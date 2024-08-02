@@ -43,11 +43,16 @@ class Tank: BoardObject {
                     fuel -= movementCost
                     coordinates.x += step.changeInXValue()
                     coordinates.y += step.changeInYValue()
-                    /*if <#Tank is inside another object#> { // If the tank crashes into something
-                        coordinates.x -= step.changeInXValue()
-                        coordinates.y -= step.changeInYValue()
-                        health -= 5
-                    }*/
+                    for tile in board.objects {
+                        if tile.coordinates.x == coordinates.x && tile.coordinates.y == coordinates.y {
+                            coordinates.x -= step.changeInXValue()
+                            coordinates.y -= step.changeInYValue()
+                            health -= 10
+                            if tile is Tank {
+                                (tile as! Tank).health -= 10
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -64,9 +69,8 @@ class Tank: BoardObject {
         }
         for tile in board.objects {
             if tile is Tank {
-                let thisTileTank: Tank = tile as! Tank
-                if thisTileTank.coordinates.x == bulletPosition.x && thisTileTank.coordinates.y == bulletPosition.y {
-                    thisTileTank.health -= gunDamage
+                if tile.coordinates.x == bulletPosition.x && tile.coordinates.y == bulletPosition.y {
+                    (tile as! Tank).health -= gunDamage
                 }
             }
         }
@@ -91,8 +95,15 @@ class Scout: Tank {
             appearance: appearance,
             coordinates: coordinates
         )
+        let normalAppearance = appearance
     }
-    //TODO: Add Special Ability to hide or gain information
+    var isInvisible: Bool = false
+    func specialAbility() {
+        isInvisible = true
+        appearance = Appearance(fillColor: .white, strokeColor: .white, textColor: .white, symbol: "")
+    }
+    
+    
 }
 
 class Berserker: Tank {
