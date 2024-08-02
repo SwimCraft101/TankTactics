@@ -20,7 +20,7 @@ struct Appearance {
 }
 
 class BoardObject {
-    let appearance: Appearance
+    var appearance: Appearance
     var coordinates: Coordinates
     
     func move(_direction: [Direction]) {
