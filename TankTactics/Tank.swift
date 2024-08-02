@@ -79,6 +79,7 @@ class Tank: BoardObject {
  
 class Scout: Tank {
     init(appearance: Appearance, coordinates: Coordinates) {
+        normalAppearance = appearance
         super.init(
             health: 50,
             movementCost: 5,
@@ -97,10 +98,32 @@ class Scout: Tank {
         )
         let normalAppearance = appearance
     }
-    var isInvisible: Bool = false
+    let normalAppearance: Appearance
     func specialAbility() {
         isInvisible = true
         appearance = Appearance(fillColor: .white, strokeColor: .white, textColor: .white, symbol: "")
+    }
+    override func move(_direction: [Direction]) {
+        appearance = normalAppearance
+        if _direction.count <= movementSpeed {
+            for step in _direction {
+                if fuel <= movementCost {
+                    fuel -= movementCost
+                    coordinates.x += step.changeInXValue()
+                    coordinates.y += step.changeInYValue()
+                    for tile in board.objects {
+                        if tile.coordinates.x == coordinates.x && tile.coordinates.y == coordinates.y {
+                            coordinates.x -= step.changeInXValue()
+                            coordinates.y -= step.changeInYValue()
+                            health -= 10
+                            if tile is Tank {
+                                (tile as! Tank).health -= 10
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     
