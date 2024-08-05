@@ -5,7 +5,18 @@
 //
 //  Defines all tank types and attributes
 
+struct PlayerDemogrphics {
+    let firstName: String
+    let lastName: String
+    let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
+    let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
+    let deliveryNumber: Int // Should be a Locker Number or Room Number
+    
+}
+
 class Tank: BoardObject {
+    var playerDemographics: PlayerDemogrphics
+    
     var health: Int
     var fuel: Int = 0
     
@@ -21,7 +32,7 @@ class Tank: BoardObject {
     var radarRange: Int
     
     init(
-        health: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates
+        health: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics
     ) {
         self.health = health
         self.movementCost = movementCost
@@ -32,6 +43,7 @@ class Tank: BoardObject {
         self.highDetailSightRange = highDetailSightRange
         self.lowDetailSightRange = lowDetailSightRange
         self.radarRange = radarRange
+        self.playerDemographics = playerDemographics
         
         super.init(appearance: appearance, coordinates: coordinates)
     }
@@ -78,7 +90,7 @@ class Tank: BoardObject {
 }
  
 class Scout: Tank {
-    init(appearance: Appearance, coordinates: Coordinates) {
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) {
         normalAppearance = appearance
         super.init(
             health: 50,
@@ -94,7 +106,9 @@ class Scout: Tank {
             radarRange: 7,
             
             appearance: appearance,
-            coordinates: coordinates
+            coordinates: coordinates,
+            
+            playerDemographics: playerDemographics
         )
         let normalAppearance = appearance
     }
@@ -129,7 +143,7 @@ class Scout: Tank {
 }
 
 class Berserker: Tank {
-    init(appearance: Appearance, coordinates: Coordinates) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
         super.init(
             health: 50,
             movementCost: 10,
@@ -144,14 +158,16 @@ class Berserker: Tank {
             radarRange: 3,
             
             appearance: appearance,
-            coordinates: coordinates
+            coordinates: coordinates,
+            
+            playerDemographics: playerDemographics
         )
     }
     //TODO: Add Special Ability to attack more aggresively and riskily
 }
 
 class Defender: Tank {
-    init(appearance: Appearance, coordinates: Coordinates) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
         super.init(
             health: 200,
             movementCost: 10,
@@ -166,14 +182,16 @@ class Defender: Tank {
             radarRange: 3,
             
             appearance: appearance,
-            coordinates: coordinates
+            coordinates: coordinates,
+            
+            playerDemographics: playerDemographics
         )
     }
     //TODO: Add Special Ability to defend something
 }
 
 class Espionaur: Tank {
-    init(appearance: Appearance, coordinates: Coordinates) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
         super.init(
             health: 50,
             movementCost: 10,
@@ -188,14 +206,16 @@ class Espionaur: Tank {
             radarRange: 5,
             
             appearance: appearance,
-            coordinates: coordinates
+            coordinates: coordinates,
+            
+            playerDemographics: playerDemographics
         )
     }
     //TODO: Add Special Ability to interfere with other tanks
 }
 
 class Commander: Tank {
-    init(appearance: Appearance, coordinates: Coordinates) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
         super.init(
             health: 50,
             movementCost: 10,
@@ -210,14 +230,16 @@ class Commander: Tank {
             radarRange: 3,
             
             appearance: appearance,
-            coordinates: coordinates
+            coordinates: coordinates,
+            
+            playerDemographics: playerDemographics
         )
     }
     //TODO: Add Special Ability to see other perspectives
 }
 
 class Engineer: Tank {
-    init(appearance: Appearance, coordinates: Coordinates) {
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) {
         super.init(
             health: 50,
             movementCost: 10,
@@ -232,7 +254,9 @@ class Engineer: Tank {
             radarRange: 3,
             
             appearance: appearance,
-            coordinates: coordinates
+            coordinates: coordinates,
+            
+            playerDemographics: playerDemographics
         )
     }
     //TODO: Add special ability to place traps/turrets
