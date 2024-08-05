@@ -100,7 +100,7 @@ class Scout: Tank {
     }
     let normalAppearance: Appearance
     func specialAbility() {
-        appearance = Appearance(fillColor: .white, strokeColor: .white, textColor: .white, symbol: "")
+        appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle.filled")
     }
     override func move(_direction: [Direction]) {
         appearance = normalAppearance

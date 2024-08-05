@@ -15,7 +15,7 @@ struct Coordinates {
 struct Appearance {
     let fillColor: Color
     let strokeColor: Color
-    let textColor: Color
+    let symbolColor: Color
     let symbol: String
 }
 
@@ -38,6 +38,12 @@ class BoardObject {
 
 class Wall: BoardObject {
     init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .black, strokeColor: .black, textColor: .black, symbol: ""), coordinates: coordinates)
+        super.init(appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "eraser"), coordinates: coordinates)
+    }
+}
+
+class FuelDrop: BoardObject {
+    init(coordinates: Coordinates) {
+        super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: ""), coordinates: coordinates)
     }
 }

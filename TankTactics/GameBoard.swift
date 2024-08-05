@@ -12,12 +12,12 @@ class Board {
     }
 }
 
-let scoutExample     = Appearance(fillColor: .green,  strokeColor: .black, textColor: .black, symbol: "SC")
-let berserkerExample = Appearance(fillColor: .red,    strokeColor: .black, textColor: .black, symbol: "BZ")
-let defenderExample  = Appearance(fillColor: .blue,   strokeColor: .black, textColor: .black, symbol: "DF")
-let espionaurExample = Appearance(fillColor: .black,  strokeColor: .white, textColor: .white, symbol: "EP")
-let commanderExample = Appearance(fillColor: .yellow, strokeColor: .black, textColor: .black, symbol: "CM")
-let engineerExample  = Appearance(fillColor: .orange, strokeColor: .black, textColor: .black, symbol: "EN")
+let scoutExample     = Appearance(fillColor: .green,  strokeColor: .black, symbolColor: .black, symbol: "lessthan.square")
+let berserkerExample = Appearance(fillColor: .red,    strokeColor: .black, symbolColor: .black, symbol: "BZ")
+let defenderExample  = Appearance(fillColor: .blue,   strokeColor: .black, symbolColor: .black, symbol: "DF")
+let espionaurExample = Appearance(fillColor: .black,  strokeColor: .white, symbolColor: .white, symbol: "EP")
+let commanderExample = Appearance(fillColor: .yellow, strokeColor: .black, symbolColor: .black, symbol: "CM")
+let engineerExample  = Appearance(fillColor: .orange, strokeColor: .black, symbolColor: .black, symbol: "EN")
 
 var board: Board = Board([
     Scout      (appearance: scoutExample,     coordinates: Coordinates(x: 2,  y: -2)),
