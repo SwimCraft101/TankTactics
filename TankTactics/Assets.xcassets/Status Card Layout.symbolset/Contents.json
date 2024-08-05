@@ -5,10 +5,7 @@
   },
   "symbols" : [
     {
-      "idiom" : "front"
-    },
-    {
-      "idiom" : "back"
+      "idiom" : "universal"
     }
   ]
 }
