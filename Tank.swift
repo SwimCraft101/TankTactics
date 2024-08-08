@@ -5,7 +5,7 @@
 //
 //  Defines all tank types and attributes
 
-struct PlayerDemogrphics {
+struct PlayerDemographics {
     let firstName: String
     let lastName: String
     let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
@@ -15,7 +15,7 @@ struct PlayerDemogrphics {
 }
 
 class Tank: BoardObject {
-    var playerDemographics: PlayerDemogrphics
+    var playerDemographics: PlayerDemographics
     
     var health: Int
     var fuel: Int = 0
@@ -32,7 +32,7 @@ class Tank: BoardObject {
     var radarRange: Int
     
     init(
-        health: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics
+        health: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
     ) {
         self.health = health
         self.movementCost = movementCost
@@ -90,7 +90,7 @@ class Tank: BoardObject {
 }
  
 class Scout: Tank {
-    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) {
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) {
         normalAppearance = appearance
         super.init(
             health: 50,
@@ -143,7 +143,7 @@ class Scout: Tank {
 }
 
 class Berserker: Tank {
-    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
             health: 50,
             movementCost: 10,
@@ -167,7 +167,7 @@ class Berserker: Tank {
 }
 
 class Defender: Tank {
-    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
             health: 200,
             movementCost: 10,
@@ -191,7 +191,7 @@ class Defender: Tank {
 }
 
 class Espionaur: Tank {
-    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
             health: 50,
             movementCost: 10,
@@ -215,7 +215,7 @@ class Espionaur: Tank {
 }
 
 class Commander: Tank {
-    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) { // These modify the base player values
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
             health: 50,
             movementCost: 10,
@@ -239,7 +239,7 @@ class Commander: Tank {
 }
 
 class Engineer: Tank {
-    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemogrphics) {
+    init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) {
         super.init(
             health: 50,
             movementCost: 10,
