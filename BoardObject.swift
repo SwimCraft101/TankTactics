@@ -22,9 +22,11 @@ struct Appearance {
 class BoardObject {
     var appearance: Appearance
     var coordinates: Coordinates
+    var health: Int = 1
+    var defence: Int = 0
     
-    func move(_direction: [Direction]) {
-        for step in _direction {
+    func move(_ direction: [Direction]) {
+        for step in direction {
             self.coordinates.x += step.changeInXValue()
             self.coordinates.y += step.changeInYValue()
         }
