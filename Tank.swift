@@ -26,32 +26,25 @@ class Tank: BoardObject {
     var playerDemographics: PlayerDemographics
 
     var fuel: Int = 0
+    var metal: Int = 0
     
-    var movementCost: Int
-    var movementSpeed: Int
+    var movementCost: Int = 10
+    var movementSpeed: Int = 1
     
-    var gunRange: Int
-    var gunDamage: Int
-    var gunCost: Int
+    var gunRange: Int = 1
+    var gunDamage: Int = 5
+    var gunCost: Int = 10
     
-    var highDetailSightRange: Int
-    var lowDetailSightRange: Int
-    var radarRange: Int
+    var highDetailSightRange: Int = 1
+    var lowDetailSightRange: Int = 2
+    var radarRange: Int = 3
     
     init(
-        defence: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
+        appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
     ) {
-        self.movementCost = movementCost
-        self.movementSpeed = movementSpeed
-        self.gunRange = gunRange
-        self.gunDamage = gunDamage
-        self.gunCost = gunCost
-        self.highDetailSightRange = highDetailSightRange
-        self.lowDetailSightRange = lowDetailSightRange
-        self.radarRange = radarRange
         self.playerDemographics = playerDemographics
-        
         super.init(appearance: appearance, coordinates: coordinates)
+        self.metal = 0
         self.health = 100
         self.defence = defence
     }
@@ -68,9 +61,7 @@ class Tank: BoardObject {
                             coordinates.x -= step.changeInXValue()
                             coordinates.y -= step.changeInYValue()
                             health -= 10
-                            if tile is Tank {
-                                (tile as! Tank).health -= 10
-                            }
+                            tile.health -= 10
                         }
                     }
                 }
@@ -92,5 +83,15 @@ class Tank: BoardObject {
                 tile.health -= gunDamage * power(base: 0.95, exponent: tile.defence)
             }
         }
+    }
+    
+    func placeWall(direction: Direction) {
+        let wallCoordinates = Coordinates(x: coordinates.x + direction.changeInXValue(), y: coordinates.y + direction.changeInYValue())
+        for tile in board.objects {
+            if tile.coordinates.x == wallCoordinates.x && tile.coordinates.y == wallCoordinates.y {
+                return
+            }
+        }
+        board.objects.append(Wall(coordinates: wallCoordinates))
     }
 }

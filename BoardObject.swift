@@ -40,7 +40,7 @@ class BoardObject {
 
 class Wall: BoardObject {
     init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "eraser"), coordinates: coordinates)
+        super.init(appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "rectangle.fill"), coordinates: coordinates)
     }
 }
 
