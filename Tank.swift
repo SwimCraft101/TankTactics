@@ -110,9 +110,9 @@ class Scout: Tank {
             
             playerDemographics: playerDemographics
         )
-        let normalAppearance = appearance
+        normalAppearance = appearance
     }
-    let normalAppearance: Appearance
+    var normalAppearance: Appearance
     func specialAbility() {
         appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle.filled")
     }

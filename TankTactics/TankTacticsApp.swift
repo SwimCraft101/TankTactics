@@ -21,7 +21,7 @@ let cellSize: CGFloat = 52
 @main
 struct TankTacticsApp: App {
     var body: some Scene {
-        WindowGroup {                                      // Make a window
+        WindowGroup {                                          // Make a window
             HStack {
                 HStack {                                       // Stack up each row of the board
                     ForEach(-7...7, id: \.self) { x in         // Run for each row
