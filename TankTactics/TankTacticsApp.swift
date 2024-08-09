@@ -22,23 +22,25 @@ let cellSize: CGFloat = 52
 struct TankTacticsApp: App {
     var body: some Scene {
         WindowGroup {                                      // Make a window
-            HStack {                                       // Stack up each row of the board
-                ForEach(-7...7, id: \.self) { x in         // Run for each row
-                    VStack {                               // Connect the cells into a row
-                        ForEach(-7...7, id: \.self) { y in // Run for each cell
-                            ZStack {                       // Combine these elements into a cell
-                                Rectangle()
-                                    .foregroundColor(getAppearenceAtLocation(Coordinates(x: x, y: -y)).fillColor)
-                                    .frame(width: cellSize, height: cellSize)
-                                    .border(getAppearenceAtLocation(Coordinates(x: x, y: -y)).strokeColor, width: cellSize / 10)
-                                    .cornerRadius(cellSize / 20)
-                                Image(systemName: getAppearenceAtLocation(Coordinates(x: x, y: -y)).symbol)
-                                    .foregroundColor(getAppearenceAtLocation(Coordinates(x: x, y: -y)).symbolColor)
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: cellSize * 0.8, height: cellSize * 0.8)
+            HStack {
+                HStack {                                       // Stack up each row of the board
+                    ForEach(-7...7, id: \.self) { x in         // Run for each row
+                        VStack {                               // Connect the cells into a row
+                            ForEach(-7...7, id: \.self) { y in // Run for each cell
+                                ZStack {                       // Combine these elements into a cell
+                                    Rectangle()
+                                        .foregroundColor(getAppearenceAtLocation(Coordinates(x: x, y: -y)).fillColor)
+                                        .frame(width: cellSize, height: cellSize)
+                                        .border(getAppearenceAtLocation(Coordinates(x: x, y: -y)).strokeColor, width: cellSize / 10)
+                                        .cornerRadius(cellSize / 20)
+                                    Image(systemName: getAppearenceAtLocation(Coordinates(x: x, y: -y)).symbol)
+                                        .foregroundColor(getAppearenceAtLocation(Coordinates(x: x, y: -y)).symbolColor)
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: cellSize * 0.8, height: cellSize * 0.8)
+                                }
+                                .frame(width: cellSize, height: cellSize)
+                                .padding(.all, -10)
                             }
-                            .frame(width: cellSize, height: cellSize)
-                            .padding(.all, -10)
                         }
                     }
                 }
