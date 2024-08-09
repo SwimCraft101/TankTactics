@@ -5,6 +5,14 @@
 //
 //  Defines all tank types and attributes
 
+func power(base: Double, exponent: Int) -> Int {
+    var value = base
+    for iterator in 1...exponent {
+        value *= base
+    }
+    return Int(value)
+}
+
 struct PlayerDemographics {
     let firstName: String
     let lastName: String
@@ -16,8 +24,7 @@ struct PlayerDemographics {
 
 class Tank: BoardObject {
     var playerDemographics: PlayerDemographics
-    
-    var health: Int
+
     var fuel: Int = 0
     
     var movementCost: Int
@@ -32,9 +39,8 @@ class Tank: BoardObject {
     var radarRange: Int
     
     init(
-        health: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
+        defence: Int, movementCost: Int, movementSpeed: Int, gunRange: Int, gunDamage: Int, gunCost: Int, highDetailSightRange: Int, lowDetailSightRange: Int, radarRange: Int, appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
     ) {
-        self.health = health
         self.movementCost = movementCost
         self.movementSpeed = movementSpeed
         self.gunRange = gunRange
@@ -46,11 +52,13 @@ class Tank: BoardObject {
         self.playerDemographics = playerDemographics
         
         super.init(appearance: appearance, coordinates: coordinates)
+        self.health = 100
+        self.defence = defence
     }
     
-    override func move(_direction: [Direction]) {
-        if _direction.count <= movementSpeed {
-            for step in _direction {
+    override func move(_ direction: [Direction]) {
+        if direction.count <= movementSpeed {
+            for step in direction {
                 if fuel <= movementCost {
                     fuel -= movementCost
                     coordinates.x += step.changeInXValue()
@@ -70,9 +78,9 @@ class Tank: BoardObject {
         }
     }
     
-    func fire(_direction: [Direction]) {
+    func fire(_ direction: [Direction]) {
         var bulletPosition: Coordinates = coordinates
-        for step in _direction {
+        for step in direction {
             if fuel >= gunCost {
                 fuel -= gunCost
                 bulletPosition.x += step.changeInXValue()
@@ -80,20 +88,19 @@ class Tank: BoardObject {
             }
         }
         for tile in board.objects {
-            if tile is Tank {
-                if tile.coordinates.x == bulletPosition.x && tile.coordinates.y == bulletPosition.y {
-                    (tile as! Tank).health -= gunDamage
-                }
+            if tile.coordinates.x == bulletPosition.x && tile.coordinates.y == bulletPosition.y {
+                tile.health -= gunDamage * power(base: 0.95, exponent: tile.defence)
             }
         }
     }
 }
- 
+
 class Scout: Tank {
     init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) {
         normalAppearance = appearance
         super.init(
-            health: 50,
+            defence: 0,
+            
             movementCost: 5,
             movementSpeed: 3,
             
@@ -116,27 +123,9 @@ class Scout: Tank {
     func specialAbility() {
         appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle.filled")
     }
-    override func move(_direction: [Direction]) {
+    override func move(_ direction: [Direction]) {
         appearance = normalAppearance
-        if _direction.count <= movementSpeed {
-            for step in _direction {
-                if fuel <= movementCost {
-                    fuel -= movementCost
-                    coordinates.x += step.changeInXValue()
-                    coordinates.y += step.changeInYValue()
-                    for tile in board.objects {
-                        if tile.coordinates.x == coordinates.x && tile.coordinates.y == coordinates.y {
-                            coordinates.x -= step.changeInXValue()
-                            coordinates.y -= step.changeInYValue()
-                            health -= 10
-                            if tile is Tank {
-                                (tile as! Tank).health -= 10
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        super.move(direction)
     }
     
     
@@ -145,7 +134,8 @@ class Scout: Tank {
 class Berserker: Tank {
     init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
-            health: 50,
+            defence: 0,
+            
             movementCost: 10,
             movementSpeed: 2,
             
@@ -169,7 +159,8 @@ class Berserker: Tank {
 class Defender: Tank {
     init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
-            health: 200,
+            defence: 3,
+
             movementCost: 10,
             movementSpeed: 2,
             
@@ -193,7 +184,8 @@ class Defender: Tank {
 class Espionaur: Tank {
     init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
-            health: 50,
+            defence: 0,
+            
             movementCost: 10,
             movementSpeed: 2,
             
@@ -217,7 +209,8 @@ class Espionaur: Tank {
 class Commander: Tank {
     init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) { // These modify the base player values
         super.init(
-            health: 50,
+            defence: 0,
+            
             movementCost: 10,
             movementSpeed: 2,
             
@@ -241,7 +234,8 @@ class Commander: Tank {
 class Engineer: Tank {
     init(appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics) {
         super.init(
-            health: 50,
+            defence: 0,
+            
             movementCost: 10,
             movementSpeed: 2,
             
@@ -261,3 +255,4 @@ class Engineer: Tank {
     }
     //TODO: Add special ability to place traps/turrets
 }
+
