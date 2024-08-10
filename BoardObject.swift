@@ -7,23 +7,40 @@
 import Foundation
 import SwiftUI
 
-struct Coordinates {
+struct Coordinates: Equatable {
     var x: Int
     var y: Int
 }
 
-struct Appearance {
+struct Appearance: Equatable {
     let fillColor: Color
     let strokeColor: Color
     let symbolColor: Color
     let symbol: String
 }
 
-class BoardObject {
+class BoardObject: Equatable {
+    static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
+        return lhs.coordinates == rhs.coordinates &&
+        lhs.appearance == rhs.appearance
+    }
+    
+    var fuelDropped: Int = 0
+    var metalDropped: Int = 0
+    
     var appearance: Appearance
     var coordinates: Coordinates
     var health: Int = 1
     var defence: Int = 0
+    
+    func tick() {
+        if health <= 0 {
+            board.objects.removeAll(where: {
+                $0 == self
+            })
+            board.objects.append(Gift(coordinates: self.coordinates, fuelReward: fuelDropped, metalReward: metalDropped))
+        }
+    }
     
     func move(_ direction: [Direction]) {
         for step in direction {
@@ -44,8 +61,10 @@ class Wall: BoardObject {
     }
 }
 
-class FuelDrop: BoardObject {
-    init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: ""), coordinates: coordinates)
+class Gift: BoardObject {
+    init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {
+        super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift"), coordinates: coordinates)
+        fuelDropped = fuelReward
+        metalDropped = metalReward
     }
 }

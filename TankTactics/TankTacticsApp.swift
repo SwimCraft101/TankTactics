@@ -44,10 +44,6 @@ struct TankTacticsApp: App {
                         }
                     }
                 }
-                Spacer()
-                Button("Print Example Status Card") {
-                    printStatusCard(Scout(appearance: scoutExample, coordinates: Coordinates(x: 4, y: -4), playerDemographics: placeholderDemographics))
-                }
             }
         }
     }
