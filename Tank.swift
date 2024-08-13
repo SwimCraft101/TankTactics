@@ -25,8 +25,8 @@ struct PlayerDemographics {
 class Tank: BoardObject {
     var playerDemographics: PlayerDemographics
 
-    var fuel: Int = 0
-    var metal: Int = 0
+    var fuel: Int = 10
+    var metal: Int = 5
     
     var movementCost: Int = 10
     var movementSpeed: Int = 1
