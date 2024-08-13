@@ -10,6 +10,14 @@ import SwiftUI
 struct Coordinates: Equatable {
     var x: Int
     var y: Int
+    
+    func distanceTo(_ other: Coordinates) -> Int {
+        var deltax = abs(other.x - x)
+        var deltay = abs(other.y - y)
+        deltax *= deltax
+        deltay *= deltay
+        return Int(sqrt(Double(deltax + deltay)))
+    }
 }
 
 struct Appearance: Equatable {
