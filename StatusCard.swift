@@ -9,65 +9,71 @@ import SwiftUI
 import AppKit
 import PDFKit
 
-extension View {
-    func asNSImage(size: NSSize) -> NSImage? {
-        // Create the hosting controller with the SwiftUI view
-        let hostingView = NSHostingView(rootView: self)
-        hostingView.frame = NSRect(origin: .zero, size: size)
+private func createAndSavePDF(from views: [AnyView]) {
+    // Helper function to convert a SwiftUI view to NSImage
+    func imageFromView(_ view: AnyView, size: CGSize) -> NSImage {
+        let hostingController = NSHostingController(rootView: view)
+        let rootView = hostingController.view
         
-        // Create a bitmap representation with the desired size and scale
-        guard let bitmapRep = hostingView.bitmapImageRepForCachingDisplay(in: hostingView.bounds) else {
-            return nil
-        }
+        rootView.frame = CGRect(origin: .zero, size: size)
         
-        hostingView.cacheDisplay(in: hostingView.bounds, to: bitmapRep)
+        let offscreenView = NSView(frame: CGRect(origin: .zero, size: size))
+        offscreenView.addSubview(rootView)
         
-        // Create an NSImage from the bitmap representation
-        let nsImage = NSImage(size: size)
-        nsImage.addRepresentation(bitmapRep)
+        let bitmapRep = NSBitmapImageRep(bitmapDataPlanes: nil,
+                                         pixelsWide: Int(size.width),
+                                         pixelsHigh: Int(size.height),
+                                         bitsPerSample: 8,
+                                         samplesPerPixel: 4,
+                                         hasAlpha: true,
+                                         isPlanar: false,
+                                         colorSpaceName: .deviceRGB,
+                                         bytesPerRow: 0,
+                                         bitsPerPixel: 0)
         
-        return nsImage
+        offscreenView.cacheDisplay(in: offscreenView.bounds, to: bitmapRep!)
+        
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmapRep!)
+        
+        return image
     }
-}
-
-func createPDFData(from images: [NSImage]) -> Data? {
-    guard !images.isEmpty else { return nil }
     
-    // Create a PDFDocument instance
+    // Define page size for portrait orientation
+    let pageSize = CGSize(width: 396, height: 612) // 5.5 by 8.5 inches in points (72 points per inch)
+    
+    // Create a PDF document
     let pdfDocument = PDFDocument()
-
-    for image in images {
-        // Create a PDFPage from NSImage
-        if let pdfPage = PDFPage(image: image) {
-            // Add the page to the PDF document
-            pdfDocument.insert(pdfPage, at: pdfDocument.pageCount)
+    
+    // Add each view as a separate page in the PDF document
+    for view in views {
+        let image = imageFromView(view, size: pageSize)
+        let pdfPage = PDFPage(image: image)
+        
+        if let page = pdfPage {
+            pdfDocument.insert(page, at: pdfDocument.pageCount)
+        } else {
+            print("Failed to create PDFPage from image.")
         }
     }
-    // Return the PDF data
-    return pdfDocument.dataRepresentation()
-}
-
-func printPDFData(_ pdfData: Data) {
-    // Create a PDF document from the data
-    guard let pdfDocument = PDFDocument(data: pdfData) else {
-        print("Failed to create PDF document from data.")
-        return
+    
+    // Create a temporary file URL to save the PDF
+    let tempFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("output.pdf")
+    
+    // Save PDF to temporary file
+    if let pdfData = pdfDocument.dataRepresentation() {
+        do {
+            try pdfData.write(to: tempFileURL)
+            print("PDF saved to temporary file: \(tempFileURL.path)")
+            
+            // Open the PDF file using the system's default viewer
+            NSWorkspace.shared.open(tempFileURL)
+        } catch {
+            print("Error saving PDF: \(error)")
+        }
+    } else {
+        print("Failed to get PDF data representation.")
     }
-    
-    // Create a print view with the PDF document
-    let printView = PDFView(frame: NSRect(x: 0, y: 0, width: 400, height: 400))
-    printView.document = pdfDocument
-
-    // Create a print operation
-    let printOperation = NSPrintOperation(view: printView)
-    
-    // Set the print info if needed
-    let printInfo = printOperation.printInfo
-    printInfo.jobDisposition = .preview // or .print for actual printing
-    printInfo.orientation = .portrait
-    printInfo.paperSize = NSSize(width: 5.5 * 72, height: 8.5 * 72)
-    // Present the print dialog
-    printOperation.run()
 }
 
 struct StatusCardFront: View {
@@ -90,15 +96,18 @@ struct StatusCardBack: View {
     }
 }
 
-func printStatusCard(_ tank: Tank) {
-    let statusCardFront = StatusCardFront(tank: tank).asNSImage(size: NSSize(width: 5.5, height: 8.5))!
-    let statusCardBack  = StatusCardBack(tank:  tank).asNSImage(size: NSSize(width: 5.5, height: 8.5))!
-    printPDFData(createPDFData(from: [statusCardFront, statusCardBack])!)
+func saveStatusCardsToPDF(_ tanks: [Tank]) {
+    var pages: [AnyView] = []
+    for tank in tanks {
+        pages.append(AnyView(StatusCardFront(tank: tank)))
+        pages.append(AnyView(StatusCardBack(tank: tank)))
+    }
+    createAndSavePDF(from: pages)
 }
 
 #Preview {
     HSplitView {
-        StatusCardFront(tank: board.objects.first as! Tank)
-        StatusCardBack(tank: board.objects.first as! Tank)
+        StatusCardFront(tank: exampleTank)
+        StatusCardBack(tank: exampleTank)
     }
 }
