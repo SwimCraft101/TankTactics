@@ -7,7 +7,7 @@
 
 func power(base: Double, exponent: Int) -> Int {
     var value = base
-    for iterator in 1...exponent {
+    for _ in 1...exponent {
         value *= base
     }
     return Int(value)
