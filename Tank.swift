@@ -24,7 +24,8 @@ struct PlayerDemographics {
 
 class Tank: BoardObject {
     var playerDemographics: PlayerDemographics
-
+    var dailyMessage: String?
+    
     var fuel: Int = 10
     var metal: Int = 5
     
@@ -44,9 +45,7 @@ class Tank: BoardObject {
     ) {
         self.playerDemographics = playerDemographics
         super.init(appearance: appearance, coordinates: coordinates)
-        self.metal = 0
         self.health = 100
-        self.defence = defence
     }
     
     override func move(_ direction: [Direction]) {

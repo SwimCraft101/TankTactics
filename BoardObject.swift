@@ -16,7 +16,7 @@ struct Coordinates: Equatable {
         var deltay = abs(other.y - y)
         deltax *= deltax
         deltay *= deltay
-        return Int(sqrt(Double(deltax + deltay)))
+        return Int(sqrt(Double(deltax + deltay)) + 0.5)
     }
 }
 

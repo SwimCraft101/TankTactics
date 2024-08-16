@@ -10,7 +10,7 @@ import AppKit
 import PDFKit
 
 func inch(_ inches: CGFloat) -> CGFloat {
-    return inches * 72
+    return inches * 288
 }
 
 private func createAndSavePDF(from views: [AnyView]) {
@@ -84,8 +84,62 @@ struct StatusCardFront: View {
     let tank: Tank
     var body: some View {
         ZStack {
-            Image("Status Card Front")
-                .scaledToFill()
+            VStack {
+                HStack {
+                    
+                    Spacer()
+                }
+                HStack {
+                    Spacer()
+                    if tank.dailyMessage != nil {
+                        var messageWords: [String] = tank.dailyMessage?.split(separator: " ") ?? []
+                        var messageRows: [String] = []
+                        ForEach(0...10, id: \.self) { row in
+                            let rowMaxCharacters = row * 2
+                            while messageRows[row].count < rowMaxCharacters + messageWords.first {
+                                messageRows[row].append(messageWords.removeFirst())
+                            }
+                        }
+                        VStack {
+                            
+                        }
+                    }
+                }
+            }
+            VStack {
+                VStack {
+                    Spacer()
+                    Text(tank.playerDemographics.firstName)
+                        .foregroundColor(.black)
+                        .fontWeight(.ultraLight)
+                        .font(.system(size: inch(0.35)))
+                    Text(tank.playerDemographics.lastName)
+                        .foregroundColor(.black)
+                        .fontWeight(.bold)
+                        .font(.system(size: inch(0.35)))
+                }
+                .rotationEffect(Angle(degrees: -90))
+                .frame(width: inch(4.875), height: inch(4.25), alignment: .center)
+                VStack {
+                    Text(tank.playerDemographics.deliveryBuilding)
+                        .foregroundColor(Color(red: 0.4, green: 0.4, blue: 0.4))
+                        .fontWeight(.light)
+                        .font(.system(size: inch(0.35)))
+                    HStack {
+                        Text(tank.playerDemographics.deliveryType)
+                            .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
+                            .fontWeight(.medium)
+                            .font(.system(size: inch(0.35)))
+                        Text("\(tank.playerDemographics.deliveryNumber)")
+                            .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
+                            .fontWeight(.black)
+                            .font(.system(size: inch(0.35)))
+                    }
+                    Spacer()
+                }
+                .rotationEffect(Angle(degrees: -90))
+                .frame(width: inch(4.875), height: inch(4.25), alignment: .center)
+            }
             VStack {
                 HStack {
                     Image("")
@@ -112,8 +166,6 @@ struct StatusCardBack: View {
     let tank: Tank
     var body: some View {
         ZStack {
-            Image("Status Card Back")
-                .scaledToFill()
             VStack {
                 HStack {
                     HStack {
@@ -128,9 +180,10 @@ struct StatusCardBack: View {
                 }
                 .frame(width: inch(5.5), height: inch(4.25), alignment: .top)
                 HStack {
-                    Text("This View is a placeholder for later (:")
+                    Text("This View is a placeholder for Tank drawings")
                         .frame(width: inch(4.25), height: inch(4.25), alignment: .center)
                         .font(.system(size: inch(0.5), weight: .bold, design: .default))
+                        .foregroundColor(.black)
                     HStack {
                         MeterView(value: tank.metal, max: 30, color: .blue)
                         Spacer()
@@ -156,7 +209,7 @@ struct MeterView: View {
                 .cornerRadius(inch(0.1))
                 .frame(width: inch(0.5), height: inch((CGFloat(value) / CGFloat(max) * 4.25)), alignment: .bottom)
             Text("\(value)")
-                .font(.system(size: 20))
+                .font(.system(size: inch(0.27)))
                 .foregroundColor(.white)
                 .bold()
         }
@@ -219,11 +272,11 @@ struct Viewport: View {
                                 .foregroundColor(thisTileAppearance.fillColor)
                                 .frame(width: cellSize, height: cellSize)
                                 .border(thisTileAppearance.strokeColor, width: cellSize / 10)
-                                .cornerRadius(cellSize / 20)
+                                .cornerRadius(cellSize / 10)
                             Image(systemName: thisTileAppearance.symbol)
                                 .foregroundColor(thisTileAppearance.symbolColor)
                                 .frame(width: cellSize, height: cellSize)
-                                .aspectRatio(contentMode: .fill)
+                                .font(.system(size: cellSize / 2))
                         }
                         .frame(width: cellSize, height: cellSize)
                         .padding(.all, -3)
@@ -243,12 +296,12 @@ func saveStatusCardsToPDF(_ tanks: [Tank]) {
     createAndSavePDF(from: pages)
 }
 
+let previewTank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "Rodriguezz", lastName: "Appleseed-Bonjoir", deliveryBuilding: "Apple Park, Cuperino, CA", deliveryType: "Window", deliveryNumber: 101))
+
 #Preview("Front") {
-    var exampleTank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "John", lastName: "Appleseed", deliveryBuilding: "Apple Park", deliveryType: "Window", deliveryNumber: 101))
-    StatusCardFront(tank: exampleTank)
+    StatusCardFront(tank: previewTank)
 }
 
 #Preview("Back") {
-    var exampleTank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "John", lastName: "Appleseed", deliveryBuilding: "Apple Park", deliveryType: "Window", deliveryNumber: 101))
-    StatusCardBack(tank: exampleTank)
+    StatusCardBack(tank: previewTank)
 }
