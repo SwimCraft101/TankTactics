@@ -36,9 +36,9 @@ var board: Board = Board([
     Gift(coordinates: Coordinates(x: 5 , y: -5), fuelReward: 0, metalReward: 0),
     Gift(coordinates: Coordinates(x: -5, y: 5 ), fuelReward: 0, metalReward: 0),
     
-    Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "eraser.fill"), coordinates: Coordinates(x: 3 , y: 3 ), playerDemographics: placeholderDemographics),
-    Tank(appearance: Appearance(fillColor: .blue, strokeColor: .blue, symbolColor: .blue, symbol: "pencil"), coordinates: Coordinates(x: -3, y: -3), playerDemographics: placeholderDemographics),
-    Tank(appearance: Appearance(fillColor: .yellow, strokeColor: .yellow, symbolColor: .cyan, symbol: "trash.slash.circle.fill"), coordinates: Coordinates(x: 3 , y: -3), playerDemographics: placeholderDemographics),
-    Tank(appearance: Appearance(fillColor: .orange, strokeColor: .gray, symbolColor: .gray, symbol: "headlight.high.beam"), coordinates: Coordinates(x: -3, y: 3 ), playerDemographics: placeholderDemographics),
+    Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "eraser.fill"), coordinates: Coordinates(x: 3 , y: 3 ), playerDemographics: placeholderDemographics, dailyMessage: lipsum),
+    Tank(appearance: Appearance(fillColor: .blue, strokeColor: .blue, symbolColor: .blue, symbol: "pencil"), coordinates: Coordinates(x: -3, y: -3), playerDemographics: placeholderDemographics, dailyMessage: lipsum),
+    Tank(appearance: Appearance(fillColor: .yellow, strokeColor: .yellow, symbolColor: .cyan, symbol: "trash.slash.circle.fill"), coordinates: Coordinates(x: 3 , y: -3), playerDemographics: placeholderDemographics, dailyMessage: lipsum),
+    Tank(appearance: Appearance(fillColor: .orange, strokeColor: .gray, symbolColor: .gray, symbol: "headlight.high.beam"), coordinates: Coordinates(x: -3, y: 3 ), playerDemographics: placeholderDemographics, dailyMessage: lipsum),
 ])
 
