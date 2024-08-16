@@ -24,7 +24,7 @@ struct PlayerDemographics {
 
 class Tank: BoardObject {
     var playerDemographics: PlayerDemographics
-    var dailyMessage: String?
+    var dailyMessage: String
     
     var fuel: Int = 10
     var metal: Int = 5
@@ -41,11 +41,32 @@ class Tank: BoardObject {
     var radarRange: Int = 3
     
     init(
-        appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
+        appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics, dailyMessage: String
     ) {
         self.playerDemographics = playerDemographics
+        self.dailyMessage = dailyMessage
         super.init(appearance: appearance, coordinates: coordinates)
         self.health = 100
+    }
+    
+    func setDailyMessage(_ message: String) {
+        dailyMessage = message
+    }
+    
+    func formattedDailyMessage() -> String {
+        var words = dailyMessage.split(separator: " ")
+        var rows: [String] = []
+        for row in 0...25 {
+            let rowMaxLength = Int(Double(25 - row) * 2 - 5.0)
+            if words.isEmpty {
+                break
+            }
+            rows.append("")
+            while rowMaxLength > rows[row].count + (words.first?.count ?? 9999999) {
+                rows[row] = "\(words.removeLast()) \(rows[row])"
+            }
+        }
+        return rows.reversed().joined(separator: "\n")
     }
     
     override func move(_ direction: [Direction]) {

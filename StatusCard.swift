@@ -85,26 +85,20 @@ struct StatusCardFront: View {
     var body: some View {
         ZStack {
             VStack {
-                HStack {
-                    
-                    Spacer()
+                VStack {
+                    Spacer(minLength: inch(1.25))
+                    Text(tank.formattedDailyMessage())
+                        .font(.system(size: inch(0.15)))
+                        .frame(width: inch(4.25), height: inch(4.25), alignment: .bottomLeading)
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.leading)
+                        .fontDesign(.monospaced)
                 }
-                HStack {
-                    Spacer()
-                    if tank.dailyMessage != nil {
-                        var messageWords: [String] = tank.dailyMessage?.split(separator: " ") ?? []
-                        var messageRows: [String] = []
-                        ForEach(0...10, id: \.self) { row in
-                            let rowMaxCharacters = row * 2
-                            while messageRows[row].count < rowMaxCharacters + messageWords.first {
-                                messageRows[row].append(messageWords.removeFirst())
-                            }
-                        }
-                        VStack {
-                            
-                        }
-                    }
-                }
+                .rotationEffect(Angle(degrees: 90))
+                .frame(width: inch(5.5), height: inch(4.25), alignment: .center)
+                Spacer()
+                Spacer(minLength: inch(4.25))
+                
             }
             VStack {
                 VStack {
@@ -296,7 +290,11 @@ func saveStatusCardsToPDF(_ tanks: [Tank]) {
     createAndSavePDF(from: pages)
 }
 
-let previewTank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "Rodriguezz", lastName: "Appleseed-Bonjoir", deliveryBuilding: "Apple Park, Cuperino, CA", deliveryType: "Window", deliveryNumber: 101))
+let lipsum = """
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ligula quam, semper quis fringilla nec, elementum eget magna. Donec finibus auctor efficitur. Sed vulputate est sed augue mollis malesuada. Vestibulum dictum molestie congue. Praesent justo lorem, convallis quis ex porttitor, porta posuere turpis. Aliquam a tristique est. Praesent ut felis et mi suscipit porttitor. Aenean justo risus, luctus dignissim fringilla ac, congue consequat velit. In hac habitasse platea dictumst. Maecenas a nisi a sapien gravida vulputate sit amet vel mauris. Nullam lectus massa, hendrerit at viverra auctor, aliquam eget augue. Sed nec arcu ipsum. Quisque pulvinar semper augue id ornare. Curabitur finibus nisi at semper scelerisque. Mauris dictum laoreet ullamcorper.
+"""
+
+let previewTank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "Rodriguezz", lastName: "Appleseed-Bonjoir", deliveryBuilding: "Apple Park, Cuperino, CA", deliveryType: "Window", deliveryNumber: 101), dailyMessage: lipsum)
 
 #Preview("Front") {
     StatusCardFront(tank: previewTank)
