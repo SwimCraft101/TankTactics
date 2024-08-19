@@ -169,7 +169,7 @@ struct StatusCardBack: View {
                         MeterView(value: tank.metal, max: 30, color: .yellow)
                     }
                     .frame(width: inch(1.25), height: inch(4.25), alignment: .center)
-                    Viewport(coordinates: tank.coordinates, cellSize: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange)
+                    Viewport(board: board, coordinates: tank.coordinates, cellSize: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange)
                         .frame(width: inch(4.25), height: inch(4.25), alignment: .center)
                 }
                 .frame(width: inch(5.5), height: inch(4.25), alignment: .top)
@@ -212,12 +212,14 @@ struct MeterView: View {
 }
 
 struct Viewport: View {
+    @State var board: Board
     let coordinates: Coordinates
     let cellSize: CGFloat
     let viewRenderSize: Int
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
+    var rerenderView: Bool = false
     
     func getAppearenceAtLocation(_ localCoordinates: Coordinates) -> Appearance {
         for tile in board.objects {
@@ -256,24 +258,83 @@ struct Viewport: View {
     }
 
     var body: some View {
-        HStack {
-            ForEach(coordinates.x - viewRenderSize...coordinates.x + viewRenderSize, id: \.self) { x in
-                VStack {
-                    ForEach((-coordinates.y - viewRenderSize)...(-coordinates.y + viewRenderSize), id: \.self) { y in
+            HStack {
+                ForEach(coordinates.x - viewRenderSize...coordinates.x + viewRenderSize, id: \.self) { x in
+                    VStack {
+                        ForEach((-coordinates.y - viewRenderSize)...(-coordinates.y + viewRenderSize), id: \.self) { y in
                         ZStack {
                             let thisTileAppearance = getAppearenceAtLocation(Coordinates(x: x, y: -y))
                             Rectangle()
-                                .foregroundColor(thisTileAppearance.fillColor)
+                            .foregroundColor(thisTileAppearance.fillColor)
                                 .frame(width: cellSize, height: cellSize)
-                                .border(thisTileAppearance.strokeColor, width: cellSize / 10)
+                            .border(thisTileAppearance.strokeColor, width: cellSize / 10)
                                 .cornerRadius(cellSize / 10)
                             Image(systemName: thisTileAppearance.symbol)
-                                .foregroundColor(thisTileAppearance.symbolColor)
+                            .foregroundColor(thisTileAppearance.symbolColor)
                                 .frame(width: cellSize, height: cellSize)
                                 .font(.system(size: cellSize / 2))
                         }
                         .frame(width: cellSize, height: cellSize)
                         .padding(.all, -3)
+                        .contextMenu {
+                            let thisTile = board.objects.first(
+                                where: { $0.coordinates.x == x && $0.coordinates.y == -y }) ?? nil
+                            if thisTile != nil {
+                                Menu("Attributes") {
+                                    if thisTile is Tank {
+                                        Section("   Player Demographics") {
+                                            Text("Name: \((thisTile! as! Tank).playerDemographics.firstName) \((thisTile! as! Tank).playerDemographics.lastName)")
+                                            Text("Delivery Location: \((thisTile! as! Tank).playerDemographics.deliveryType) \((thisTile! as! Tank).playerDemographics.deliveryNumber) in \((thisTile! as! Tank).playerDemographics.deliveryBuilding)")
+                                        }
+                                        Section("   Tank Attributes") {
+                                            Text("Fuel: \((thisTile! as! Tank).fuel)")
+                                            Text("Metal: \((thisTile! as! Tank).metal)")
+                                            Menu("Daily Message") {
+                                                Text((thisTile! as! Tank).dailyMessage)
+                                            }
+                                            Menu("Upgrades") {
+                                                Section("   Movement") {
+                                                    Text("Speed: \((thisTile! as! Tank).movementSpeed) Tiles/Turn")
+                                                    Text("Cost: \((thisTile! as! Tank).movementCost) Fuel")
+                                                }
+                                                Section("   Weaponry") {
+                                                    Text("Range: \((thisTile! as! Tank).gunRange) Tiles")
+                                                    Text("Damage: \((thisTile! as! Tank).gunDamage) Health")
+                                                    Text("Cost: \((thisTile! as! Tank).gunCost) Fuel")
+                                                }
+                                                Section("   Sight Range") {
+                                                    Text("High Detail: \((thisTile! as! Tank).highDetailSightRange) Tiles")
+                                                    Text("Low Detail: \((thisTile! as! Tank).lowDetailSightRange) Tiles")
+                                                    Text("Radar: \((thisTile! as! Tank).radarRange) Tiles")
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Section("   General Attributes") {
+                                        Text("XY: \(thisTile!.coordinates.x), \(thisTile!.coordinates.y)")
+                                        Text("Health: \(thisTile!.health)")
+                                        Text("Defence: \(thisTile!.defence)")
+                                        Text("Fuel Dropped: \(thisTile!.fuelDropped)")
+                                        Text("Metal Dropped: \(thisTile!.metalDropped)")
+                                    }
+                                }
+                                Button("Delete") {
+                                    board.objects.removeAll(where: { 
+                                        $0 == thisTile
+                                    })
+                                }
+                            } else {
+                                Button("Add Wall") {
+                                    board.objects.append(Wall(coordinates: Coordinates(x: x, y: -y)))
+                                }
+                                Button("Add Gift") {
+                                    let totalReward: Int = 20
+                                    let metalReward: Int = Int.random(in: 0...totalReward)
+                                    let fuelReward: Int = totalReward - metalReward
+                                    board.objects.append(Gift(coordinates: Coordinates(x: x, y: -y), fuelReward: fuelReward, metalReward: metalReward))
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -294,12 +355,11 @@ let lipsum = """
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent ligula quam, semper quis fringilla nec, elementum eget magna. Donec finibus auctor efficitur. Sed vulputate est sed augue mollis malesuada. Vestibulum dictum molestie congue. Praesent justo lorem, convallis quis ex porttitor, porta posuere turpis. Aliquam a tristique est. Praesent ut felis et mi suscipit porttitor. Aenean justo risus, luctus dignissim fringilla ac, congue consequat velit. In hac habitasse platea dictumst. Maecenas a nisi a sapien gravida vulputate sit amet vel mauris. Nullam lectus massa, hendrerit at viverra auctor, aliquam eget augue. Sed nec arcu ipsum. Quisque pulvinar semper augue id ornare. Curabitur finibus nisi at semper scelerisque. Mauris dictum laoreet ullamcorper.
 """
 
-let previewTank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "Rodriguezz", lastName: "Appleseed-Bonjoir", deliveryBuilding: "Apple Park, Cuperino, CA", deliveryType: "Window", deliveryNumber: 101), dailyMessage: lipsum)
-
+let previewTank = Tank(
+    appearance: Appearance(fillColor: .red, strokeColor: .orange, symbolColor: .orange, symbol: "printer.fill"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "Rodriguezz", lastName: "Appleseed-Bonjoir", deliveryBuilding: "Apple Park, Cuperino, CA", deliveryType: "Window", deliveryNumber: 101), dailyMessage: lipsum)
 #Preview("Front") {
     StatusCardFront(tank: previewTank)
 }
-
 #Preview("Back") {
     StatusCardBack(tank: previewTank)
 }
