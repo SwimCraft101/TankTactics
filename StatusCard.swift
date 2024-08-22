@@ -169,7 +169,7 @@ struct StatusCardBack: View {
                         MeterView(value: tank.metal, max: 30, color: .yellow)
                     }
                     .frame(width: inch(1.25), height: inch(4.25), alignment: .center)
-                    Viewport(board: board, coordinates: tank.coordinates, cellSize: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange)
+                    Viewport(coordinates: tank.coordinates, cellSize: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange)
                         .frame(width: inch(4.25), height: inch(4.25), alignment: .center)
                 }
                 .frame(width: inch(5.5), height: inch(4.25), alignment: .top)
@@ -212,7 +212,6 @@ struct MeterView: View {
 }
 
 struct Viewport: View {
-    @State var board: Board
     let coordinates: Coordinates
     let cellSize: CGFloat
     let viewRenderSize: Int
