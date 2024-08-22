@@ -13,14 +13,16 @@ struct TankTacticsApp: App {
         WindowGroup {
             HSplitView {
                 Viewport(board: board, coordinates: Coordinates(x: 0, y: 0), cellSize: 35, viewRenderSize: 7, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000)
-                HStack {
-                    Spacer()
-                    VStack {
-                        Button("Print All Status") {
-                            saveStatusCardsToPDF(board.objects.filter{ $0 is Tank } as! [Tank])
+                VStack {
+                    HStack {
+                        Spacer()
+                        VStack {
+                            Button("Print All Status") {
+                                saveStatusCardsToPDF(board.objects.filter{ $0 is Tank } as! [Tank])
+                            }
                         }
+                        Spacer()
                     }
-                    Spacer()
                 }
             }
         }
