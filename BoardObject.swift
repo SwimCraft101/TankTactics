@@ -21,12 +21,12 @@ struct Coordinates: Equatable {
 }
 
 struct Appearance: Equatable {
-    let fillColor: Color
-    let strokeColor: Color
-    let symbolColor: Color
-    let symbol: String
+    var fillColor: Color
+    var strokeColor: Color
+    var symbolColor: Color
+    var symbol: String
 }
-
+@Observable
 class BoardObject: Equatable {
     static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
         return lhs.coordinates == rhs.coordinates &&
