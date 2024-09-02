@@ -7,7 +7,7 @@
 import Foundation
 import SwiftUI
 
-struct Coordinates: Equatable {
+struct Coordinates: Equatable, Hashable {
     var x: Int
     var y: Int
     
@@ -20,17 +20,27 @@ struct Coordinates: Equatable {
     }
 }
 
-struct Appearance: Equatable {
+struct Appearance: Equatable, Hashable {
     var fillColor: Color
     var strokeColor: Color
     var symbolColor: Color
     var symbol: String
 }
+
 @Observable
-class BoardObject: Equatable {
+class BoardObject: Equatable, Hashable {
     static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
         return lhs.coordinates == rhs.coordinates &&
         lhs.appearance == rhs.appearance
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(fuelDropped)
+        hasher.combine(metalDropped)
+        hasher.combine(appearance)
+        hasher.combine(coordinates)
+        hasher.combine(health)
+        hasher.combine(defence)
     }
     
     var fuelDropped: Int = 0

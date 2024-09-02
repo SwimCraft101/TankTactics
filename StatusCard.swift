@@ -261,7 +261,7 @@ struct Viewport: View {
             ForEach(coordinates.x - viewRenderSize...coordinates.x + viewRenderSize, id: \.self) { x in
                 VStack {
                     ForEach((-coordinates.y - viewRenderSize)...(-coordinates.y + viewRenderSize), id: \.self) { y in
-                        var thisTile = board.objects.first(
+                        @State var thisTile = board.objects.first(
                             where: { $0.coordinates == Coordinates(x: x, y: -y) }) ?? nil
                         ZStack {
                             let thisTileAppearance = getAppearenceAtLocation(Coordinates(x: x, y: -y))
@@ -327,19 +327,21 @@ struct Viewport: View {
                                     }
                                 }
                             } else {
-                            Button("Add Wall") {
-                                board.objects.append(Wall(coordinates: Coordinates(x: x, y: -y)))
-                            }
-                            Button("Add Gift") {
-                                let totalReward: Int = 20
-                                let metalReward: Int = Int.random(in: 0...totalReward)
-                                let fuelReward: Int = totalReward - metalReward
-                                board.objects.append(Gift(coordinates: Coordinates(x: x, y: -y), fuelReward: fuelReward, metalReward: metalReward))
-                            }
+                                Button("Add Wall") {
+                                    board.objects.append(Wall(coordinates: Coordinates(x: x, y: -y)))
+                                }
+                                Button("Add Gift") {
+                                    let totalReward: Int = 20
+                                    let metalReward: Int = Int.random(in: 0...totalReward)
+                                    let fuelReward: Int = totalReward - metalReward
+                                    board.objects.append(Gift(coordinates: Coordinates(x: x, y: -y), fuelReward: fuelReward, metalReward: metalReward))
+                                }
                             }
                         }
+                        .focusable()
                         .onTapGesture {
-                            
+                            @Binding var editTile = board.objects.first(where: { $0 == thisTile })
+                            selectedObject = $editTile
                         }
                     }
                 }
@@ -348,7 +350,30 @@ struct Viewport: View {
     }
 }
 
-
+struct ValueEditor: View {
+    @Binding var tile: BoardObject?
+    var body: some View {
+        VStack {
+            if $tile.wrappedValue != nil {
+                @State var X: String = "\($tile.wrappedValue!.coordinates.x)"
+                @State var Y: String = "\($tile.wrappedValue!.coordinates.y)"
+                HStack {
+                    Text("Values")
+                    TextField("X", text: $X)
+                        .onSubmit {
+                            tile!.coordinates.x = Int(X) ?? 0
+                        }
+                    TextField("Y", text: $Y)
+                        .onSubmit {
+                            tile!.coordinates.y = Int(Y) ?? 0
+                        }
+                }
+            } else {
+                Text("Nothing Selected")
+            }
+        }
+    }
+}
 
 func saveStatusCardsToPDF(_ tanks: [Tank]) {
     var pages: [AnyView] = []
