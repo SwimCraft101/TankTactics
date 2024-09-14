@@ -14,7 +14,6 @@
 		59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */; };
 		59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */; };
 		59DF70BE2BF553F8001E64B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 59DF70BD2BF553F8001E64B3 /* Assets.xcassets */; };
-		59DF70C12BF553F8001E64B3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 59DF70C02BF553F8001E64B3 /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,11 +21,11 @@
 		592B80492C3A0A22008F41BF /* Tank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tank.swift; sourceTree = "<group>"; };
 		592B804F2C42AB9B008F41BF /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
 		595A2D082C6655A10086A452 /* StatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusCard.swift; sourceTree = "<group>"; };
+		59D77B232C93836600BD384A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoard.swift; sourceTree = "<group>"; };
 		59DF70B42BF553F7001E64B3 /* TankTactics.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TankTactics.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankTacticsApp.swift; sourceTree = "<group>"; };
 		59DF70BD2BF553F8001E64B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		59DF70C02BF553F8001E64B3 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		59DF70C22BF553F8001E64B3 /* TankTactics.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TankTactics.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -65,20 +64,12 @@
 		59DF70B62BF553F7001E64B3 /* TankTactics */ = {
 			isa = PBXGroup;
 			children = (
+				59D77B232C93836600BD384A /* Info.plist */,
 				59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */,
 				59DF70BD2BF553F8001E64B3 /* Assets.xcassets */,
 				59DF70C22BF553F8001E64B3 /* TankTactics.entitlements */,
-				59DF70BF2BF553F8001E64B3 /* Preview Content */,
 			);
 			path = TankTactics;
-			sourceTree = "<group>";
-		};
-		59DF70BF2BF553F8001E64B3 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				59DF70C02BF553F8001E64B3 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,7 +130,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				59DF70C12BF553F8001E64B3 /* Preview Assets.xcassets in Resources */,
 				59DF70BE2BF553F8001E64B3 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -293,11 +283,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_ASSET_PATHS = "\"TankTactics/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6ZYJVS964D;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TankTactics/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tank Tactics";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -322,11 +315,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_ASSET_PATHS = "\"TankTactics/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6ZYJVS964D;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TankTactics/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tank Tactics";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
