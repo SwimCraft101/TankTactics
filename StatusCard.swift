@@ -218,7 +218,6 @@ struct Viewport: View {
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
-    var rerenderView: Bool = false
     
     func getAppearenceAtLocation(_ localCoordinates: Coordinates) -> Appearance {
         for tile in board.objects {
@@ -338,38 +337,8 @@ struct Viewport: View {
                                 }
                             }
                         }
-                        .focusable()
-                        .onTapGesture {
-                            @Binding var editTile = board.objects.first(where: { $0 == thisTile })
-                            selectedObject = $editTile
-                        }
                     }
                 }
-            }
-        }
-    }
-}
-
-struct ValueEditor: View {
-    @Binding var tile: BoardObject?
-    var body: some View {
-        VStack {
-            if $tile.wrappedValue != nil {
-                @State var X: String = "\($tile.wrappedValue!.coordinates.x)"
-                @State var Y: String = "\($tile.wrappedValue!.coordinates.y)"
-                HStack {
-                    Text("Values")
-                    TextField("X", text: $X)
-                        .onSubmit {
-                            tile!.coordinates.x = Int(X) ?? 0
-                        }
-                    TextField("Y", text: $Y)
-                        .onSubmit {
-                            tile!.coordinates.y = Int(Y) ?? 0
-                        }
-                }
-            } else {
-                Text("Nothing Selected")
             }
         }
     }
@@ -396,3 +365,4 @@ let previewTank = Tank(
 #Preview("Back") {
     StatusCardBack(tank: previewTank)
 }
+
