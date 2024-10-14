@@ -18,149 +18,205 @@ struct PlayerDemographics {
     let lastName: String
     let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
     let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
-    let deliveryNumber: Int // Should be a Locker Number or Room Number
+    let deliveryNumber: String // Should be a Locker Number or Room Number
     
+    func savedText() -> String {
+        "PlayerDemographics(firstName: \(firstName), lastName: \(lastName), deliveryBuilding: \(deliveryBuilding), deliveryType: \(deliveryType), deliveryNumber: \(deliveryNumber))"
+    }
 }
 
-class Tank: BoardObject {
-    class Action {
-        var tank: Tank
+class Action {
+    var tank: Tank
+    
+    enum ActionType {
+        case move([Direction])
+        case fire([Direction])
+        case placeWall(Direction)
+        case upgrade(UpgradeType)
         
-        enum ActionType {
-            case move([Direction])
-            case fire([Direction])
-            case placeWall(Direction)
-            case upgrade(UpgradeType)
-            
-            enum UpgradeType {
-                case movementCost
-                case movementSpeed
-                case gunRange
-                case gunDamage
-                case gunCost
-                case highDetailSightRange
-                case lowDetailSightRange
-                case radarRange
-            }
+        enum UpgradeType {
+            case movementCost
+            case movementRange
+            case gunRange
+            case gunDamage
+            case gunCost
+            case highDetailSightRange
+            case lowDetailSightRange
+            case radarRange
         }
-        let type: ActionType
-        
-        init(_ type: ActionType, tank: Tank) {
-            self.type = type
-            self.tank = tank
+    }
+    let type: ActionType
+    
+    init(_ type: ActionType, tank: Tank) {
+        self.type = type
+        self.tank = tank
+    }
+    
+    func fuelCost() -> Int {
+        switch type {
+        case .move:
+            return tank.movementCost
+        case .fire:
+            return tank.gunCost
+        case .placeWall:
+            return 0
+        case .upgrade:
+            return 0
         }
-        
-        func fuelCost() -> Int {
-            switch type {
-            case .move:
-                return tank.movementCost
-            case .fire:
-                return tank.gunCost
-            case .placeWall:
-                return 0
-            case .upgrade:
-                return 0
-            }
-        }
-        
-        func metalCost() -> Int {
-            switch type {
-            case .move:
-                return 0
-            case .fire:
-                return 0
-            case .placeWall:
-                return 5
-            case .upgrade(let upgradeType):
-                switch upgradeType {
-                case .movementCost:
-                    return Int(power(base: 1, exponent: tank.movementCost) * 1.5 + 0)
-                case .movementSpeed:
-                    return Int(power(base: 2, exponent: tank.movementSpeed) * 1 + 0)
-                case .gunRange:
-                    return Int(power(base: 2, exponent: tank.gunRange) * 1 + 1)
-                case .gunDamage:
-                    return Int(power(base: 1, exponent: tank.gunDamage) * 1 + 1)
-                case .gunCost:
-                    return Int(power(base: 1, exponent: tank.gunCost) * 1.5 + 0)
-                case .highDetailSightRange:
-                    return Int(power(base: 1, exponent: tank.highDetailSightRange) * 3 + 0)
-                case .lowDetailSightRange:
-                    return Int(power(base: 1, exponent: tank.lowDetailSightRange) * 2 + 0)
-                case .radarRange:
-                    return Int(power(base: 1, exponent: tank.radarRange) * 1 + 0)
-                }
-            }
-        }
-        
-        func run() {
-            if tank.metal >= self.metalCost() && tank.fuel >= self.fuelCost() {
-                switch type {
-                case .move(let directions):
-                    tank.fuel -= self.fuelCost()
-                    tank.move(directions)
-                case .fire(let directions):
-                    tank.fuel -= self.fuelCost()
-                    tank.fire(directions)
-                case .placeWall(let direction):
-                    tank.metal -= self.metalCost()
-                    tank.placeWall(direction)
-                case .upgrade(let upgradeType):
-                    switch upgradeType {
-                    case .movementCost:
-                        tank.metal -= self.metalCost()
-                        tank.movementCost -= 1
-                    case .movementSpeed:
-                        tank.metal -= self.metalCost()
-                        tank.movementSpeed += 1
-                    case .gunRange:
-                        tank.metal -= self.metalCost()
-                        tank.gunRange += 1
-                    case .gunDamage:
-                        tank.metal -= self.metalCost()
-                        tank.gunDamage += 5
-                    case .gunCost:
-                        tank.metal -= self.metalCost()
-                        tank.gunCost -= 1
-                    case .highDetailSightRange:
-                        tank.metal -= self.metalCost()
-                        tank.highDetailSightRange += 1
-                    case .lowDetailSightRange:
-                        tank.metal -= self.metalCost()
-                        tank.lowDetailSightRange += 1
-                    case .radarRange:
-                        tank.metal -= self.metalCost()
-                        tank.radarRange += 1
-                    }
-                }
+    }
+    
+    func metalCost() -> Int {
+        switch type {
+        case .move:
+            return 0
+        case .fire:
+            return 0
+        case .placeWall:
+            return 5
+        case .upgrade(let upgradeType):
+            switch upgradeType {
+            case .movementCost:
+                return Int(power(base: 1, exponent: tank.movementCost) * 1.5 + 0)
+            case .movementRange:
+                return Int(power(base: 2, exponent: tank.movementRange) * 1 + 0)
+            case .gunRange:
+                return Int(power(base: 2, exponent: tank.gunRange) * 1 + 1)
+            case .gunDamage:
+                return Int(power(base: 1, exponent: tank.gunDamage) * 1 + 1)
+            case .gunCost:
+                return Int(power(base: 1, exponent: tank.gunCost) * 1.5 + 0)
+            case .highDetailSightRange:
+                return Int(power(base: 1, exponent: tank.highDetailSightRange) * 3 + 0)
+            case .lowDetailSightRange:
+                return Int(power(base: 1, exponent: tank.lowDetailSightRange) * 2 + 0)
+            case .radarRange:
+                return Int(power(base: 1, exponent: tank.radarRange) * 1 + 0)
             }
         }
     }
     
+    func run() {
+        if tank.metal >= self.metalCost() && tank.fuel >= self.fuelCost() {
+            switch type {
+            case .move(let directions):
+                tank.fuel -= self.fuelCost()
+                tank.move(directions)
+            case .fire(let directions):
+                tank.fuel -= self.fuelCost()
+                tank.fire(directions)
+            case .placeWall(let direction):
+                tank.metal -= self.metalCost()
+                tank.placeWall(direction)
+            case .upgrade(let upgradeType):
+                switch upgradeType {
+                case .movementCost:
+                    tank.metal -= self.metalCost()
+                    tank.movementCost -= 1
+                case .movementRange:
+                    tank.metal -= self.metalCost()
+                    tank.movementRange += 1
+                case .gunRange:
+                    tank.metal -= self.metalCost()
+                    tank.gunRange += 1
+                case .gunDamage:
+                    tank.metal -= self.metalCost()
+                    tank.gunDamage += 5
+                case .gunCost:
+                    tank.metal -= self.metalCost()
+                    tank.gunCost -= 1
+                case .highDetailSightRange:
+                    tank.metal -= self.metalCost()
+                    tank.highDetailSightRange += 1
+                case .lowDetailSightRange:
+                    tank.metal -= self.metalCost()
+                    tank.lowDetailSightRange += 1
+                case .radarRange:
+                    tank.metal -= self.metalCost()
+                    tank.radarRange += 1
+                }
+            }
+        }
+    }
+}
+
+class Tank: BoardObject {
     var playerDemographics: PlayerDemographics
     var dailyMessage: String
     
-    var fuel: Int = 10
-    var metal: Int = 5
+    var fuel: Int
+    var metal: Int
     
-    var movementCost: Int = 10
-    var movementSpeed: Int = 1
+    var movementCost: Int
+    var movementRange: Int
     
-    var gunRange: Int = 1
-    var gunDamage: Int = 5
-    var gunCost: Int = 10
+    var gunRange: Int
+    var gunDamage: Int
+    var gunCost: Int
     
-    var highDetailSightRange: Int = 1
-    var lowDetailSightRange: Int = 2
-    var radarRange: Int = 3
+    var highDetailSightRange: Int
+    var lowDetailSightRange: Int
+    var radarRange: Int
     
     init(
-        appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics, dailyMessage: String
+        appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
     ) {
         self.playerDemographics = playerDemographics
-        self.dailyMessage = dailyMessage
+        self.dailyMessage = ""
+        self.fuel = 10
+        self.metal = 5
+        
+        self.movementCost = 10
+        self.movementRange = 1
+        
+        self.gunRange = 1
+        self.gunDamage = 5
+        self.gunCost = 10
+        
+        self.highDetailSightRange = 1
+        self.lowDetailSightRange = 2
+        self.radarRange = 3
         super.init(appearance: appearance, coordinates: coordinates)
         self.health = 100
+    }
+    
+    init(
+        appearance: Appearance,
+        coordinates: Coordinates,
+        playerDemographics: PlayerDemographics,
+    
+        fuel: Int,
+        metal: Int,
+        health: Int,
+        defense: Int,
+        
+        movementCost: Int,
+        movementRange: Int,
+        
+        gunRange: Int,
+        gunDamage: Int,
+        gunCost: Int,
+        
+        highDetailSightRange: Int,
+        lowDetailSightRange: Int,
+        radarRange: Int,
+        
+        dailyMesage: String
+    ) {
+        self.fuel = fuel
+        self.metal = metal
+        self.movementCost = movementCost
+        self.movementRange = movementRange
+        self.gunRange = gunRange
+        self.gunDamage = gunDamage
+        self.gunCost = gunCost
+        self.highDetailSightRange = highDetailSightRange
+        self.lowDetailSightRange = lowDetailSightRange
+        self.radarRange = radarRange
+        self.playerDemographics = playerDemographics
+        self.dailyMessage = dailyMesage
+        super.init(appearance: appearance, coordinates: coordinates)
+        self.health = health
+        self.defense = defense
     }
     
     func runAction(_ action: Action) {
@@ -184,7 +240,7 @@ class Tank: BoardObject {
     }
     
     override func move(_ direction: [Direction]) {
-        if direction.count <= movementSpeed {
+        if direction.count <= movementRange {
             for step in direction {
                 fuel -= movementCost
                 coordinates.x += step.changeInXValue()
@@ -216,7 +272,7 @@ class Tank: BoardObject {
         }
         for tile in board.objects {
             if tile.coordinates.x == bulletPosition.x && tile.coordinates.y == bulletPosition.y {
-                tile.health -= gunDamage * Int(power(base: 0.95, exponent: tile.defence))
+                tile.health -= gunDamage * Int(power(base: 0.95, exponent: tile.defense))
             }
         }
     }
@@ -229,5 +285,9 @@ class Tank: BoardObject {
             }
         }
         board.objects.append(Wall(coordinates: wallCoordinates))
+    }
+    
+    override func savedText() -> String {
+        "Tank(appearance: \(appearance.savedText()), coordinates: \(coordinates.savedText()), playerDemographics: \(playerDemographics.savedText()), fuel: \(fuel), metal: \(metal), health: \(health), defense: \(defense), movementCost: \(movementCost), movementRange: \(movementRange), gunRange: \(gunRange), gunDamage: \(gunDamage), gunCost: \(gunCost), highDetailSightRange: \(highDetailSightRange), lowDetailSightRange: \(lowDetailSightRange), radarRange: \(radarRange), dailyMesage: \"\")"
     }
 }
