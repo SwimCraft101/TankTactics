@@ -42,12 +42,11 @@ struct Appearance: Equatable, Hashable {
     var symbol: String
     
     func savedText() -> String {
-        return "Appearance(fillColor: Color(red: \(NSColor(fillColor).cgColor.components![0]), green: \(NSColor(fillColor).cgColor.components![1]), blue: \(NSColor(fillColor).cgColor.components![2])), strokeColor: Color(red: \(NSColor(strokeColor).cgColor.components![0]), green: \(NSColor(strokeColor).cgColor.components![1]), blue: \(NSColor(strokeColor).cgColor.components![2])), symbolColor: Color(red: \(NSColor(symbolColor).cgColor.components![0]), green: \(NSColor(symbolColor).cgColor.components![1]), blue: \(NSColor(symbolColor).cgColor.components![2])), symbol: \(symbol))"
+        return "Appearance(fillColor: Color(red: \(NSColor(fillColor).cgColor.components![0]), green: \(NSColor(fillColor).cgColor.components![1]), blue: \(NSColor(fillColor).cgColor.components![2])), strokeColor: Color(red: \(NSColor(strokeColor).cgColor.components![0]), green: \(NSColor(strokeColor).cgColor.components![1]), blue: \(NSColor(strokeColor).cgColor.components![2])), symbolColor: Color(red: \(NSColor(symbolColor).cgColor.components![0]), green: \(NSColor(symbolColor).cgColor.components![1]), blue: \(NSColor(symbolColor).cgColor.components![2])), symbol: \"\(symbol)\")"
     }
 }
 
-@Observable
-class BoardObject: Equatable, Hashable {
+@Observable class BoardObject: Equatable, Hashable {
     static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
         return lhs.coordinates == rhs.coordinates &&
         lhs.appearance == rhs.appearance
@@ -63,7 +62,7 @@ class BoardObject: Equatable, Hashable {
     }
     
     func savedText() -> String {
-        return "BoardObject(\(appearance.savedText()), \(coordinates.savedText()), \(health), \(defense)), \(fuelDropped), \(metalDropped))"
+        return "BoardObject(\(appearance.savedText()), \(coordinates.savedText()), \(health), \(defense), \(fuelDropped), \(metalDropped))"
     }
     
     var fuelDropped: Int = 0
@@ -79,7 +78,9 @@ class BoardObject: Equatable, Hashable {
             board.objects.removeAll(where: {
                 $0 == self
             })
-            board.objects.append(Gift(coordinates: self.coordinates, fuelReward: fuelDropped, metalReward: metalDropped))
+            if(fuelDropped > 0 || metalDropped > 0) {
+                board.objects.append(Gift(coordinates: self.coordinates, fuelReward: fuelDropped, metalReward: metalDropped))
+            }
         }
     }
     
