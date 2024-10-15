@@ -6,6 +6,7 @@
 //  Defines all tank types and attributes
 
 func power(base: Double, exponent: Int) -> Double {
+    if exponent == 0 { return 1 }
     var value = base
     for _ in 1...exponent {
         value *= base
@@ -21,7 +22,7 @@ struct PlayerDemographics {
     let deliveryNumber: String // Should be a Locker Number or Room Number
     
     func savedText() -> String {
-        "PlayerDemographics(firstName: \(firstName), lastName: \(lastName), deliveryBuilding: \(deliveryBuilding), deliveryType: \(deliveryType), deliveryNumber: \(deliveryNumber))"
+        "PlayerDemographics(firstName: \"\(firstName)\", lastName: \"\(lastName)\", deliveryBuilding: \"\(deliveryBuilding)\", deliveryType: \"\(deliveryType)\", deliveryNumber: \"\(deliveryNumber)\")"
     }
 }
 
@@ -52,6 +53,16 @@ class Action {
         self.tank = tank
     }
     
+    func isAlowed() -> Bool {
+        if self.fuelCost() > tank.fuel {
+            return false
+        }
+        if self.metalCost() > tank.metal {
+            return false
+        }
+        return true
+    }
+    
     func fuelCost() -> Int {
         switch type {
         case .move:
@@ -72,7 +83,7 @@ class Action {
         case .fire:
             return 0
         case .placeWall:
-            return 5
+            return 10
         case .upgrade(let upgradeType):
             switch upgradeType {
             case .movementCost:
@@ -96,7 +107,7 @@ class Action {
     }
     
     func run() {
-        if tank.metal >= self.metalCost() && tank.fuel >= self.fuelCost() {
+        if self.isAlowed() {
             switch type {
             case .move(let directions):
                 tank.fuel -= self.fuelCost()
@@ -242,11 +253,16 @@ class Tank: BoardObject {
     override func move(_ direction: [Direction]) {
         if direction.count <= movementRange {
             for step in direction {
-                fuel -= movementCost
                 coordinates.x += step.changeInXValue()
                 coordinates.y += step.changeInYValue()
+                if(!coordinates.inBounds()) {
+                    coordinates.x -= step.changeInXValue()
+                    coordinates.y -= step.changeInYValue()
+                    health -= 10
+                    return
+                }
                 for tile in board.objects {
-                    if tile.coordinates.x == coordinates.x && tile.coordinates.y == coordinates.y {
+                    if tile.coordinates.x == coordinates.x && tile.coordinates.y == coordinates.y && tile != self {
                         if tile is Gift {
                             metal += tile.metalDropped
                             fuel += tile.fuelDropped
@@ -256,6 +272,7 @@ class Tank: BoardObject {
                             coordinates.y -= step.changeInYValue()
                             health -= 10
                             tile.health -= 10
+                            return
                         }
                     }
                 }
@@ -269,10 +286,11 @@ class Tank: BoardObject {
             fuel -= gunCost
             bulletPosition.x += step.changeInXValue()
             bulletPosition.y += step.changeInYValue()
-        }
-        for tile in board.objects {
-            if tile.coordinates.x == bulletPosition.x && tile.coordinates.y == bulletPosition.y {
-                tile.health -= gunDamage * Int(power(base: 0.95, exponent: tile.defense))
+            for tile in board.objects {
+                if tile.coordinates.x == bulletPosition.x && tile.coordinates.y == bulletPosition.y {
+                    tile.health -= gunDamage * Int(power(base: 0.95, exponent: tile.defense))
+                    return
+                }
             }
         }
     }

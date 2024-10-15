@@ -127,7 +127,7 @@ struct ControlPanelView: View {
     var body: some View {
         VStack {
             HStack {
-                if(tank.fuel >= tank.gunCost) {
+                if tank.fuel >= tank.gunCost {
                     HStack {
                         ZStack {
                             Rectangle()
@@ -150,7 +150,7 @@ struct ControlPanelView: View {
                     .padding(.horizontal, -4)
                 }
                 
-                if(tank.fuel >= tank.movementCost) {
+                if tank.fuel >= tank.movementCost {
                     HStack {
                         ZStack {
                             Rectangle()
@@ -173,7 +173,7 @@ struct ControlPanelView: View {
                     .padding(.horizontal, -4)
                 }
                 
-                if(tank.metal >= 10) {
+                if tank.metal >= 10 {
                     HStack {
                         ZStack {
                             Rectangle()
@@ -239,7 +239,7 @@ struct UpgradeOption: View {
     }
     
     var body: some View {
-        if(checkUpgrade()) {
+        if checkUpgrade() {
             HStack {
                 Text("\(name): \(currentValue) \(unit) 􁉂 \(currentValue + upgradeIncrement) \(unit) (Costs \(upgradeCost) metal)")
                     .font(.system(size: inch(0.2)))
@@ -261,7 +261,7 @@ struct MeterView: View {
     let label: String
     let icon: String
     var body: some View {
-        if(value > 0) {
+        if value > 0 {
             ZStack {
                 Rectangle()
                     .foregroundColor(color)
@@ -275,8 +275,8 @@ struct MeterView: View {
                             .foregroundColor(.black)
                             .bold()
                         Spacer()
-                        if((CGFloat(value) / CGFloat(max)) >= 0.12) {
-                            if((CGFloat(value) / CGFloat(max)) >= 0.2) {
+                        if (CGFloat(value) / CGFloat(max)) >= 0.12 {
+                            if (CGFloat(value) / CGFloat(max)) >= 0.2 {
                                 Image(systemName: icon)
                                     .font(.system(size: inch(0.28)))
                                     .foregroundColor(.black)
@@ -303,7 +303,7 @@ struct Viewport: View {
     let radarRange: Int
     
     func getAppearenceAtLocation(_ localCoordinates: Coordinates) -> Appearance {
-        if(localCoordinates.inBounds()) {
+        if localCoordinates.inBounds() {
             for tile in board.objects {
                 if tile.coordinates.distanceTo(coordinates) <= radarRange {
                     if tile.coordinates.distanceTo(coordinates) <= lowDetailSightRange {
@@ -349,7 +349,7 @@ struct Viewport: View {
             return Appearance(fillColor: fog, strokeColor: fog, symbolColor: fog, symbol: "rectangle")
         }
     }
-
+    
     var body: some View {
         HStack {
             ForEach(coordinates.x - viewRenderSize...coordinates.x + viewRenderSize, id: \.self) { x in
@@ -360,12 +360,12 @@ struct Viewport: View {
                         ZStack {
                             let thisTileAppearance = getAppearenceAtLocation(Coordinates(x: x, y: -y))
                             Rectangle()
-                            .foregroundColor(thisTileAppearance.fillColor)
+                                .foregroundColor(thisTileAppearance.fillColor)
                                 .frame(width: cellSize, height: cellSize)
-                            .border(thisTileAppearance.strokeColor, width: cellSize / 10)
+                                .border(thisTileAppearance.strokeColor, width: cellSize / 10)
                                 .cornerRadius(cellSize / 10)
                             Image(systemName: thisTileAppearance.symbol)
-                            .foregroundColor(thisTileAppearance.symbolColor)
+                                .foregroundColor(thisTileAppearance.symbolColor)
                                 .frame(width: cellSize, height: cellSize)
                                 .font(.system(size: cellSize / 2))
                         }
@@ -373,6 +373,101 @@ struct Viewport: View {
                         .padding(.vertical, -4)
                         .contextMenu {
                             if thisTile != nil {
+                                if thisTile is Tank {
+                                    Button("Print Status...") {
+                                        saveStatusCardsToPDF([thisTile! as! Tank])
+                                    }
+                                    Menu("Apply Action") {
+                                        Menu("Move") {
+                                            DirectionOptions(depthRemaining: (thisTile as! Tank).movementRange, vector: []) {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.move($0), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                        }
+                                        Menu("Fire") {
+                                            DirectionOptions(depthRemaining: (thisTile as! Tank).gunRange, vector: []) {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.fire($0), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                        }
+                                        Menu("Build Wall") {
+                                            DirectionOptions(depthRemaining: 1, vector: []) {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.placeWall($0.first!), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                        }
+                                        Menu("Upgrade") {
+                                            Button("movementRange") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.movementRange), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("movementCost") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.movementCost), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("gunRange") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.gunRange), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("gunDamage") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.gunDamage), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("highDetailSightRange") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.highDetailSightRange), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("lowDetailSightRange") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.lowDetailSightRange), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("radarRange") {
+                                                for object in board.objects {
+                                                    if object == thisTile {
+                                                        Action(.upgrade(.radarRange), tank: object as! Tank).run()
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                        }
+                                    }
+                                }
                                 Menu("Attributes") {
                                     if thisTile is Tank {
                                         Section("   Player Demographics") {
@@ -415,17 +510,6 @@ struct Viewport: View {
                                     board.objects.removeAll(where: {
                                         $0 == thisTile})
                                 }
-                                if thisTile is Tank {
-                                    Button("Print Status...") {
-                                        saveStatusCardsToPDF([thisTile! as! Tank])
-                                    }
-                                    Menu("Apply Action...") {
-                                        Menu("Move...") {}
-                                        Menu("Fire...") {}
-                                        Menu("Build Wall...") {}
-                                        Menu("Upgrade...") {}
-                                    }
-                                }
                             } else {
                                 Button("Add Wall") {
                                     board.objects.append(Wall(coordinates: Coordinates(x: x, y: -y)))
@@ -439,6 +523,7 @@ struct Viewport: View {
                                 Button("Add Placeholder") {
                                     board.objects.append(TankPlaceholder(coordinates: Coordinates(x: x, y: -y)))
                                 }
+                                
                             }
                         }
                     }
@@ -448,6 +533,47 @@ struct Viewport: View {
             }
         }
         .frame(width: cellSize * CGFloat(viewRenderSize), height: cellSize * CGFloat(viewRenderSize))
+    }
+}
+
+struct DirectionOptions: View {
+    let depthRemaining: Int
+    var vector: [Direction]
+    var action: ([Direction]) -> Void
+    
+    var body: some View {
+        if depthRemaining > 0  {
+            Menu("North") {
+                DirectionOptions(depthRemaining: depthRemaining - 1, vector: vector + [.north], action: action)
+            }
+            Menu("South") {
+                DirectionOptions(depthRemaining: depthRemaining - 1, vector: vector + [.south], action: action)
+            }
+            Menu("East") {
+                DirectionOptions(depthRemaining: depthRemaining - 1, vector: vector + [.east], action: action)
+            }
+            Menu("West") {
+                DirectionOptions(depthRemaining: depthRemaining - 1, vector: vector + [.west], action: action)
+            }
+            if vector != [] {
+                Button("Go!") {
+                    action(vector)
+                }
+            }
+        } else {
+            Button("North") {
+                action(vector + [.north])
+            }
+            Button("South") {
+                action(vector + [.south])
+            }
+            Button("East") {
+                action(vector + [.east])
+            }
+            Button("West") {
+                action(vector + [.west])
+            }
+        }
     }
 }
 

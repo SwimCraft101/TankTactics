@@ -19,6 +19,13 @@ func getBoardState() -> String {
     return output
 }
 
+func runGameTick() {
+    for object in board.objects {
+        object.tick()
+    }
+    board.objects.append(board.objects.removeLast())
+}
+
 @main
 struct TankTacticsApp: App {
     var body: some Scene {
@@ -32,14 +39,11 @@ struct TankTacticsApp: App {
                             Button("Print All Status") {
                                 saveStatusCardsToPDF(board.objects.filter{ $0 is Tank } as! [Tank])
                             }
-                            Button("Give All 1 Fuel") {
-                                board.objects.forEach{
-                                    if $0 is Tank {
-                                        ($0 as! Tank).fuel += 1
-                                    }
-                                }
+                            Button("Force Game Tick") {
+                                runGameTick()
                             }
                             Text(getBoardState())
+                                .textSelection(.enabled)
                         }
                         Spacer()
                     }
