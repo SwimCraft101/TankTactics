@@ -11,7 +11,7 @@ import AppKit
 struct Coordinates: Equatable, Hashable {
     var x: Int
     var y: Int
-    let border = 7
+    let border = 12
     
     func distanceTo(_ other: Coordinates) -> Int {
         var deltax = abs(other.x - x)
@@ -31,7 +31,7 @@ struct Coordinates: Equatable, Hashable {
     }
     
     func savedText() -> String {
-        return "Coordinates(x: \(x), y: \(y))"
+        return "c(\(x),\(y))"
     }
 }
 
@@ -42,7 +42,7 @@ struct Appearance: Equatable, Hashable {
     var symbol: String
     
     func savedText() -> String {
-        return "Appearance(fillColor: Color(red: \(NSColor(fillColor).cgColor.components![0]), green: \(NSColor(fillColor).cgColor.components![1]), blue: \(NSColor(fillColor).cgColor.components![2])), strokeColor: Color(red: \(NSColor(strokeColor).cgColor.components![0]), green: \(NSColor(strokeColor).cgColor.components![1]), blue: \(NSColor(strokeColor).cgColor.components![2])), symbolColor: Color(red: \(NSColor(symbolColor).cgColor.components![0]), green: \(NSColor(symbolColor).cgColor.components![1]), blue: \(NSColor(symbolColor).cgColor.components![2])), symbol: \"\(symbol)\")"
+        return "a(\(Int(NSColor(fillColor).cgColor.components![0] * 255)),\(Int(NSColor(fillColor).cgColor.components![1] * 255)),\(Int(NSColor(fillColor).cgColor.components![2] * 255)),\(Int(NSColor(strokeColor).cgColor.components![0] * 255)),\(Int(NSColor(strokeColor).cgColor.components![1] * 255)),\(Int(NSColor(strokeColor).cgColor.components![2] * 255)),\(Int(NSColor(symbolColor).cgColor.components![0] * 255)),\(Int(NSColor(symbolColor).cgColor.components![1] * 255)),\(Int(NSColor(symbolColor).cgColor.components![2] * 255)),\"\(symbol)\")"
     }
 }
 
@@ -62,7 +62,7 @@ struct Appearance: Equatable, Hashable {
     }
     
     func savedText() -> String {
-        return "BoardObject(\(appearance.savedText()), \(coordinates.savedText()), \(health), \(defense), \(fuelDropped), \(metalDropped))"
+        return "BoardObject(\(appearance.savedText()), \(coordinates.savedText()), \(health), \(defense), \(fuelDropped), \(metalDropped))\n"
     }
     
     var fuelDropped: Int = 0
@@ -116,17 +116,32 @@ class Wall: BoardObject {
     }
     
     override func savedText() -> String {
-        return "Wall(Coordinates(x: \(self.coordinates.x), y: \(self.coordinates.y)))"
+        return "w(\(coordinates.x),\(coordinates.y)),"
     }
 }
 
 class Gift: BoardObject {
     init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {
-        super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift"), coordinates: coordinates)
+        if fuelReward == 0 {
+            super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "square.grid.2x2"), coordinates: coordinates)
+        } else if metalReward == 0 {
+            super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "fuelpump"), coordinates: coordinates)
+        } else {
+            super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift"), coordinates: coordinates)
+        }
         fuelDropped = fuelReward
         metalDropped = metalReward
     }
     override func savedText() -> String {
-        return "Gift(coordinates: Coordinates(x: \(self.coordinates.x), y: \(self.coordinates.y)), fuelReward: \(self.fuelDropped), metalReward: \(self.metalDropped))"
+        return "g(\(self.coordinates.x),\(self.coordinates.y),\(self.fuelDropped),\(self.metalDropped)),"
+    }
+}
+
+class TankPlaceholder: BoardObject {
+    init(coordinates: Coordinates) {
+        super.init(appearance: Appearance(fillColor: .gray, strokeColor: .black, symbolColor: .black, symbol: "questionmark.square.dashed"), coordinates: coordinates)
+    }
+    override func savedText() -> String {
+        "TankPlaceholder(coordinates: \(coordinates.savedText()))"
     }
 }
