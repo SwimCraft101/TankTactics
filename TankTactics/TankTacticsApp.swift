@@ -13,9 +13,9 @@ var uiViewport = Viewport(coordinates: Coordinates(x: 0, y: 0), cellSize: 35, vi
 func getBoardState() -> String {
     var output: String = "[\n"
     for object in board.objects {
-        output += "\(object.savedText()),\n"
+        output += object.savedText()
     }
-    output += "]"
+    output += "\n]"
     return output
 }
 
@@ -38,12 +38,24 @@ struct TankTacticsApp: App {
                         VStack {
                             Button("Print All Status") {
                                 saveStatusCardsToPDF(board.objects.filter{ $0 is Tank } as! [Tank])
+                                let virtualTank = board.objects.filter{
+                                    if $0 is Tank {
+                                        if ($0 as! Tank).isVirtualPlayer {
+                                            return true
+                                        }
+                                    }
+                                    return false
+                                }.first as! Tank
+                                NSWorkspace.shared.open(URL(string: "mailto:nlearbrewer@gmail.com?subject=Tank Tactics: \(Date.now.addingTimeInterval(86400).formatted(date: .complete, time: .omitted))&body=\(virtualTank.dailyMessage)"
+                                )!)
+                                createAndSavePDF(from: [AnyView(VirtualStatusCard(tank: virtualTank))], fileName: "Virtual Status Card")
                             }
                             Button("Force Game Tick") {
                                 runGameTick()
                             }
                             Text(getBoardState())
                                 .textSelection(.enabled)
+                                .font(.system(size: 5))
                         }
                         Spacer()
                     }
