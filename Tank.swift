@@ -22,7 +22,7 @@ struct PlayerDemographics {
     let deliveryNumber: String // Should be a Locker Number or Room Number
     
     func savedText() -> String {
-        "PlayerDemographics(firstName: \"\(firstName)\", lastName: \"\(lastName)\", deliveryBuilding: \"\(deliveryBuilding)\", deliveryType: \"\(deliveryType)\", deliveryNumber: \"\(deliveryNumber)\")"
+        "p(\"\(firstName)\",\"\(lastName)\",\"\(deliveryBuilding)\",\"\(deliveryType)\",\"\(deliveryNumber)\")"
     }
 }
 
@@ -168,6 +168,8 @@ class Tank: BoardObject {
     var lowDetailSightRange: Int
     var radarRange: Int
     
+    var isVirtualPlayer: Bool
+    
     init(
         appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
     ) {
@@ -186,6 +188,8 @@ class Tank: BoardObject {
         self.highDetailSightRange = 1
         self.lowDetailSightRange = 2
         self.radarRange = 3
+        
+        self.isVirtualPlayer = false
         super.init(appearance: appearance, coordinates: coordinates)
         self.health = 100
     }
@@ -211,7 +215,8 @@ class Tank: BoardObject {
         lowDetailSightRange: Int,
         radarRange: Int,
         
-        dailyMesage: String
+        dailyMessage: String,
+        _ isVirtualPlayer: Bool
     ) {
         self.fuel = fuel
         self.metal = metal
@@ -224,7 +229,8 @@ class Tank: BoardObject {
         self.lowDetailSightRange = lowDetailSightRange
         self.radarRange = radarRange
         self.playerDemographics = playerDemographics
-        self.dailyMessage = dailyMesage
+        self.dailyMessage = dailyMessage
+        self.isVirtualPlayer = isVirtualPlayer
         super.init(appearance: appearance, coordinates: coordinates)
         self.health = health
         self.defense = defense
@@ -237,17 +243,17 @@ class Tank: BoardObject {
     func formattedDailyMessage() -> String {
         var words = dailyMessage.split(separator: " ")
         var rows: [String] = []
-        for row in 0...25 {
+        for row in 0...24 {
             let rowMaxLength = Int(Double(25 - row) * 2 - 5.0)
             if words.isEmpty {
                 break
             }
-            rows.append("")
+            rows.append(" ")
             while rowMaxLength > rows[row].count + (words.first?.count ?? 9999999) {
                 rows[row] = "\(words.removeLast()) \(rows[row])"
             }
         }
-        return rows.reversed().joined(separator: "\n")
+        return rows.reversed().joined(separator: "\n") + ["\n"]
     }
     
     override func move(_ direction: [Direction]) {
@@ -306,6 +312,6 @@ class Tank: BoardObject {
     }
     
     override func savedText() -> String {
-        "Tank(appearance: \(appearance.savedText()), coordinates: \(coordinates.savedText()), playerDemographics: \(playerDemographics.savedText()), fuel: \(fuel), metal: \(metal), health: \(health), defense: \(defense), movementCost: \(movementCost), movementRange: \(movementRange), gunRange: \(gunRange), gunDamage: \(gunDamage), gunCost: \(gunCost), highDetailSightRange: \(highDetailSightRange), lowDetailSightRange: \(lowDetailSightRange), radarRange: \(radarRange), dailyMesage: \"\")"
+        "Tank(appearance: \(appearance.savedText()), coordinates: \(coordinates.savedText()), playerDemographics: \(playerDemographics.savedText()), fuel: \(fuel), metal: \(metal), health: \(health), defense: \(defense), movementCost: \(movementCost), movementRange: \(movementRange), gunRange: \(gunRange), gunDamage: \(gunDamage), gunCost: \(gunCost), highDetailSightRange: \(highDetailSightRange), lowDetailSightRange: \(lowDetailSightRange), radarRange: \(radarRange), dailyMessage: standardDailyMessage, \(isVirtualPlayer ? "true" : "false")),\n"
     }
 }
