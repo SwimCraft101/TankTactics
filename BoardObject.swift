@@ -11,6 +11,7 @@ import AppKit
 struct Coordinates: Equatable, Hashable {
     var x: Int
     var y: Int
+    var level: Int
     let border = 12
     
     func distanceTo(_ other: Coordinates) -> Int {
@@ -31,7 +32,19 @@ struct Coordinates: Equatable, Hashable {
     }
     
     func savedText() -> String {
-        return "c(\(x),\(y))"
+        return "c(\(x),\(y),\(level))"
+    }
+    
+    init(x: Int, y: Int) {
+        self.x = x
+        self.y = y
+        self.level = 0
+    }
+    
+    init(x: Int, y: Int, level: Int) {
+        self.x = x
+        self.y = y
+        self.level = level
     }
 }
 
@@ -82,6 +95,19 @@ struct Appearance: Equatable, Hashable {
                 board.objects.append(Gift(coordinates: self.coordinates, fuelReward: fuelDropped, metalReward: metalDropped))
             }
         }
+        if coordinates.level > 0 {
+            for tile in board.objects.filter({!($0 is Gift)}) {
+                if tile.coordinates.x == coordinates.x {
+                    if tile.coordinates.y == coordinates.y {
+                        if tile.coordinates.level == coordinates.level - 1 {
+                            return
+                        }
+                    }
+                }
+            }
+            coordinates.level -= 1
+            health -= 10
+        }
     }
     
     func move(_ direction: [Direction]) {
@@ -116,7 +142,23 @@ class Wall: BoardObject {
     }
     
     override func savedText() -> String {
-        return "w(\(coordinates.x),\(coordinates.y)),"
+        return "w(\(coordinates.x),\(coordinates.y),\(coordinates.level)),"
+    }
+}
+
+class RedWall: BoardObject {
+    init(_ coordinates: Coordinates) {
+        super.init(appearance: Appearance(fillColor: Color(hex: 0x330000), strokeColor: Color(hex: 0x330000), symbolColor: Color(hex: 0x330000), symbol: "rectangle.fill"), coordinates: coordinates)
+        defense = 1000
+    }
+    
+    init(coordinates: Coordinates) {
+        super.init(appearance: Appearance(fillColor: Color(hex: 0x330000), strokeColor: Color(hex: 0x330000), symbolColor: Color(hex: 0x330000), symbol: "rectangle.fill"), coordinates: coordinates)
+        defense = 1000
+    }
+    
+    override func savedText() -> String {
+        return "r(\(coordinates.x),\(coordinates.y),\(coordinates.level)),"
     }
 }
 
@@ -133,7 +175,27 @@ class Gift: BoardObject {
         metalDropped = metalReward
     }
     override func savedText() -> String {
-        return "g(\(self.coordinates.x),\(self.coordinates.y),\(self.fuelDropped),\(self.metalDropped)),"
+        return "g(\(self.coordinates.x),\(self.coordinates.y),\(coordinates.level),\(self.fuelDropped),\(self.metalDropped)),"
+    }
+    override func tick() {
+        if health <= 0 {
+            board.objects.removeAll(where: {
+                $0 == self
+            })
+        }
+    }
+}
+
+class DeluxeGift: Gift {
+    override init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {
+        super.init(coordinates: coordinates, fuelReward: fuelReward, metalReward: metalReward)
+        self.appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift.fill")
+        self.coordinates = coordinates
+        fuelDropped = fuelReward
+        metalDropped = metalReward
+    }
+    override func savedText() -> String {
+        return "d(\(self.coordinates.x),\(self.coordinates.y),\(coordinates.level),\(self.fuelDropped),\(self.metalDropped)),"
     }
 }
 

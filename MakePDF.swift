@@ -70,7 +70,7 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
 }
 
 func saveStatusCardsToPDF(_ tanks: [Tank]) {
-    var workingTanks = tanks.filter({ !$0.isVirtualPlayer })
+    var workingTanks = tanks.filter({ $0.virtualDelivery == nil })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[Tank?]] = []
     while true {
@@ -83,23 +83,35 @@ func saveStatusCardsToPDF(_ tanks: [Tank]) {
         }
     }
     for tankPair in tanksTwoByTwo {
-        pages.append(AnyView(HSplitView {
+        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
             StatusCardFront(tank: tankPair[0]!)
+                .frame(width: inch(5), height: inch(8))
+                .border(.black, width: 1)
             if tankPair[1] != nil {
                 StatusCardFront(tank: tankPair[1]!)
+                    .frame(width: inch(5), height: inch(8))
+                    .border(.black, width: 1)
             } else {
-                EmptyView()
-                    .frame(width: inch(5.5), height: inch(8.5))
+                Rectangle()
+                    .frame(width: inch(5), height: inch(8))
+                    .foregroundColor(.white)
+                    .border(.black, width: 1)
             }
         }))
-        pages.append(AnyView(HSplitView {
+        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
             if tankPair[1] != nil {
                 StatusCardBack(tank: tankPair[1]!)
+                    .frame(width: inch(5), height: inch(8))
+                    .border(.black, width: 1)
             } else {
-                EmptyView()
-                    .frame(width: inch(5.5), height: inch(8.5))
+                Rectangle()
+                    .frame(width: inch(5), height: inch(8))
+                    .foregroundColor(.white)
+                    .border(.black, width: 1)
             }
             StatusCardBack(tank: tankPair[0]!)
+                .frame(width: inch(5), height: inch(8))
+                .border(.black, width: 1)
         }))
     }
     createAndSavePDF(from: pages, fileName: "Status Cards")

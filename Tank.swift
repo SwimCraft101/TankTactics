@@ -20,9 +20,10 @@ struct PlayerDemographics {
     let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
     let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
     let deliveryNumber: String // Should be a Locker Number or Room Number
+    let kills: Int
     
     func savedText() -> String {
-        "p(\"\(firstName)\",\"\(lastName)\",\"\(deliveryBuilding)\",\"\(deliveryType)\",\"\(deliveryNumber)\")"
+        "p(\"\(firstName)\",\"\(lastName)\",\"\(deliveryBuilding)\",\"\(deliveryType)\",\"\(deliveryNumber)\",\(kills))"
     }
 }
 
@@ -44,6 +45,7 @@ class Action {
             case highDetailSightRange
             case lowDetailSightRange
             case radarRange
+            case repair
         }
     }
     let type: ActionType
@@ -83,25 +85,27 @@ class Action {
         case .fire:
             return 0
         case .placeWall:
-            return 10
+            return 5
         case .upgrade(let upgradeType):
             switch upgradeType {
             case .movementCost:
-                return Int(power(base: 1, exponent: tank.movementCost) * 1.5 + 0)
+                return Int(power(base: Double(tank.movementCost), exponent: 1) * 1.5 + 0)
             case .movementRange:
-                return Int(power(base: 2, exponent: tank.movementRange) * 1 + 0)
+                return Int(power(base: Double(tank.movementRange), exponent: 2) * 1 + 0)
             case .gunRange:
-                return Int(power(base: 2, exponent: tank.gunRange) * 1 + 1)
+                return Int(power(base: Double(tank.gunRange), exponent: 2) * 1 + 1)
             case .gunDamage:
-                return Int(power(base: 1, exponent: tank.gunDamage) * 1 + 1)
+                return Int(power(base: Double(tank.gunDamage), exponent: 1) * 1 + 1)
             case .gunCost:
-                return Int(power(base: 1, exponent: tank.gunCost) * 1.5 + 0)
+                return Int(power(base: Double(tank.gunCost), exponent: 1) * 1.5 + 0)
             case .highDetailSightRange:
-                return Int(power(base: 1, exponent: tank.highDetailSightRange) * 3 + 0)
+                return Int(power(base: Double(tank.highDetailSightRange), exponent: 1) * 3 + 0)
             case .lowDetailSightRange:
-                return Int(power(base: 1, exponent: tank.lowDetailSightRange) * 2 + 0)
+                return Int(power(base: Double(tank.lowDetailSightRange), exponent: 1) * 2 + 0)
             case .radarRange:
-                return Int(power(base: 1, exponent: tank.radarRange) * 1 + 0)
+                return Int(power(base: Double(tank.radarRange), exponent: 1) * 1 + 0)
+            case .repair:
+                return 3
             }
         }
     }
@@ -144,6 +148,9 @@ class Action {
                 case .radarRange:
                     tank.metal -= self.metalCost()
                     tank.radarRange += 1
+                case .repair:
+                    tank.metal -= self.metalCost()
+                    tank.health = min(100, tank.health + 5)
                 }
             }
         }
@@ -168,7 +175,7 @@ class Tank: BoardObject {
     var lowDetailSightRange: Int
     var radarRange: Int
     
-    var isVirtualPlayer: Bool
+    var virtualDelivery: String?
     
     init(
         appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
@@ -189,7 +196,7 @@ class Tank: BoardObject {
         self.lowDetailSightRange = 2
         self.radarRange = 3
         
-        self.isVirtualPlayer = false
+        self.virtualDelivery = nil
         super.init(appearance: appearance, coordinates: coordinates)
         self.health = 100
     }
@@ -216,7 +223,7 @@ class Tank: BoardObject {
         radarRange: Int,
         
         dailyMessage: String,
-        _ isVirtualPlayer: Bool
+        _ virtualDelivery: String?
     ) {
         self.fuel = fuel
         self.metal = metal
@@ -230,14 +237,10 @@ class Tank: BoardObject {
         self.radarRange = radarRange
         self.playerDemographics = playerDemographics
         self.dailyMessage = dailyMessage
-        self.isVirtualPlayer = isVirtualPlayer
+        self.virtualDelivery = virtualDelivery
         super.init(appearance: appearance, coordinates: coordinates)
         self.health = health
         self.defense = defense
-    }
-    
-    func runAction(_ action: Action) {
-        action.run()
     }
     
     func formattedDailyMessage() -> String {
@@ -272,6 +275,10 @@ class Tank: BoardObject {
                         if tile is Gift {
                             metal += tile.metalDropped
                             fuel += tile.fuelDropped
+                            if tile is DeluxeGift {
+                                health = min(100, health + Int.random(in: 1...2))
+                                defense += 1
+                            }
                             tile.health = 0
                         } else {
                             coordinates.x -= step.changeInXValue()
@@ -289,7 +296,6 @@ class Tank: BoardObject {
     func fire(_ direction: [Direction]) {
         var bulletPosition: Coordinates = coordinates
         for step in direction {
-            fuel -= gunCost
             bulletPosition.x += step.changeInXValue()
             bulletPosition.y += step.changeInYValue()
             for tile in board.objects {
@@ -302,7 +308,7 @@ class Tank: BoardObject {
     }
     
     func placeWall(_ direction: Direction) {
-        let wallCoordinates = Coordinates(x: coordinates.x + direction.changeInXValue(), y: coordinates.y + direction.changeInYValue())
+        let wallCoordinates = Coordinates(x: coordinates.x + direction.changeInXValue(), y: coordinates.y + direction.changeInYValue(), level: coordinates.level)
         for tile in board.objects {
             if tile.coordinates.x == wallCoordinates.x && tile.coordinates.y == wallCoordinates.y {
                 return
@@ -312,6 +318,78 @@ class Tank: BoardObject {
     }
     
     override func savedText() -> String {
-        "Tank(appearance: \(appearance.savedText()), coordinates: \(coordinates.savedText()), playerDemographics: \(playerDemographics.savedText()), fuel: \(fuel), metal: \(metal), health: \(health), defense: \(defense), movementCost: \(movementCost), movementRange: \(movementRange), gunRange: \(gunRange), gunDamage: \(gunDamage), gunCost: \(gunCost), highDetailSightRange: \(highDetailSightRange), lowDetailSightRange: \(lowDetailSightRange), radarRange: \(radarRange), dailyMessage: standardDailyMessage, \(isVirtualPlayer ? "true" : "false")),\n"
+        "Tank(appearance: \(appearance.savedText()), coordinates: \(coordinates.savedText()), playerDemographics: \(playerDemographics.savedText()), fuel: \(fuel), metal: \(metal), health: \(health), defense: \(defense), movementCost: \(movementCost), movementRange: \(movementRange), gunRange: \(gunRange), gunDamage: \(gunDamage), gunCost: \(gunCost), highDetailSightRange: \(highDetailSightRange), lowDetailSightRange: \(lowDetailSightRange), radarRange: \(radarRange), dailyMessage: standardDailyMessage, \((virtualDelivery != nil) ? ("\"" + virtualDelivery! + "\"") : "nil")),\n"
+    }
+}
+
+class DeadTank: BoardObject {
+    var killedByIndex: Int
+    var playerDemographics: PlayerDemographics
+    var dailyMessage: String
+    
+    var essence: Int
+    var energy: Int
+    
+    var virtualDelivery: String?
+    
+    override func tick() {}
+    
+    func formattedDailyMessage() -> String {
+        var words = dailyMessage.split(separator: " ")
+        var rows: [String] = []
+        for row in 0...24 {
+            let rowMaxLength = Int(Double(25 - row) * 2 - 5.0)
+            if words.isEmpty {
+                break
+            }
+            rows.append(" ")
+            while rowMaxLength > rows[row].count + (words.first?.count ?? 9999999) {
+                rows[row] = "\(words.removeLast()) \(rows[row])"
+            }
+        }
+        return rows.reversed().joined(separator: "\n") + ["\n"]
+    }
+    
+    override func savedText() -> String {
+        return "DeadTank(appearance: \(appearance.savedText()), killedByIndex: \(killedByIndex), playerDemographics: \(playerDemographics.savedText()), dailyMessage: standardDailyMessage, essence: \(essence), energy: \(energy), \((virtualDelivery != nil) ? ("\"" + virtualDelivery! + "\"") : "nil")),\n"
+    }
+    
+    init(
+        appearance: Appearance, killedByIndex: Int, playerDemographics: PlayerDemographics, dailyMessage: String, essence: Int, energy: Int, _ virtualDelivery: String?) {
+        self.killedByIndex = killedByIndex
+        self.essence = essence
+        self.energy = energy
+        self.playerDemographics = playerDemographics
+        self.dailyMessage = dailyMessage
+        self.virtualDelivery = virtualDelivery
+        super.init(appearance, Coordinates(x: 500, y: 500), 0, 0, 0, 0)
+    }
+    
+    init(_ tank: Tank, _ killedByIndex: Int) {
+        let essenceEarned = {
+            var amount: Int = 0
+            amount += Int(power(base: 1, exponent: tank.movementCost) * 1.5 + 0)
+            amount += Int(power(base: 2, exponent: tank.movementRange) * 1 + 0)
+            amount += Int(power(base: 2, exponent: tank.gunRange) * 1 + 1)
+            amount += Int(power(base: 1, exponent: tank.gunDamage) * 1 + 1)
+            amount += Int(power(base: 1, exponent: tank.gunCost) * 1.5 + 0)
+            amount += Int(power(base: 1, exponent: tank.highDetailSightRange) * 3 + 0)
+            amount += Int(power(base: 1, exponent: tank.lowDetailSightRange) * 2 + 0)
+            amount += Int(power(base: 1, exponent: tank.radarRange) * 1 + 0)
+            amount += 20 * tank.playerDemographics.kills
+            amount += Int(tank.fuel / 3)
+            amount += Int(tank.metal / 3)
+            amount += Int(tank.defense)
+            return amount
+        }
+        self.killedByIndex = killedByIndex
+        self.playerDemographics = tank.playerDemographics
+        self.dailyMessage = "You have died. Your achievemnts in life have been added together to grant you \(essenceEarned()) essence. You will now only recieve your status cards on Mortuus Mondays."
+        self.virtualDelivery = tank.virtualDelivery
+        
+        self.essence = essenceEarned()
+        self.energy = 1
+        
+        super.init(tank.appearance, Coordinates(x: 500, y: 500), 0, 0, 0, 0)
     }
 }
