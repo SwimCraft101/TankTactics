@@ -69,8 +69,61 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
     }
 }
 
-func saveStatusCardsToPDF(_ tanks: [Tank]) {
+func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) {
+    runGameTick()
     var workingTanks = tanks.filter({ $0.virtualDelivery == nil })
+    var pages: [AnyView] = []
+    var tanksTwoByTwo: [[DeadTank?]] = []
+    while true {
+        if workingTanks.count > 1 {
+            tanksTwoByTwo.append([workingTanks.removeFirst(), workingTanks.removeFirst()])
+        } else if workingTanks.count == 1 {
+            tanksTwoByTwo.append([workingTanks.removeFirst(), nil])
+        } else {
+            break
+        }
+    }
+    for tankPair in tanksTwoByTwo {
+        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
+            DeadStatusCardFront(tank: tankPair[0]!)
+                .frame(width: inch(5), height: inch(8))
+                .border(.black, width: 1)
+            if tankPair[1] != nil {
+                DeadStatusCardFront(tank: tankPair[1]!)
+                    .frame(width: inch(5), height: inch(8))
+                    .border(.black, width: 1)
+            } else {
+                Rectangle()
+                    .frame(width: inch(5), height: inch(8))
+                    .foregroundColor(.white)
+                    .border(.black, width: 1)
+            }
+        }))
+        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
+            if tankPair[1] != nil {
+                DeadStatusCardBack(tank: tankPair[1]!)
+                    .frame(width: inch(5), height: inch(8))
+                    .border(.black, width: 1)
+            } else {
+                Rectangle()
+                    .frame(width: inch(5), height: inch(8))
+                    .foregroundColor(.white)
+                    .border(.black, width: 1)
+            }
+            DeadStatusCardBack(tank: tankPair[0]!)
+                .frame(width: inch(5), height: inch(8))
+                .border(.black, width: 1)
+        }
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))))
+        
+    }
+    createAndSavePDF(from: pages, fileName: "Dead Status Cards")
+}
+
+func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBorderWarning: Bool) {
+    var workingTanks = tanks.filter({ $0.virtualDelivery == nil && !($0.science) })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[Tank?]] = []
     while true {
@@ -100,7 +153,7 @@ func saveStatusCardsToPDF(_ tanks: [Tank]) {
         }))
         pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
             if tankPair[1] != nil {
-                StatusCardBack(tank: tankPair[1]!)
+                StatusCardBack(tank: tankPair[1]!, showBorderWarning: showBorderWarning)
                     .frame(width: inch(5), height: inch(8))
                     .border(.black, width: 1)
             } else {
@@ -109,10 +162,14 @@ func saveStatusCardsToPDF(_ tanks: [Tank]) {
                     .foregroundColor(.white)
                     .border(.black, width: 1)
             }
-            StatusCardBack(tank: tankPair[0]!)
+            StatusCardBack(tank: tankPair[0]!, showBorderWarning: showBorderWarning)
                 .frame(width: inch(5), height: inch(8))
                 .border(.black, width: 1)
-        }))
+        }
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))))
+        
     }
     createAndSavePDF(from: pages, fileName: "Status Cards")
 }

@@ -31,22 +31,6 @@ struct StatusCardFront: View {
         ZStack {
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
-                    Spacer(minLength: inch(1.25))
-                    Text(tank.formattedDailyMessage())
-                        .font(.system(size: inch(0.15)))
-                        .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.leading)
-                        .fontDesign(.monospaced)
-                }
-                .rotationEffect(Angle(degrees: 90))
-                .frame(width: inch(5), height: inch(4), alignment: .center)
-                Spacer()
-                Spacer(minLength: inch(4))
-                
-            }
-            VStack(spacing: 0) {
-                VStack(spacing: 0) {
                     Spacer()
                     Text(tank.playerDemographics.firstName)
                         .foregroundColor(.black)
@@ -80,13 +64,27 @@ struct StatusCardFront: View {
                 .frame(width: inch(4.5), height: inch(4), alignment: .center)
             }
             VStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    Spacer(minLength: inch(1))
+                    Text(tank.formattedDailyMessage())
+                        .font(.system(size: inch(0.15)))
+                        .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
+                        .foregroundColor(.black)
+                        .multilineTextAlignment(.leading)
+                        .fontDesign(.monospaced)
+                }
+                .rotationEffect(Angle(degrees: 90))
+                .frame(width: inch(5), height: inch(4), alignment: .center)
+                Spacer()
+            }
+            VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     Image("")
                         .frame(width: inch(4.5), height: inch(4), alignment: .center)
                     if tank.fuel >= tank.metal {
-                        MeterView(value: tank.fuel, max: 30, color: .green, label: "fuel", icon: "fuelpump")
+                        MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
                     } else {
-                        MeterView(value: tank.metal, max: 30, color: .yellow, label: "metal", icon: "square.grid.2x2")
+                        MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
                     }
                     Spacer()
                 }
@@ -96,41 +94,59 @@ struct StatusCardFront: View {
                     Image("")
                         .frame(width: inch(4.5), height: inch(4), alignment: .center)
                 }
+                
             }
+            Text("") //empty for now (:
+                .font(.system(size: inch(0.15)))
+                .italic()
+                .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .center)
+                .rotationEffect(Angle(degrees: 45))
         }
     }
 }
 
 struct StatusCardBack: View {
     let tank: Tank
+    let showBorderWarning: Bool
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
+        if tank.science {
+            Text("You escaped the Moon!")
+                .font(.system(size: inch(0.75), weight: .bold, design: .default))
+                .frame(width: inch(5), height: inch(8))
+                .foregroundColor(.black)
+        } else {
+            ZStack {
+                VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        if tank.fuel >= tank.metal {
-                            MeterView(value: tank.fuel, max: 30, color: .green, label: "fuel", icon: "fuelpump")
-                            MeterView(value: tank.metal, max: 30, color: .yellow, label: "metal", icon: "square.grid.2x2")
-                        } else {
-                            MeterView(value: tank.metal, max: 30, color: .yellow, label: "metal", icon: "square.grid.2x2")
-                            MeterView(value: tank.fuel, max: 30, color: .green, label: "fuel", icon: "fuelpump")
+                        HStack(spacing: 0) {
+                            if tank.fuel >= tank.metal {
+                                MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
+                                MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
+                            } else if tank.fuel + tank.metal > 0 {
+                                MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
+                                MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
+                            } else {
+                                MeterView(value: tank.defense, max: 20, color: .blue, label: "defense", icon: "shield.righthalf.filled")
+                            }
                         }
+                        .frame(width: inch(1), height: inch(4), alignment: .leading)
+                        Viewport(coordinates: tank.coordinates, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
+                            .frame(width: inch(4), height: inch(4), alignment: .center)
                     }
-                    .frame(width: inch(1), height: inch(4), alignment: .center)
-                    Viewport(coordinates: tank.coordinates, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange)
-                        .frame(width: inch(4), height: inch(4), alignment: .center)
-                }
-                .frame(width: inch(5), height: inch(4), alignment: .top)
-                HStack(spacing: 0) {
-                    ControlPanelView(tank: tank)
-                        .frame(width: inch(4), height: inch(4), alignment: .topLeading)
+                    .frame(width: inch(5), height: inch(4), alignment: .top)
                     HStack(spacing: 0) {
-                        MeterView(value: tank.defense, max: 30, color: .blue, label: "defense", icon: "shield.righthalf.filled")
-                        MeterView(value: tank.health, max: 100, color: .red, label: "health", icon: "bolt.heart")
+                        ControlPanelView(tank: tank)
+                            .frame(width: inch(4), height: inch(4), alignment: .topLeading)
+                        HStack(spacing: 0) {
+                            if tank.fuel + tank.metal > 0 {
+                                MeterView(value: tank.defense, max: 20, color: .blue, label: "defense", icon: "shield.righthalf.filled")
+                            }
+                            MeterView(value: tank.health, max: 100, color: .red, label: "health", icon: "bolt.heart")
+                        }
+                        .frame(width: inch(1), height: inch(4), alignment: .trailing)
                     }
-                    .frame(width: inch(1), height: inch(4), alignment: .center)
+                    .frame(width: inch(5), height: inch(4), alignment: .bottom)
                 }
-                .frame(width: inch(5), height: inch(4), alignment: .bottom)
             }
         }
     }
@@ -154,7 +170,7 @@ struct ControlPanelView: View {
                                     .font(.system(size: inch(3 / CGFloat(tank.radarRange * 2 + 1))))
                             }
                             .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                            Text("Draw an 􀅾 over a square \(tank.gunRange) or fewer away from you to fire at it. Optionally, draw an arrow to indicate the missile’s path.\nCosts \(tank.gunCost) 􀵞.")
+                            Text("Draw an 􀅾 over a tile \(tank.gunRange) or fewer away from you to fire at it. Optionally, draw an arrow to indicate the missile’s path. Deals \(tank.gunDamage) 􀲗.\nCosts \(tank.gunCost) 􀵞.")
                                 .font(.system(size: inch(0.1)))
                                 .italic()
                                 .foregroundColor(.black)
@@ -172,7 +188,7 @@ struct ControlPanelView: View {
                                     .font(.system(size: inch(3 / CGFloat(tank.radarRange * 2 + 1))))
                             }
                             .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                            Text("Draw a 􀀀 in the viewport \(tank.movementRange) or fewer away from you to move there. Optionally, draw an arrow to indicate your path.\nCosts \(tank.movementCost) 􀵞.")
+                            Text("Draw a 􀀀 over a tile \(tank.movementRange) or fewer away from you to move there. Optionally, draw an arrow to indicate your path.\nCosts \(tank.movementCost) 􀵞.")
                                 .font(.system(size: inch(0.1)))
                                 .italic()
                                 .foregroundColor(.black)
@@ -190,7 +206,7 @@ struct ControlPanelView: View {
                                     .font(.system(size: inch(3 / CGFloat(tank.radarRange * 2 + 1))))
                             }
                             .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                            Text("Draw a 􀂒 over a tile in the viewport 1 or fewer away from you to build a wall there.\nCosts 5 􀇷.")
+                            Text("Draw a 􀂒 over a tile in the viewport adjacent to you to build a wall there.\nCosts 5 􀇷.")
                                 .font(.system(size: inch(0.1)))
                                 .italic()
                                 .foregroundColor(.black)
@@ -204,23 +220,23 @@ struct ControlPanelView: View {
                     .italic()
                     .foregroundColor(.black)
             }
-            UpgradeOption(name: "Movement Range", currentValue: tank.movementRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.movementRange), tank: tank).metalCost(), unit: "􀂒", icon: "car.rear.road.lane.distance.\(min(tank.movementRange, 5))", tankMetal: tank.metal)
-            UpgradeOption(name: "Movement Cost", currentValue: tank.movementCost, minmaxValue: 1, upgradeIncrement: -1, upgradeCost: Action(.upgrade(.movementCost), tank: tank).metalCost(), unit: "􀵞", icon: "dollarsign.gauge.chart.leftthird.topthird.rightthird", tankMetal: tank.metal)
+            UpgradeOption(name: "Movement Range", currentValue: tank.movementRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.movementRange), tank: tank).metalCost(), unit: "􀂒", icon: "car.rear.road.lane.distance.\(min(tank.movementRange, 5))", tankMetal: tank.metal, costUnit: "􀇷")
+            UpgradeOption(name: "Movement Cost", currentValue: tank.movementCost, minmaxValue: 1, upgradeIncrement: -1, upgradeCost: Action(.upgrade(.movementCost), tank: tank).metalCost(), unit: "􀵞", icon: "dollarsign.gauge.chart.leftthird.topthird.rightthird", tankMetal: tank.metal, costUnit: "􀇷")
             Spacer()
-            UpgradeOption(name: "Gun Range", currentValue: tank.gunRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.gunRange), tank: tank).metalCost(), unit: "􀂒", icon: "headlight.high.beam", tankMetal: tank.metal)
-            UpgradeOption(name: "Gun Damage", currentValue: tank.gunDamage, minmaxValue: 50, upgradeIncrement: 5, upgradeCost: Action(.upgrade(.gunDamage), tank: tank).metalCost(), unit: "%􀞽", icon: "bandage", tankMetal: tank.metal)
-            UpgradeOption(name: "Gun Cost", currentValue: tank.gunCost, minmaxValue: 7, upgradeIncrement: -1, upgradeCost: Action(.upgrade(.gunCost), tank: tank).metalCost(), unit: "􀵞", icon: "dollarsign.ring", tankMetal: tank.metal)
+            UpgradeOption(name: "Gun Range", currentValue: tank.gunRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.gunRange), tank: tank).metalCost(), unit: "􀂒", icon: "headlight.high.beam", tankMetal: tank.metal, costUnit: "􀇷")
+            UpgradeOption(name: "Gun Damage", currentValue: tank.gunDamage, minmaxValue: 50, upgradeIncrement: 5, upgradeCost: Action(.upgrade(.gunDamage), tank: tank).metalCost(), unit: "􀲗", icon: "bandage", tankMetal: tank.metal, costUnit: "􀇷")
+            UpgradeOption(name: "Gun Cost", currentValue: tank.gunCost, minmaxValue: 7, upgradeIncrement: -1, upgradeCost: Action(.upgrade(.gunCost), tank: tank).metalCost(), unit: "􀵞", icon: "dollarsign.ring", tankMetal: tank.metal, costUnit: "􀇷")
             Spacer()
             if tank.highDetailSightRange < tank.lowDetailSightRange && tank.highDetailSightRange < tank.radarRange {
-                UpgradeOption(name: "Camera Range", currentValue: tank.highDetailSightRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.highDetailSightRange), tank: tank).metalCost(), unit: "􀂒", icon: "camera", tankMetal: tank.metal)
+                UpgradeOption(name: "Camera Range", currentValue: tank.highDetailSightRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.highDetailSightRange), tank: tank).metalCost(), unit: "􀂒", icon: "camera", tankMetal: tank.metal, costUnit: "􀇷")
             }
             if tank.lowDetailSightRange < tank.radarRange {
-                UpgradeOption(name: "LiDAR Range", currentValue: tank.lowDetailSightRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.lowDetailSightRange), tank: tank).metalCost(), unit: "􀂒", icon: "laser.burst", tankMetal: tank.metal)
+                UpgradeOption(name: "LiDAR Range", currentValue: tank.lowDetailSightRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.lowDetailSightRange), tank: tank).metalCost(), unit: "􀂒", icon: "laser.burst", tankMetal: tank.metal, costUnit: "􀇷")
             }
-            UpgradeOption(name: "RADAR Range", currentValue: tank.radarRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.radarRange), tank: tank).metalCost(), unit: "􀂒", icon: "antenna.radiowaves.left.and.right", tankMetal: tank.metal)
+            UpgradeOption(name: "RADAR Range", currentValue: tank.radarRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.radarRange), tank: tank).metalCost(), unit: "􀂒", icon: "antenna.radiowaves.left.and.right", tankMetal: tank.metal, costUnit: "􀇷")
             Spacer()
             if tank.health < 100 {
-                UpgradeOption(name: "Repair Tank", currentValue: tank.health, minmaxValue: 100, upgradeIncrement: 5, upgradeCost: 3, unit: "%􀞽", icon: "wrench.and.screwdriver", tankMetal: tank.metal)
+                UpgradeOption(name: "Repair Tank", currentValue: tank.health, minmaxValue: 100, upgradeIncrement: 5, upgradeCost: 3, unit: "%􀞽", icon: "wrench.and.screwdriver", tankMetal: tank.metal, costUnit: "􀇷")
             }
             Spacer()
             Spacer()
@@ -237,6 +253,7 @@ struct UpgradeOption: View {
     let unit: String
     let icon: String
     let tankMetal: Int
+    let costUnit: String
     
     func checkUpgrade() -> Bool {
         if upgradeCost > tankMetal {
@@ -264,7 +281,7 @@ struct UpgradeOption: View {
                     .font(.system(size: inch(0.2)))
                     .frame(width: inch(0.4))
                     .foregroundColor(.black)
-                Text("\(name): \(currentValue) \(unit) 􁉂 \(currentValue + upgradeIncrement) \(unit) (Costs \(upgradeCost)􀇷)")
+                Text("\(name): \(currentValue) \(unit) 􁉂 \(currentValue + upgradeIncrement) \(unit) (Costs \(upgradeCost)\(costUnit))")
                     .font(.system(size: inch(0.2)))
                     .foregroundColor(.black)
                 Spacer()
@@ -325,6 +342,7 @@ struct Viewport: View {
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
+    let showBorderWarning: Bool
     
     func getAppearenceAtLocation(_ localCoordinates: Coordinates) -> Appearance {
         if localCoordinates.inBounds() {
@@ -333,6 +351,9 @@ struct Viewport: View {
                     continue
                 }
                 if tile.coordinates.level != coordinates.level {
+                    continue
+                }
+                if tile is DeadTank {
                     continue
                 }
                 if tile.coordinates.distanceTo(coordinates) <= radarRange {
@@ -370,7 +391,11 @@ struct Viewport: View {
         } else {
             if localCoordinates.distanceTo(coordinates) <= radarRange {
                 if localCoordinates.distanceTo(coordinates) <= lowDetailSightRange {
-                    return Wall(coordinates: Coordinates(x: 0, y: 0)).appearance
+                    if showBorderWarning {
+                        return Appearance(fillColor: .black, strokeColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill")
+                    } else {
+                        return Wall(coordinates: Coordinates(x: 0, y: 0)).appearance
+                    }
                 }
                 let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
                 return Appearance(fillColor: mysteryObject, strokeColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
@@ -381,281 +406,292 @@ struct Viewport: View {
     }
     
     var body: some View {
-        Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
-            ForEach(-coordinates.y - viewRenderSize...(-coordinates.y) + viewRenderSize, id: \.self) { y in
-                GridRow {
-                    ForEach((coordinates.x - viewRenderSize)...(coordinates.x + viewRenderSize), id: \.self) { x in
-                        @State var thisTile = board.objects.first(
-                            where: { $0.coordinates == Coordinates(x: x, y: -y, level: coordinates.level) }) ?? nil
-                        GeometryReader { geometry in
-                            ZStack {
-                                let thisTileAppearance = getAppearenceAtLocation(Coordinates(x: x, y: -y, level: coordinates.level))
-                                Rectangle()
-                                    .foregroundColor(thisTileAppearance.fillColor)
-                                    .border(thisTileAppearance.strokeColor, width: geometry.size.height / 10)
-                                    .cornerRadius(geometry.size.height / 10)
-                                Image(systemName: thisTileAppearance.symbol)
-                                    .foregroundColor(thisTileAppearance.symbolColor)
-                                    .font(.system(size: geometry.size.height / 2))
-                            }
-                            .contextMenu {
-                                if thisTile != nil {
-                                    if thisTile is Tank {
-                                        Button("􀎚 Print Status...") {
-                                            saveStatusCardsToPDF([thisTile! as! Tank])
-                                        }
-                                        Menu("Apply Action") {
-                                            if (thisTile as! Tank).fuel >= (thisTile as! Tank).movementCost {
-                                                Menu("􀀀 Move") {
-                                                    DirectionOptions(depth: (thisTile as! Tank).movementRange, vector: []) {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.move($0), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                }
-                                            } else {
-                                                Text("􀀀 Move")
-                                            }
-                                            if (thisTile as! Tank).fuel >= (thisTile as! Tank).gunCost {
-                                                Menu("􀅾 Fire") {
-                                                    DirectionOptions(depth: (thisTile as! Tank).gunRange, vector: []) {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.fire($0), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                }
-                                            } else {
-                                                Text("􀅾 Fire")
-                                            }
-                                            if (thisTile as! Tank).metal >= 5 {
-                                                Menu("􀂒 Build Wall") {
-                                                    DirectionOptions(depth: 1, vector: []) {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.placeWall($0.first!), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                }
-                                            } else {
-                                                Text("􀂒 Build Wall")
-                                            }
-                                            Section("􀇷 Upgrade") {
-                                                if (thisTile as! Tank).metal >= Action(.upgrade(.movementRange), tank: thisTile as! Tank).metalCost() {
-                                                    Button("􂊼 Movement Range") {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.upgrade(.movementRange), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                } else {
-                                                    Text("􂊼 Movement Range")
-                                                }
-                                                if (thisTile as! Tank).metal >= Action(.upgrade(.movementCost), tank: thisTile as! Tank).metalCost() {
-                                                    Button("􂧉 Movement Cost") {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.upgrade(.movementCost), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                } else {
-                                                    Text("􂧉 Movement Cost")
-                                                }
-                                                Spacer()
-                                                if (thisTile as! Tank).metal >= Action(.upgrade(.gunRange), tank: thisTile as! Tank).metalCost() {
-                                                    Button("􀾲 Gun Range") {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.upgrade(.gunRange), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                } else {
-                                                    Text("􀾲 Gun Range")
-                                                }
-                                                if (thisTile as! Tank).metal >= Action(.upgrade(.gunDamage), tank: thisTile as! Tank).metalCost() { Button("􀎓 Gun Damage") {
-                                                    for object in board.objects {
-                                                        if object == thisTile {
-                                                            Action(.upgrade(.gunDamage), tank: object as! Tank).run()
-                                                        }
-                                                    }
-                                                    runGameTick()
-                                                }
-                                                } else {
-                                                    Text("􀎓 Gun Damage")
-                                                }
-                                                if (thisTile as! Tank).metal >= Action(.upgrade(.gunCost), tank: thisTile as! Tank).metalCost() { Button("􂮈 Gun Cost") {
-                                                    for object in board.objects {
-                                                        if object == thisTile {
-                                                            Action(.upgrade(.gunCost), tank: object as! Tank).run()
-                                                        }
-                                                    }
-                                                    runGameTick()
-                                                }
-                                                } else {
-                                                    Text("􂮈 Gun Cost")
-                                                }
-                                                Spacer()
-                                                if Action(.upgrade(.highDetailSightRange), tank: thisTile as! Tank).isAlowed() {
-                                                    Button("􀌞 Camera Range") {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.upgrade(.highDetailSightRange), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                } else {
-                                                    Text("􀌞 Camera Range")
-                                                }
-                                                if Action(.upgrade(.lowDetailSightRange), tank: thisTile as! Tank).isAlowed() {
-                                                    Button("􂁝 LiDAR Range") {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.upgrade(.lowDetailSightRange), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                } else {
-                                                    Text("􂁝 LiDAR Range")
-                                                }
-                                                if Action(.upgrade(.radarRange), tank: thisTile as! Tank).isAlowed() {
-                                                    Button("􀖀 RADAR Range") {
-                                                        for object in board.objects {
-                                                            if object == thisTile {
-                                                                Action(.upgrade(.radarRange), tank: object as! Tank).run()
-                                                            }
-                                                        }
-                                                        runGameTick()
-                                                    }
-                                                } else {
-                                                    Text("􀖀 RADAR Range")
-                                                }
-                                                Spacer()
-                                                if (thisTile as! Tank).metal >= Action(.upgrade(.repair), tank: thisTile as! Tank).metalCost() { Button("􀤊 Repair") {
-                                                    for object in board.objects {
-                                                        if object == thisTile {
-                                                            Action(.upgrade(.repair), tank: object as! Tank).run()
-                                                        }
-                                                    }
-                                                    runGameTick()
-                                                }
-                                                } else {
-                                                    Text("􀤊 Repair")
-                                                }
-                                            }
-                                        }
-                                    }
-                                    Menu("􀋲 Attributes") {
+        GeometryReader { geometry in
+            Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
+                ForEach(-coordinates.y - viewRenderSize...(-coordinates.y) + viewRenderSize, id: \.self) { y in
+                    GridRow {
+                        ForEach((coordinates.x - viewRenderSize)...(coordinates.x + viewRenderSize), id: \.self) { x in
+                            @State var thisTile = board.objects.first(
+                                where: { $0.coordinates == Coordinates(x: x, y: -y, level: coordinates.level) && !($0 is DeadTank)}) ?? nil
+                            let thisTileAppearance = getAppearenceAtLocation(Coordinates(x: x, y: -y, level: coordinates.level))
+                            TileView(appearance: thisTileAppearance)
+                                .contextMenu {
+                                    if thisTile != nil {
                                         if thisTile is Tank {
-                                            Section("   Player Demographics") {
-                                                Text("Name: \((thisTile! as! Tank).playerDemographics.firstName) \((thisTile! as! Tank).playerDemographics.lastName)")
-                                                Text("Delivery Location: \((thisTile! as! Tank).playerDemographics.deliveryType) \((thisTile! as! Tank).playerDemographics.deliveryNumber) in \((thisTile! as! Tank).playerDemographics.deliveryBuilding)")
+                                            Button("􀎚 Print Status...") {
+                                                saveStatusCardsToPDF([thisTile! as! Tank], doAlignmentCompensation: true, showBorderWarning: showBorderWarning)
                                             }
-                                            Section("   Tank Attributes") {
-                                                Text("Fuel: \((thisTile! as! Tank).fuel)")
-                                                Text("Metal: \((thisTile! as! Tank).metal)")
-                                                Menu("Daily Message") {
-                                                    Text((thisTile! as! Tank).dailyMessage)
-                                                }
-                                                Menu("Upgrades") {
-                                                    Section("   Movement") {
-                                                        Text("Speed: \((thisTile! as! Tank).movementRange) Tiles/Turn")
-                                                        Text("Cost: \((thisTile! as! Tank).movementCost) Fuel")
+                                            Menu("Apply Action") {
+                                                if (thisTile as! Tank).fuel >= (thisTile as! Tank).movementCost {
+                                                    Menu("􀀀 Move") {
+                                                        DirectionOptions(depth: (thisTile as! Tank).movementRange, vector: []) {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.move($0), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
                                                     }
-                                                    Section("   Weaponry") {
-                                                        Text("Range: \((thisTile! as! Tank).gunRange) Tiles")
-                                                        Text("Damage: \((thisTile! as! Tank).gunDamage) Health")
-                                                        Text("Cost: \((thisTile! as! Tank).gunCost) Fuel")
+                                                } else {
+                                                    Text("􀀀 Move")
+                                                }
+                                                if (thisTile as! Tank).fuel >= (thisTile as! Tank).gunCost {
+                                                    Menu("􀅾 Fire") {
+                                                        DirectionOptions(depth: (thisTile as! Tank).gunRange, vector: []) {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.fire($0), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
                                                     }
-                                                    Section("   Sight Range") {
-                                                        Text("High Detail: \((thisTile! as! Tank).highDetailSightRange) Tiles")
-                                                        Text("Low Detail: \((thisTile! as! Tank).lowDetailSightRange) Tiles")
-                                                        Text("Radar: \((thisTile! as! Tank).radarRange) Tiles")
+                                                } else {
+                                                    Text("􀅾 Fire")
+                                                }
+                                                if (thisTile as! Tank).metal >= 5 {
+                                                    Menu("􀂒 Build Wall") {
+                                                        DirectionOptions(depth: 1, vector: []) {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.placeWall($0.first!), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    }
+                                                } else {
+                                                    Text("􀂒 Build Wall")
+                                                }
+                                                Section("􀇷 Upgrade") {
+                                                    if (thisTile as! Tank).metal >= Action(.upgrade(.movementRange), tank: thisTile as! Tank).metalCost() {
+                                                        Button("􂊼 Movement Range") {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.upgrade(.movementRange), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    } else {
+                                                        Text("􂊼 Movement Range")
+                                                    }
+                                                    if (thisTile as! Tank).metal >= Action(.upgrade(.movementCost), tank: thisTile as! Tank).metalCost() {
+                                                        Button("􂧉 Movement Cost") {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.upgrade(.movementCost), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    } else {
+                                                        Text("􂧉 Movement Cost")
+                                                    }
+                                                    Spacer()
+                                                    if (thisTile as! Tank).metal >= Action(.upgrade(.gunRange), tank: thisTile as! Tank).metalCost() {
+                                                        Button("􀾲 Gun Range") {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.upgrade(.gunRange), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    } else {
+                                                        Text("􀾲 Gun Range")
+                                                    }
+                                                    if (thisTile as! Tank).metal >= Action(.upgrade(.gunDamage), tank: thisTile as! Tank).metalCost() { Button("􀎓 Gun Damage") {
+                                                        for object in board.objects {
+                                                            if object == thisTile {
+                                                                Action(.upgrade(.gunDamage), tank: object as! Tank).run()
+                                                            }
+                                                        }
+                                                        runGameTick()
+                                                    }
+                                                    } else {
+                                                        Text("􀎓 Gun Damage")
+                                                    }
+                                                    if (thisTile as! Tank).metal >= Action(.upgrade(.gunCost), tank: thisTile as! Tank).metalCost() { Button("􂮈 Gun Cost") {
+                                                        for object in board.objects {
+                                                            if object == thisTile {
+                                                                Action(.upgrade(.gunCost), tank: object as! Tank).run()
+                                                            }
+                                                        }
+                                                        runGameTick()
+                                                    }
+                                                    } else {
+                                                        Text("􂮈 Gun Cost")
+                                                    }
+                                                    Spacer()
+                                                    if Action(.upgrade(.highDetailSightRange), tank: thisTile as! Tank).isAlowed() {
+                                                        Button("􀌞 Camera Range") {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.upgrade(.highDetailSightRange), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    } else {
+                                                        Text("􀌞 Camera Range")
+                                                    }
+                                                    if Action(.upgrade(.lowDetailSightRange), tank: thisTile as! Tank).isAlowed() {
+                                                        Button("􂁝 LiDAR Range") {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.upgrade(.lowDetailSightRange), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    } else {
+                                                        Text("􂁝 LiDAR Range")
+                                                    }
+                                                    if Action(.upgrade(.radarRange), tank: thisTile as! Tank).isAlowed() {
+                                                        Button("􀖀 RADAR Range") {
+                                                            for object in board.objects {
+                                                                if object == thisTile {
+                                                                    Action(.upgrade(.radarRange), tank: object as! Tank).run()
+                                                                }
+                                                            }
+                                                            runGameTick()
+                                                        }
+                                                    } else {
+                                                        Text("􀖀 RADAR Range")
+                                                    }
+                                                    Spacer()
+                                                    if (thisTile as! Tank).metal >= Action(.upgrade(.repair), tank: thisTile as! Tank).metalCost() { Button("􀤊 Repair") {
+                                                        for object in board.objects {
+                                                            if object == thisTile {
+                                                                Action(.upgrade(.repair), tank: object as! Tank).run()
+                                                            }
+                                                        }
+                                                        runGameTick()
+                                                    }
+                                                    } else {
+                                                        Text("􀤊 Repair")
                                                     }
                                                 }
                                             }
                                         }
-                                        Section("   General Attributes") {
-                                            Text("XY: \(thisTile!.coordinates.x), \(thisTile!.coordinates.y)")
-                                            Text("Health: \(thisTile!.health)")
-                                            Text("Defense: \(thisTile!.defense)")
-                                            Text("Fuel Dropped: \(thisTile!.fuelDropped)")
-                                            Text("Metal Dropped: \(thisTile!.metalDropped)")
-                                        }
-                                    }
-                                    Button("􀈑 Delete") {
-                                        board.objects.removeAll(where: {
-                                            $0 == thisTile})
-                                    }
-                                    Menu("􀇳 Admin Move") {
-                                        DirectionOptions(depth: 3, vector: []) {
-                                            for index in board.objects.indices {
-                                                if board.objects[index] == thisTile {
-                                                    board.objects[index].move($0)
+                                        Menu("􀋲 Attributes") {
+                                            if thisTile is Tank {
+                                                Section("   Player Demographics") {
+                                                    Text("Name: \((thisTile! as! Tank).playerDemographics.firstName) \((thisTile! as! Tank).playerDemographics.lastName)")
+                                                    Text("Delivery Location: \((thisTile! as! Tank).playerDemographics.deliveryType) \((thisTile! as! Tank).playerDemographics.deliveryNumber) in \((thisTile! as! Tank).playerDemographics.deliveryBuilding)")
+                                                }
+                                                Section("   Tank Attributes") {
+                                                    Text("Fuel: \((thisTile! as! Tank).fuel)")
+                                                    Text("Metal: \((thisTile! as! Tank).metal)")
+                                                    Menu("Daily Message") {
+                                                        Text((thisTile! as! Tank).dailyMessage)
+                                                    }
+                                                    Menu("Upgrades") {
+                                                        Section("   Movement") {
+                                                            Text("Speed: \((thisTile! as! Tank).movementRange) Tiles/Turn")
+                                                            Text("Cost: \((thisTile! as! Tank).movementCost) Fuel")
+                                                        }
+                                                        Section("   Weaponry") {
+                                                            Text("Range: \((thisTile! as! Tank).gunRange) Tiles")
+                                                            Text("Damage: \((thisTile! as! Tank).gunDamage) Health")
+                                                            Text("Cost: \((thisTile! as! Tank).gunCost) Fuel")
+                                                        }
+                                                        Section("   Sight Range") {
+                                                            Text("High Detail: \((thisTile! as! Tank).highDetailSightRange) Tiles")
+                                                            Text("Low Detail: \((thisTile! as! Tank).lowDetailSightRange) Tiles")
+                                                            Text("Radar: \((thisTile! as! Tank).radarRange) Tiles")
+                                                        }
+                                                    }
                                                 }
                                             }
-                                            runGameTick()
-                                        }
-                                        Button("􀄿 Increase Level") {
-                                            for index in board.objects.indices {
-                                                if board.objects[index] == thisTile {
-                                                    board.objects[index].coordinates.level += 1
-                                                }
+                                            Section("   General Attributes") {
+                                                Text("XY: \(thisTile!.coordinates.x), \(thisTile!.coordinates.y)")
+                                                Text("Health: \(thisTile!.health)")
+                                                Text("Defense: \(thisTile!.defense)")
+                                                Text("Fuel Dropped: \(thisTile!.fuelDropped)")
+                                                Text("Metal Dropped: \(thisTile!.metalDropped)")
                                             }
-                                            runGameTick()
                                         }
-                                        Button("􀅀 Decrease Level") {
-                                            for index in board.objects.indices {
-                                                if board.objects[index] == thisTile {
-                                                    board.objects[index].coordinates.level -= 1
+                                        Button("􀈑 Delete") {
+                                            board.objects.removeAll(where: {
+                                                $0 == thisTile})
+                                        }
+                                        Menu("􀇳 Admin Move") {
+                                            DirectionOptions(depth: 3, vector: []) {
+                                                for index in board.objects.indices {
+                                                    if board.objects[index] == thisTile {
+                                                        board.objects[index].move($0)
+                                                    }
                                                 }
+                                                runGameTick()
                                             }
-                                            runGameTick()
+                                            Button("􀄿 Increase Level") {
+                                                for index in board.objects.indices {
+                                                    if board.objects[index] == thisTile {
+                                                        board.objects[index].coordinates.level += 1
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                            Button("􀅀 Decrease Level") {
+                                                for index in board.objects.indices {
+                                                    if board.objects[index] == thisTile {
+                                                        board.objects[index].coordinates.level -= 1
+                                                    }
+                                                }
+                                                runGameTick()
+                                            }
+                                        }
+                                    } else {
+                                        Button("􀂒 Add Wall") {
+                                            board.objects.append(Wall(coordinates: Coordinates(x: x, y: -y)))
+                                        }
+                                        Button("􀂓 Add Red Wall") {
+                                            board.objects.append(RedWall(coordinates: Coordinates(x: x, y: -y)))
+                                        }
+                                        Button("􀑉 Add Gift") {
+                                            let totalReward: Int = 20
+                                            let metalReward: Int = Int.random(in: 0...totalReward)
+                                            let fuelReward: Int = totalReward - metalReward
+                                            board.objects.append(Gift(coordinates: Coordinates(x: x, y: -y), fuelReward: fuelReward, metalReward: metalReward))
+                                        }
+                                        Button("􀑊 Add Deluxe Gift") {
+                                            board.objects.append(DeluxeGift(coordinates: Coordinates(x: x, y: -y)))
+                                        }
+                                        Button("􀭉 Add Placeholder") {
+                                            board.objects.append(TankPlaceholder(coordinates: Coordinates(x: x, y: -y)))
+                                        }
+                                        Button("􀙭 Add Fire") {
+                                            board.objects.append(FireTile(coordinates: Coordinates(x: x, y: -y)))
                                         }
                                     }
-                                } else {
-                                    Button("􀂒 Add Wall") {
-                                        board.objects.append(Wall(coordinates: Coordinates(x: x, y: -y)))
-                                    }
-                                    Button("􀂓 Add Red Wall") {
-                                        board.objects.append(RedWall(coordinates: Coordinates(x: x, y: -y)))
-                                    }
-                                    Button("􀑉 Add Gift") {
-                                        let totalReward: Int = 20
-                                        let metalReward: Int = Int.random(in: 0...totalReward)
-                                        let fuelReward: Int = totalReward - metalReward
-                                        board.objects.append(Gift(coordinates: Coordinates(x: x, y: -y), fuelReward: fuelReward, metalReward: metalReward))
-                                    }
-                                    Button("􀑊 Add Deluxe Gift") {
-                                        let totalReward: Int = 20
-                                        let metalReward: Int = Int.random(in: 0...totalReward)
-                                        let fuelReward: Int = totalReward - metalReward
-                                        board.objects.append(DeluxeGift(coordinates: Coordinates(x: x, y: -y), fuelReward: fuelReward, metalReward: metalReward))
-                                    }
-                                    Button("􀭉 Add Placeholder") {
-                                        board.objects.append(TankPlaceholder(coordinates: Coordinates(x: x, y: -y)))
-                                    }
-                                    
                                 }
-                            }
                         }
                     }
                 }
             }
+            .frame(width: min(geometry.size.height, geometry.size.width), height: min(geometry.size.height, geometry.size.width), alignment: .center)
+        }
+    }
+}
+
+struct TileView: View {
+    let appearance: Appearance
+    var body: some View {
+        GeometryReader { geometry in
+            let shortestLength = min(geometry.size.width, geometry.size.height, inch(1))
+            ZStack {
+                Rectangle()
+                    .foregroundColor(appearance.fillColor)
+                    .border(appearance.strokeColor, width: shortestLength / 10)
+                    .cornerRadius(shortestLength / 10)
+                Image(systemName: appearance.symbol)
+                    .foregroundColor(appearance.symbolColor)
+                    .font(.system(size: shortestLength / 2))
+            }
+            .frame(width: shortestLength, height: shortestLength, alignment: .center)
         }
     }
 }
@@ -708,16 +744,19 @@ struct DirectionOptions: View {
 
 struct VirtualStatusCard: View {
     let tank: Tank
+    let showBorderWarning: Bool
     var body: some View {
         VStack(spacing: 0) {
-            Viewport(coordinates: tank.coordinates, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange)
-                .frame(width: inch(4), height: inch(4), alignment: .center)
+            HStack(spacing: 0) {
+                Viewport(coordinates: tank.coordinates, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
+                    .frame(width: inch(4), height: inch(4), alignment: .center)
+            }
             HStack(spacing: 0) {
                 ControlPanelView(tank: tank)
                     .frame(width: inch(4), height: inch(4), alignment: .top)
-                MeterView(value: tank.fuel, max: 30, color: .green, label: "fuel", icon: "fuelpump")
-                MeterView(value: tank.metal, max: 30, color: .yellow, label: "metal", icon: "square.grid.2x2")
-                MeterView(value: tank.defense, max: 30, color: .blue, label: "defense", icon: "shield.righthalf.filled")
+                MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
+                MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
+                MeterView(value: tank.defense, max: 20, color: .blue, label: "defense", icon: "shield.righthalf.filled")
                 MeterView(value: tank.health, max: 100, color: .red, label: "health", icon: "bolt.heart")
             }
         }
@@ -725,26 +764,3 @@ struct VirtualStatusCard: View {
     }
 }
 
-#Preview("Status Card") {
-    let example = Tank(appearance: Appearance(fillColor: .yellow, strokeColor: .gray, symbolColor: .orange, symbol: "printer"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "Rodriguezz", lastName: "Appleseed-Bonjoir", deliveryBuilding: "Apple Park, Cuperino, CA", deliveryType: "Window", deliveryNumber: "101", kills: 15), fuel: 16, metal: 14, health: 100, defense: 18, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: String(repeating: "a ", count: 1000), nil)
-    ZStack {
-        VStack {
-            VStack(spacing: 0) {
-                Spacer(minLength: inch(1.25))
-                Text(example.formattedDailyMessage())
-                    .font(.system(size: inch(0.15)))
-                    .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
-                    .foregroundColor(.black)
-                    .multilineTextAlignment(.leading)
-                    .fontDesign(.monospaced)
-            }
-            .rotationEffect(Angle(degrees: 90))
-            .frame(width: inch(5), height: inch(4), alignment: .center)
-            Spacer()
-            Spacer(minLength: inch(4))
-        }
-        Image("Status Card Front")
-            .resizable()
-            .scaledToFit()
-    }
-}
