@@ -1,5 +1,6 @@
 import Observation
 import SwiftUI
+
 @Observable class Board {
     var objects: [BoardObject]
     init(_ boardObjects: [BoardObject]) {
