@@ -59,7 +59,7 @@ struct Appearance: Equatable, Hashable {
     }
 }
 
-@Observable class BoardObject: Equatable, Hashable {
+@Observable class BoardObject: Equatable, Hashable, Identifiable {
     static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
         return lhs.coordinates == rhs.coordinates &&
         lhs.appearance == rhs.appearance
@@ -148,12 +148,12 @@ class Wall: BoardObject {
 
 class RedWall: BoardObject {
     init(_ coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: Color(hex: 0x330000), strokeColor: Color(hex: 0x330000), symbolColor: Color(hex: 0x330000), symbol: "rectangle.fill"), coordinates: coordinates)
+        super.init(appearance: Appearance(fillColor: Color(hex: 0x550000), strokeColor: Color(hex: 0x550000), symbolColor: Color(hex: 0x550000), symbol: "rectangle.fill"), coordinates: coordinates)
         defense = 1000
     }
     
     init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: Color(hex: 0x330000), strokeColor: Color(hex: 0x330000), symbolColor: Color(hex: 0x330000), symbol: "rectangle.fill"), coordinates: coordinates)
+        super.init(appearance: Appearance(fillColor: Color(hex: 0x550000), strokeColor: Color(hex: 0x550000), symbolColor: Color(hex: 0x550000), symbol: "rectangle.fill"), coordinates: coordinates)
         defense = 1000
     }
     
@@ -194,6 +194,16 @@ class DeluxeGift: Gift {
         fuelDropped = fuelReward
         metalDropped = metalReward
     }
+    init(coordinates: Coordinates) {
+        let totalReward: Int = 20
+        let metalReward: Int = Int.random(in: 0...totalReward)
+        let fuelReward: Int = totalReward - metalReward
+        super.init(coordinates: coordinates, fuelReward: fuelReward, metalReward: metalReward)
+        self.appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift.fill")
+        self.coordinates = coordinates
+        fuelDropped = fuelReward
+        metalDropped = metalReward
+    }
     override func savedText() -> String {
         return "d(\(self.coordinates.x),\(self.coordinates.y),\(coordinates.level),\(self.fuelDropped),\(self.metalDropped)),"
     }
@@ -205,5 +215,14 @@ class TankPlaceholder: BoardObject {
     }
     override func savedText() -> String {
         "TankPlaceholder(coordinates: \(coordinates.savedText()))"
+    }
+}
+
+class FireTile: BoardObject {
+    init(coordinates: Coordinates) {
+        super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .orange, symbol: "flame.fill"), coordinates: coordinates)
+    }
+    override func savedText() -> String {
+        "f(\(self.coordinates.x),\(self.coordinates.y)),"
     }
 }

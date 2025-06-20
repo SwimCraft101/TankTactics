@@ -1,4 +1,4 @@
-
+import Observation
 import SwiftUI
 @Observable class Board {
     var objects: [BoardObject]
@@ -6,18 +6,28 @@ import SwiftUI
         objects = boardObjects
     }
 }
+
 var board: Board = Board(boardObjects)
-#Preview("Board") {
-    Viewport(coordinates: Coordinates(x: 0, y: 0), cellSize: 250, viewRenderSize: Coordinates(x: 0, y: 0).border * 2 + 3, highDetailSightRange: 999, lowDetailSightRange: 999, radarRange: 999)
-}
+
 private func w(
-    _ x: Int, _ y: Int) -> Wall {
-    return Wall(Coordinates(x: x, y: y))
+    _ x: Int, _ y: Int, _ level: Int) -> BoardObject {
+        if level == 0 && Int.random(in: 0...29) == 0 {
+            return DeluxeGift(coordinates: Coordinates(x: x, y: y, level: level))
+        }
+        return Wall(Coordinates(x: x, y: y, level: level))
+}
+private func r(
+    _ x: Int, _ y: Int, _ level: Int) -> RedWall {
+        return RedWall(Coordinates(x: x, y: y, level: level))
 }
 private func g(
-    _ x: Int, _ y: Int, _ fuel: Int, _ metal: Int) -> Gift {
-    return Gift(coordinates: Coordinates(x: x, y: y), fuelReward: fuel, metalReward: metal)
+    _ x: Int, _ y: Int, _ level: Int, _ fuelAmount: Int, _ metalAmount: Int) -> Gift {
+        return Gift(coordinates: Coordinates(x: x, y: y, level: level), fuelReward: fuelAmount, metalReward: metalAmount)
 }
+private func d(
+    _ x: Int, _ y: Int, _ level: Int, _ fuelAmount: Int, _ metalAmount: Int) -> DeluxeGift {
+        return DeluxeGift(coordinates: Coordinates(x: x, y: y, level: level), fuelReward: fuelAmount, metalReward: metalAmount)
+    }
 private func a(
     _ fr: Int, _ fg: Int, _ fb: Int, _ br: Int, _ bg: Int, _ bb: Int, _ sr: Int, _ sg: Int, _ sb: Int, _ symbol: String) -> Appearance {
     let fill = Color(red: CGFloat(fr) / 256, green: CGFloat(fg) / 256, blue: CGFloat(fb) / 256)
@@ -26,46 +36,26 @@ private func a(
     return Appearance(fillColor: fill, strokeColor: border, symbolColor: symbolColor, symbol: symbol)
 }
 private func c(
-    _ x: Int, _ y: Int) -> Coordinates {
-    return Coordinates(x: x, y: y)
+    _ x: Int, _ y: Int, _ level: Int) -> Coordinates {
+        return Coordinates(x: x, y: y, level: level)
 }
 private func p(
-    _ a: String, _ b: String, _ c: String, _ d: String, _ e: String) -> PlayerDemographics {
-    return PlayerDemographics(firstName: a, lastName: b, deliveryBuilding: c, deliveryType: d, deliveryNumber: e)
+    _ a: String, _ b: String, _ c: String, _ d: String, _ e: String, _ f: Int) -> PlayerDemographics {
+        return PlayerDemographics(firstName: a, lastName: b, deliveryBuilding: c, deliveryType: d, deliveryNumber: e, kills: f)
 }
+private func m(
+    _ sender: String, _ message: String) -> String {
+    return "You receive the following message from \(sender): “\(message)” "
+}
+private func d(
+    _ message: String) -> String {
+    return "You hear a ghostly voice, haunting you and crying: “... \(message) ...”"
+}
+private func f(
+    _ x: Int, _ y: Int) -> FireTile {
+    return FireTile(coordinates: c(x,y,0))
+}
+
 let standardDailyMessage: String = ""
 
-var boardObjects: [BoardObject] = [
-    Tank(appearance: a(123,234,3,234,123,3,123,3,234,"medal"), coordinates: c(4,6), playerDemographics: p("Jackson","Sherrard","North Hall","Upstairs Locker","97"), fuel: 15, metal: 12, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(230,152,175,40,196,130,198,42,108,"music.note.tv.fill"), coordinates: c(4,1), playerDemographics: p("Lilli","Benko","Virginia Hall","Classroom","SR"), fuel: 1, metal: 0, health: 100, defense: 0, movementCost: 8, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 8, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 4, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(212,220,227,217,217,217,210,210,210,"ipad.gen2"), coordinates: c(4,-11), playerDemographics: p("Eric","Latourelle","Lingle Hall","Classroom","L1"), fuel: 9, metal: 0, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 10, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(2,123,247,247,61,49,247,206,2,"eraser"), coordinates: c(-3,6), playerDemographics: p("Craig","Kompelien","Lingle Hall","Classroom","L6"), fuel: 19, metal: 3, health: 100, defense: 0, movementCost: 8, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(131,246,239,19,76,131,56,231,55,"applewatch"), coordinates: c(8,-10), playerDemographics: p("Cade","Slepitza","Lingle Hall","Classroom","L10"), fuel: 10, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(41,207,66,247,247,247,0,0,0,"soccerball"), coordinates: c(-6,5), playerDemographics: p("Charlie","Cross","Lingle Hall","Locker","279"), fuel: 1, metal: 0, health: 100, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 9, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(188,4,228,203,110,173,65,146,213,"square.and.arrow.up.trianglebadge.exclamationmark.fill"), coordinates: c(-7,-2), playerDemographics: p("Mae","Markham","Lingle Hall","Locker","____"), fuel: 19, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(186,10,10,222,214,9,222,214,9,"rublesign.circle.fill"), coordinates: c(-1,4), playerDemographics: p("Jonathan","Bullock","Lingle Hall","Locker","253"), fuel: 1, metal: 0, health: 100, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 9, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(2,123,247,247,247,247,247,206,2,"plus"), coordinates: c(-2,-7), playerDemographics: p("Isaac","Allam","Lingle Hall","Locker","106"), fuel: -1, metal: 2, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 10, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 4, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,0,0,0,120,0,0,0,247,"eraser"), coordinates: c(-8,-5), playerDemographics: p("James","Chippendale","Lingle Hall","Locker","306"), fuel: 20, metal: 1, health: 100, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 9, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(20,114,0,9,72,0,44,22,7,"tree"), coordinates: c(-6,-12), playerDemographics: p("Caleb","Kuester","Lingle Hall","Locker","261"), fuel: 9, metal: 0, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 10, gunCost: 9, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 5, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,61,49,2,123,247,247,247,247,"arrowshape.backward.circle.fill"), coordinates: c(5,-7), playerDemographics: p("Michael","Petersen","Lingle Hall","Locker","267"), fuel: 9, metal: 0, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 2, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,206,2,247,206,2,0,0,0,"atom"), coordinates: c(1,4), playerDemographics: p("Eli","Samuel","Lingle Hall","Locker","155"), fuel: -1, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: "The tank two squares west of you sends the following message: 'we chill bro?'", false),
-    Tank(appearance: a(35,89,230,35,154,230,230,143,35,"pencil.circle"), coordinates: c(-4,0), playerDemographics: p("Riley","Allam","Lingle Hall","Locker","120"), fuel: -10, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(61,96,71,80,219,196,247,247,247,"carrot"), coordinates: c(-8,3), playerDemographics: p("Story Jane","Martin","Lingle Hall","Locker","237"), fuel: 1, metal: 1, health: 100, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(183,81,234,0,0,0,0,0,0,"eurosign.bank.building.fill"), coordinates: c(-2,8), playerDemographics: p("Grayson","Wood","Lingle Hall","Locker","251"), fuel: 6, metal: 3, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 10, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,47,87,0,0,0,247,247,247,"hare"), coordinates: c(4,12), playerDemographics: p("Dylan","Gutirrez","Lingle Hall","Locker","86"), fuel: 9, metal: 1, health: 100, defense: 0, movementCost: 10, movementRange: 2, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,32,68,119,119,119,247,243,0,"bolt.fill"), coordinates: c(12,0), playerDemographics: p("Parker","Smith","Lingle Hall","Locker","198"), fuel: 19, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(68,25,117,247,247,247,247,247,247,"tortoise.fill"), coordinates: c(10,-12), playerDemographics: p("Hayes","Atkinson","Lingle Hall","Locker","249"), fuel: -1, metal: 1, health: 100, defense: 0, movementCost: 10, movementRange: 2, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(87,150,152,208,183,208,230,224,162,"dpad.up.filled"), coordinates: c(0,-2), playerDemographics: p("Kezzie","Joyner","Lingle Hall","Locker","225"), fuel: 10, metal: 19, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 3, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,61,49,0,0,0,247,247,247,"dollarsign"), coordinates: c(3,-12), playerDemographics: p("Rhône","Fischer","Lingle Hall","Locker","163"), fuel: 9, metal: 0, health: 100, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 9, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(32,143,2,21,94,1,247,220,0,"bolt.shield"), coordinates: c(0,10), playerDemographics: p("Jack","Murphy","Lingle Hall","Locker","242"), fuel: 9, metal: 1, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 4, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(2,123,247,144,144,149,81,192,237,"scribble.variable"), coordinates: c(-7,8), playerDemographics: p("Henry","Ritz","Lingle Hall","Locker","231"), fuel: 19, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(144,144,149,0,0,0,247,247,247,"ipad"), coordinates: c(12,-11), playerDemographics: p("Judah","Paul","Lingle Hall","Locker","179"), fuel: 0, metal: 0, health: 90, defense: 0, movementCost: 8, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 8, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 4, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(26,36,66,221,105,0,210,210,210,"pencil.circle"), coordinates: c(4,4), playerDemographics: p("Will","Killmer","North Hall","Classroom","N201"), fuel: -1, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(2,123,247,247,247,247,144,144,149,"r.joystick.tilt.up.fill"), coordinates: c(-3,-7), playerDemographics: p("Luke","Brewer","North Hall","Upstairs Locker","79"), fuel: 19, metal: 1, health: 100, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 3, dailyMessage: "The tank adjacent to you sends the following message: 'Lemurs are Real.'", false),
-    Tank(appearance: a(247,151,2,120,0,0,247,247,247,"arrowkeys.fill"), coordinates: c(9,-3), playerDemographics: p("Lauren","Light","North Hall","Room","N101"), fuel: -1, metal: 5, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(242,241,247,173,164,245,235,15,15,"poweroutlet.type.g"), coordinates: c(8,2), playerDemographics: p("Winfield","Benko","North Hall","Front Desk","Atrium"), fuel: 9, metal: 4, health: 90, defense: 0, movementCost: 9, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(247,247,0,102,154,127,102,78,202,"pencil.circle.fill"), coordinates: c(-6,12), playerDemographics: p("Grant","Gombert","North Hall","Classroom Podium","N103"), fuel: 9, metal: 0, health: 100, defense: 0, movementCost: 10, movementRange: 2, gunRange: 1, gunDamage: 5, gunCost: 9, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(41,207,66,144,144,149,247,206,2,"pencil.circle.fill"), coordinates: c(-8,12), playerDemographics: p("Chase","Smith","North Hall","Downstairs Locker","35"), fuel: 19, metal: 1, health: 100, defense: 0, movementCost: 10, movementRange: 1, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 2, radarRange: 4, dailyMessage: standardDailyMessage, false),
-    Tank(appearance: a(249,153,4,43,209,68,43,209,68,"carrot"), coordinates: c(-12,0), playerDemographics: p("Nathan","Brewer","","",""), fuel: 30, metal: 19, health: 90, defense: 10, movementCost: 9, movementRange: 2, gunRange: 1, gunDamage: 5, gunCost: 10, highDetailSightRange: 2, lowDetailSightRange: 3, radarRange: 4, dailyMessage: standardDailyMessage, true),
-    w(-11,12),w(-11,11),w(-11,9),w(-11,8),w(-11,10),w(-10,12),w(-9,12),w(-9,11),w(-10,11),w(-10,10),w(-9,10),w(-9,9),w(-10,9),w(-10,8),w(-9,8),w(-9,7),w(-10,7),w(-11,7),w(-11,6),w(-10,6),w(-9,6),w(-9,5),w(-10,5),w(-11,5),w(-11,4),w(-10,4),w(-9,4),w(-9,3),w(-11,3),w(-10,3),w(-9,2),w(-10,2),w(-11,2),w(-11,1),w(-10,1),w(-9,1),w(-9,0),w(-10,0),w(-11,0),w(-11,-1),w(-10,-1),w(-9,-1),w(-9,-2),w(-10,-2),w(-11,-2),w(-11,-3),w(-10,-3),w(-9,-3),w(-9,-4),w(-10,-4),w(-11,-4),w(-11,-5),w(-10,-5),w(-9,-5),w(-9,-6),w(-10,-6),w(-11,-6),w(-11,-7),w(-10,-7),w(-9,-7),w(-9,-8),w(-10,-8),w(-11,-8),w(-11,-9),w(-10,-9),w(-9,-9),w(-9,-10),w(-10,-10),w(-11,-10),w(-11,-11),w(-10,-11),w(-9,-11),w(-9,-12),w(-10,-12),w(-11,-12),g(-12,12,1,19),g(-12,8,3,17),g(-12,4,9,11),g(-12,-4,2,18),g(-12,-8,3,17),g(-12,-12,2,18),w(-12,11),w(-12,10),w(-12,9),w(-12,7),w(-12,6),w(-12,5),w(-12,3),w(-12,2),w(-12,1),w(-12,-2),w(-12,-3),w(-12,-5),w(-12,-6),w(-12,-7),w(-12,-9),w(-12,-10),w(-12,-11),w(-7,11),w(-7,12),w(-7,10),w(-7,9),w(-6,9),w(-5,9),w(-4,9),w(-3,9),w(-3,10),w(-3,11),w(-2,11),w(-1,11),w(-1,10),w(-1,9),w(-1,8),w(-1,7),w(-2,7),w(-3,7),w(-4,7),w(-5,7),w(-6,7),w(-7,7),w(-7,6),w(-7,5),w(-5,5),w(-4,5),w(-3,5),w(-2,5),w(-1,5),w(0,5),w(0,4),w(0,3),w(-2,3),w(-2,1),w(-3,1),w(-4,1),w(-4,2),w(-4,3),w(-5,3),w(-6,3),w(-7,3),w(-7,2),w(-2,2),w(-7,1),w(-7,0),w(-7,-1),w(-6,-1),w(-5,-1),w(-4,-1),w(-3,-1),w(-2,-1),w(-1,-1),w(0,-1),w(1,-1),w(2,-1),w(2,0),w(2,1),w(2,2),w(2,3),w(2,5),w(2,6),w(2,7),w(2,8),w(2,9),w(2,10),w(2,11),w(1,11),w(1,10),w(1,9),w(1,8),w(1,7),w(0,1),w(-6,2),w(-6,1),w(-6,0),w(-5,11),w(11,12),w(10,11),w(12,11),w(11,10),w(9,12),w(9,10),w(10,9),w(12,9),w(8,11),w(8,9),w(9,8),w(11,8),w(7,12),w(7,10),w(7,8),w(8,7),w(7,6),w(9,6),w(10,7),w(11,6),w(12,7),g(9,11,3,17),g(11,9,11,9),g(10,8,3,17),g(10,6,12,8),g(7,9,8,12),w(-7,-3),w(-6,-3),w(-5,-3),w(-4,-3),w(-3,-3),w(-2,-3),w(0,-3),w(1,-3),w(2,-3),w(8,5),w(7,4),w(8,3),w(7,2),w(8,1),w(7,0),w(8,-1),w(7,-2),w(7,-4),w(-1,-3),w(-7,-4),w(-7,-5),w(-7,-6),w(-7,-7),w(-7,-8),w(-7,-9),w(-7,-10),w(-7,-11),w(-6,-11),w(-5,-11),w(-4,-11),w(-3,-11),w(-2,-11),w(-1,-11),w(0,-11),w(1,-11),w(2,-11),w(2,-10),w(2,-9),w(2,-8),w(2,-7),w(2,-6),w(2,-5),w(2,-4),w(-6,-4),w(-6,-5),w(-6,-6),w(-6,-7),w(-6,-8),w(-6,-9),w(-6,-10),w(-5,-10),w(-4,-10),w(-3,-10),w(-2,-10),w(-1,-10),w(0,-10),w(1,-10),w(1,-9),w(1,-8),w(1,-7),w(1,-6),w(1,-5),w(1,-4),w(0,-4),w(-1,-4),w(-2,-4),w(-3,-4),w(-4,-4),w(-5,-4),w(-5,-5),w(-4,-5),w(-3,-5),w(-2,-5),w(-1,-5),w(0,-5),w(0,-6),w(0,-7),w(0,-8),w(0,-9),w(-1,-9),w(-2,-9),w(-3,-9),w(-4,-9),w(-5,-9),w(-5,-8),w(-5,-7),w(-5,-6),w(8,-5),w(7,-6),w(8,-7),w(7,-8),w(8,-9),w(8,-11),w(7,-12),w(10,5),w(9,4),w(10,3),w(10,1),w(9,0),w(10,-1),w(9,-2),w(10,-3),w(9,-4),w(10,-5),w(9,-6),w(10,-7),w(9,-8),w(10,-9),w(9,-10),w(9,-12),w(-4,-6),w(-3,-6),w(-2,-6),w(-1,-6),w(-1,-8),w(-2,-8),w(-3,-8),w(-4,-8),w(-4,-7),w(12,5),w(11,4),w(12,3),w(11,2),w(12,1),w(11,0),w(12,-1),w(11,-2),w(12,-3),w(11,-4),w(12,-5),w(11,-6),w(12,-7),w(11,-8),w(12,-9),w(11,-10),w(11,-12),g(-1,2,19,1),g(-8,7,9,11),g(-3,8,0,20),g(4,10,19,1),g(5,2,16,4),g(4,-3,10,10),g(4,-12,11,9),g(4,-7,14,6),g(0,8,6,14),g(0,-2,1,19),g(11,-11,15,5),g(-6,6,14,6),g(-5,2,11,9),g(-2,12,9,11),g(-8,-10,2,18),g(-4,-12,5,15),g(4,6,13,7),g(-8,-5,19,1),g(-6,11,18,2),
-    ]
+var boardObjects: [BoardObject] = []
