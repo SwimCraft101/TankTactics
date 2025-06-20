@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5910A74D2E05F4A000B217BB /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5910A74C2E05F4A000B217BB /* Game.swift */; };
+		5910A74F2E05F4DD00B217BB /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5910A74E2E05F4DD00B217BB /* Message.swift */; };
 		592B7F802C3863F9001EA317 /* BoardObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592B7F7F2C3863E2001EA317 /* BoardObject.swift */; };
 		592B804A2C3A0A26008F41BF /* Tank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592B80492C3A0A22008F41BF /* Tank.swift */; };
 		592B80502C42ABAB008F41BF /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592B804F2C42AB9B008F41BF /* Direction.swift */; };
@@ -19,6 +21,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5910A74C2E05F4A000B217BB /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		5910A74E2E05F4DD00B217BB /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		592B7F7F2C3863E2001EA317 /* BoardObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardObject.swift; sourceTree = "<group>"; };
 		592B80492C3A0A22008F41BF /* Tank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tank.swift; sourceTree = "<group>"; };
 		592B804F2C42AB9B008F41BF /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
@@ -50,6 +54,8 @@
 				59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */,
 				592B7F7F2C3863E2001EA317 /* BoardObject.swift */,
 				592B80492C3A0A22008F41BF /* Tank.swift */,
+				5910A74C2E05F4A000B217BB /* Game.swift */,
+				5910A74E2E05F4DD00B217BB /* Message.swift */,
 				595A2D082C6655A10086A452 /* StatusCard.swift */,
 				596376A42CFB5BB000059FCA /* DeadStatusCard.swift */,
 				594D86F82CAF2F2B00916C89 /* MakePDF.swift */,
@@ -106,7 +112,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					59DF70B32BF553F7001E64B3 = {
 						CreatedOnToolsVersion = 15.4;
@@ -148,11 +154,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				592B804A2C3A0A26008F41BF /* Tank.swift in Sources */,
+				5910A74D2E05F4A000B217BB /* Game.swift in Sources */,
 				592B7F802C3863F9001EA317 /* BoardObject.swift in Sources */,
 				594D86F92CAF2F2B00916C89 /* MakePDF.swift in Sources */,
 				596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */,
 				59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */,
 				595A2D092C6655A10086A452 /* StatusCard.swift in Sources */,
+				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
 				59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */,
 			);
@@ -197,6 +205,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 6ZYJVS964D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -261,6 +270,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 6ZYJVS964D;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -292,7 +302,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 6ZYJVS964D;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -324,7 +333,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 6ZYJVS964D;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
