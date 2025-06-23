@@ -70,7 +70,6 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
 }
 
 func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) {
-    runGameTick()
     var workingTanks = tanks.filter({ $0.virtualDelivery == nil })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[DeadTank?]] = []
@@ -123,7 +122,7 @@ func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool
 }
 
 func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBorderWarning: Bool) {
-    var workingTanks = tanks.filter({ $0.virtualDelivery == nil && !($0.science) })
+    var workingTanks = tanks.filter({ $0.virtualDelivery == nil })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[Tank?]] = []
     while true {

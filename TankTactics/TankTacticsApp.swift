@@ -8,28 +8,12 @@
 import SwiftUI
 import AppKit
 
-func getBoardState() -> String {
-    var output: String = "[\n"
-    for object in board.objects {
-        output += object.savedText()
-    }
-    output += "\n]"
-    return output
-}
-
-func runGameTick() {
-    for object in board.objects {
-        object.tick()
-    }
-    board.objects.append(board.objects.removeLast())
-}
-
 @main struct TankTacticsApp: App {
     @State var levelDisplayed: Int = 0
     @State var showBorderWarning: Bool = false
     var DeadTanks: [DeadTank] = {
         var result: [DeadTank] = []
-        for object in board.objects.filter({ $0 is DeadTank }) {
+        for object in game.board.objects.filter({ $0 is DeadTank }) {
             result.append(object as! DeadTank)
         }
         return result
@@ -40,7 +24,7 @@ func runGameTick() {
                 VStack(spacing: 0) {
                     ForEach(DeadTanks) { thisTile in
                         TileView(appearance: thisTile.appearance)
-                            .contextMenu {
+                            /*.contextMenu {
                                 Button("􀎚 Print Status...") {
                                     saveDeadStatusCardsToPDF([thisTile], doAlignmentCompensation: true)
                                 }
@@ -48,12 +32,11 @@ func runGameTick() {
                                     if thisTile.essence >= 1 && thisTile.energy >= 1 {
                                         Menu("􀂒 Place Wall") {
                                             DirectionOptions(depth: thisTile.energy, vector: []) {
-                                                for object in board.objects {
+                                                for object in game.board.objects {
                                                     if object == thisTile {
                                                         DeadAction(.placeWall($0), tank: (object as! DeadTank)).run()
                                                     }
                                                 }
-                                                runGameTick()
                                             }
                                         }
                                     } else {
@@ -62,12 +45,11 @@ func runGameTick() {
                                     if thisTile.essence >= 3 && thisTile.energy >= 2 {
                                         Menu("􀅼 Place Gift") {
                                             DirectionOptions(depth: Int(thisTile.energy / 2), vector: []) {
-                                                for object in board.objects {
+                                                for object in game.board.objects {
                                                     if object == thisTile {
                                                         DeadAction(.placeGift($0), tank: (object as! DeadTank)).run()
                                                     }
                                                 }
-                                                runGameTick()
                                             }
                                         }
                                     } else {
@@ -76,12 +58,11 @@ func runGameTick() {
                                     if thisTile.energy >= 5 {
                                         Menu("􀅾 Harm Tank") {
                                             DirectionOptions(depth: thisTile.energy - 2, vector: []) {
-                                                for object in board.objects {
+                                                for object in game.board.objects {
                                                     if object == thisTile {
                                                         DeadAction(.harmTank($0), tank: (object as! DeadTank)).run()
                                                     }
                                                 }
-                                                runGameTick()
                                             }
                                         }
                                     } else {
@@ -90,24 +71,22 @@ func runGameTick() {
                                     Section("􀄭 Transmute") {
                                         if thisTile.energy >= 2 {
                                             Button("􀆿 Channel Energy") {
-                                                for object in board.objects {
+                                                for object in game.board.objects {
                                                     if object == thisTile {
                                                         DeadAction(.channelEnergy, tank: (object as! DeadTank)).run()
                                                     }
                                                 }
-                                                runGameTick()
                                             }
                                         } else {
                                             Text("􀆿 Channel Energy")
                                         }
                                         if thisTile.essence >= 2 {
                                             Button("􀋥 Burn Essence") {
-                                                for object in board.objects {
+                                                for object in game.board.objects {
                                                     if object == thisTile {
                                                         DeadAction(.burnEssence, tank: (object as! DeadTank)).run()
                                                     }
                                                 }
-                                                runGameTick()
                                             }
                                         } else {
                                             Text("􀋥 Burn Essence")
@@ -128,10 +107,10 @@ func runGameTick() {
                                     }
                                 }
                                 Button("􀈑 Delete") {
-                                    board.objects.removeAll(where: {
+                                    game.board.objects.removeAll(where: {
                                         $0 == thisTile})
                                 }
-                            }
+                            }*///TODO: Make the Context Menus work, assuming they are not replaced with a better system.
                     }
                 }
                 let level = levelDisplayed
@@ -141,8 +120,8 @@ func runGameTick() {
                         Spacer()
                         VStack {
                             Button("Print Living Status") {
-                                saveStatusCardsToPDF(board.objects.filter{ $0 is Tank } as! [Tank], doAlignmentCompensation: true, showBorderWarning: showBorderWarning)
-                                for virtualTank in board.objects.filter({
+                                saveStatusCardsToPDF(game.board.objects.filter{ $0 is Tank } as! [Tank], doAlignmentCompensation: true, showBorderWarning: showBorderWarning)
+                                for virtualTank in game.board.objects.filter({
                                     if $0 is Tank {
                                         if ($0 as! Tank).virtualDelivery != nil {
                                             return true
@@ -155,18 +134,10 @@ func runGameTick() {
                                 }
                             }
                             Button("Print Dead Status") {
-                                saveDeadStatusCardsToPDF(board.objects.filter{ $0 is DeadTank } as! [DeadTank], doAlignmentCompensation: true)
+                                saveDeadStatusCardsToPDF(game.board.objects.filter{ $0 is DeadTank } as! [DeadTank], doAlignmentCompensation: true)
                                 //TODO: Make Dead Status Cards work in email
                             }
-                            Button("Force Game Tick") {
-                                runGameTick()
-                            }
                             Stepper("Level Displayed", value: $levelDisplayed)
-                            Text(getBoardState())
-                                .textSelection(.enabled)
-                                .font(.system(size: 5))
-                                .lineSpacing(0.5)
-                                .lineLimit(100, reservesSpace: true)
                             Toggle("Show Border Warning", isOn: $showBorderWarning)
                         }
                         Spacer()
@@ -174,5 +145,23 @@ func runGameTick() {
                 }
             }
         }
+    }
+}
+
+
+precedencegroup ExponentiationPrecedence {
+    higherThan: MultiplicationPrecedence
+    associativity: right
+}
+
+infix operator ** : ExponentiationPrecedence
+
+func ** (lhs: Double, rhs: Double) -> Double {
+    return pow(lhs, rhs)
+}
+
+extension Array where Element: BoardObject & Equatable {
+    func erasedToAnyBoardObject() -> [AnyBoardObject] {
+        return self.map { AnyBoardObject($0) }
     }
 }
