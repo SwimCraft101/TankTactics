@@ -17,13 +17,18 @@ func power(base: Double, exponent: Int) -> Double {
     return value
 }
 
+protocol Player {
+    var playerDemographics: PlayerDemographics { get }
+}
+
 struct PlayerDemographics {
     let firstName: String
     let lastName: String
     let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
     let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
     let deliveryNumber: String // Should be a Locker Number or Room Number
-    let kills: Int
+    let virtualDelivery: String? // Should be an email adress
+    let kills: Int //TODO: Move this value elsewhere
     
     func savedText() -> String {
         "p(\"\(firstName)\",\"\(lastName)\",\"\(deliveryBuilding)\",\"\(deliveryType)\",\"\(deliveryNumber)\",\(kills))"
@@ -156,8 +161,8 @@ class Action {
                     tank.health = min(100, tank.health + 5)
                 }
             }
-            for deadTank in board.objects.filter({ $0 is DeadTank }) as! [DeadTank] {
-                if board.objects[deadTank.killedByIndex] == tank {
+            for deadTank in game.board.objects.filter({ $0 is DeadTank }) as! [DeadTank] {
+                if game.board.objects[deadTank.killedByIndex].id == tank.id {
                     deadTank.energy += 1
                 }
             }
@@ -166,6 +171,15 @@ class Action {
 }
 
 class Tank: BoardObject {
+    var fuelDropped: Int
+    var metalDropped: Int
+    
+    var appearance: Appearance
+    var coordinates: Coordinates?
+    
+    var health: Int
+    var defense: Int
+    
     var playerDemographics: PlayerDemographics
     var dailyMessage: String
     
@@ -183,9 +197,7 @@ class Tank: BoardObject {
     var lowDetailSightRange: Int
     var radarRange: Int
     
-    var virtualDelivery: String?
-    
-    var science: Bool
+    var virtualDelivery: String? // `nil` signifies standard delivery only. Should be a valid email address.
     
     init(
         appearance: Appearance, coordinates: Coordinates, playerDemographics: PlayerDemographics
@@ -194,6 +206,9 @@ class Tank: BoardObject {
         self.dailyMessage = ""
         self.fuel = 10
         self.metal = 5
+        
+        self.fuelDropped = 10
+        self.metalDropped = 5
         
         self.movementCost = 10
         self.movementRange = 1
@@ -207,9 +222,11 @@ class Tank: BoardObject {
         self.radarRange = 3
         
         self.virtualDelivery = nil
-        self.science = false
-        super.init(appearance: appearance, coordinates: coordinates)
         self.health = 100
+        self.defense = 0
+        
+        self.appearance = appearance
+        self.coordinates = coordinates
     }
     
     init(
@@ -234,11 +251,11 @@ class Tank: BoardObject {
         radarRange: Int,
         
         dailyMessage: String,
-        _ virtualDelivery: String?,
-        _ science: Bool
     ) {
         self.fuel = fuel
         self.metal = metal
+        self.fuelDropped = fuel
+        self.metalDropped = metal
         self.movementCost = movementCost
         self.movementRange = movementRange
         self.gunRange = gunRange
@@ -249,37 +266,10 @@ class Tank: BoardObject {
         self.radarRange = radarRange
         self.playerDemographics = playerDemographics
         self.dailyMessage = dailyMessage
-        self.virtualDelivery = virtualDelivery
-        self.science = science
-        super.init(appearance: appearance, coordinates: coordinates)
         self.health = health
         self.defense = defense
-    }
-    
-    override func tick() {
-        if coordinates.level > 0 {
-            for tile in board.objects.filter({!($0 is Gift)}) {
-                if tile.coordinates.x == coordinates.x {
-                    if tile.coordinates.y == coordinates.y {
-                        if tile.coordinates.level == coordinates.level - 1 {
-                            return
-                        }
-                    }
-                }
-            }
-            coordinates.level -= 1
-            health -= 10
-        }
-        if health <= 0 {
-            if self.fuel + self.metal >= 20 {
-                board.objects.append(DeluxeGift(coordinates: self.coordinates, fuelReward: self.fuel, metalReward: self.metal))
-            }
-            for object in board.objects.indices {
-                if board.objects[object] == self {
-                    board.objects[object] = DeadTank(self, 0)
-                }
-            }
-        }
+        self.appearance = appearance
+        self.coordinates = coordinates
     }
     
     func formattedDailyMessage() -> String {
@@ -299,32 +289,28 @@ class Tank: BoardObject {
         return rows.reversed().joined(separator: "\n") + ["\n"]
     }
     
-    override func move(_ direction: [Direction]) {
+    func move(_ direction: [Direction]) {
         if direction.count <= movementRange {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
-                if(!coordinates.inBounds()) {
-                    coordinates.x -= step.changeInXValue()
-                    coordinates.y -= step.changeInYValue()
+                coordinates!.x += step.changeInXValue()
+                coordinates!.y += step.changeInYValue()
+                if(!coordinates!.inBounds()) {
+                    coordinates!.x -= step.changeInXValue()
+                    coordinates!.y -= step.changeInYValue()
                     health -= 10
                     return
                 }
-                for tile in board.objects {
-                    if tile.coordinates == coordinates && tile != self {
+                for tile in game.board.objects {
+                    if tile.coordinates == coordinates && tile.id != id {
                         if tile is Gift {
                             metal += tile.metalDropped
                             fuel += tile.fuelDropped
-                            if tile is DeluxeGift {
-                                health = min(100, health + Int.random(in: 1...2))
-                                defense += 1
-                            }
                             tile.health = 0
                         } else if tile is DeadTank {
                             continue
                         } else {
-                            coordinates.x -= step.changeInXValue()
-                            coordinates.y -= step.changeInYValue()
+                            coordinates!.x -= step.changeInXValue()
+                            coordinates!.y -= step.changeInYValue()
                             health -= 10
                             tile.health -= 10
                             return
@@ -336,35 +322,40 @@ class Tank: BoardObject {
     }
     
     func fire(_ direction: [Direction]) {
-        var bulletPosition: Coordinates = coordinates
+        var bulletPosition: Coordinates = coordinates!
         for step in direction {
             bulletPosition.x += step.changeInXValue()
             bulletPosition.y += step.changeInYValue()
-            for tileIndex in board.objects.indices {
-                if board.objects[tileIndex].coordinates == bulletPosition {
-                    board.objects[tileIndex].health -= (gunDamage - board.objects[tileIndex].defense)
+            for tileIndex in game.board.objects.indices {
+                if game.board.objects[tileIndex].coordinates == bulletPosition {
+                    game.board.objects[tileIndex].health -= (gunDamage - game.board.objects[tileIndex].defense)
                 }
             }
         }
     }
     
     func placeWall(_ direction: Direction) {
-        let wallCoordinates = Coordinates(x: coordinates.x + direction.changeInXValue(), y: coordinates.y + direction.changeInYValue(), level: coordinates.level)
-        for tile in board.objects {
-            if tile.coordinates.x == wallCoordinates.x && tile.coordinates.y == wallCoordinates.y {
+        let wallCoordinates = Coordinates(x: coordinates!.x + direction.changeInXValue(), y: coordinates!.y + direction.changeInYValue(), level: coordinates!.level)
+        for tile in game.board.objects {
+            if tile.coordinates == wallCoordinates {
                 return
             }
         }
-        board.objects.append(Wall(coordinates: wallCoordinates))
-    }
-    
-    override func savedText() -> String {
-        "Tank(appearance: \(appearance.savedText()), coordinates: \(coordinates.savedText()), playerDemographics: \(playerDemographics.savedText()), fuel: \(fuel), metal: \(metal), health: \(health), defense: \(defense), movementCost: \(movementCost), movementRange: \(movementRange), gunRange: \(gunRange), gunDamage: \(gunDamage), gunCost: \(gunCost), highDetailSightRange: \(highDetailSightRange), lowDetailSightRange: \(lowDetailSightRange), radarRange: \(radarRange), dailyMessage: standardDailyMessage, \((virtualDelivery != nil) ? ("\"" + virtualDelivery! + "\"") : "nil"), \(science ? "true" : "false")),\n"
+        game.board.objects.append(Wall(coordinates: wallCoordinates))
     }
 }
 
 class DeadTank: BoardObject {
-    var killedByIndex: Int
+    var fuelDropped: Int = 0
+    var metalDropped: Int = 0
+    
+    let appearance: Appearance
+    var coordinates: Coordinates? = nil
+    
+    var health: Int = 0
+    var defense: Int = 0
+    
+    var killedByIndex: Int //TODO: Use UUIDs instead of Indicies
     var playerDemographics: PlayerDemographics
     var dailyMessage: String
     
@@ -373,63 +364,59 @@ class DeadTank: BoardObject {
     
     var virtualDelivery: String?
     
-    override func tick() {
-        coordinates = board.objects[killedByIndex].coordinates
-    }
-    
     func placeWall(_ direction: [Direction]) {
-        var coordinates = board.objects[killedByIndex].coordinates
+        var coordinates = game.board.objects[killedByIndex].coordinates
         if direction.count <= energy {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
-                if(!coordinates.inBounds()) {
+                coordinates!.x += step.changeInXValue()
+                coordinates!.y += step.changeInYValue()
+                if(!coordinates!.inBounds()) {
                     return
                 }
-                for tile in board.objects {
-                    if tile.coordinates == coordinates && tile != self {
+                for tile in game.board.objects {
+                    if (tile.coordinates == coordinates) && !(AnyBoardObject(tile) == AnyBoardObject(self)) {
                         if tile is Gift {
                             tile.health = 0
                         }
                     }
                 }
-                board.objects.append(Wall(coordinates: coordinates))
+                game.board.objects.append(Wall(coordinates: coordinates!))
             }
         }
     }
     
     func placeGift(_ direction: [Direction]) {
-        var coordinates = board.objects[killedByIndex].coordinates
+        var coordinates = game.board.objects[killedByIndex].coordinates
         if direction.count <= Int(energy / 2) {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
-                if(!coordinates.inBounds()) {
+                coordinates!.x += step.changeInXValue()
+                coordinates!.y += step.changeInYValue()
+                if(!coordinates!.inBounds()) {
                     return
                 }
-                for tile in board.objects {
-                    if tile.coordinates == coordinates && tile != self {
+                for tile in game.board.objects {
+                    if (tile.coordinates == coordinates) && !(AnyBoardObject(tile) == AnyBoardObject(self)) {
                         if tile is Gift {
                             tile.health = 0
                         }
                     }
                 }
-                board.objects.append(DeluxeGift(coordinates: coordinates, fuelReward: 10, metalReward: 10))
+                game.board.objects.append(Gift(coordinates: coordinates!, fuelReward: 10, metalReward: 10))
             }
         }
     }
     
     func harmTank(_ direction: [Direction]) {
-        var coordinates = board.objects[killedByIndex].coordinates
+        var coordinates = game.board.objects[killedByIndex].coordinates
         if direction.count <= Int(energy - 2) {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
-                if(!coordinates.inBounds()) {
+                coordinates!.x += step.changeInXValue()
+                coordinates!.y += step.changeInYValue()
+                if(!coordinates!.inBounds()) {
                     return
                 }
-                for tile in board.objects {
-                    if tile.coordinates == coordinates && tile != self {
+                for tile in game.board.objects {
+                    if (tile.coordinates == coordinates) && !(AnyBoardObject(tile) == AnyBoardObject(self)) {
                         if tile is Tank {
                             tile.health -= 10
                             tile.health = max(1, tile.health)
@@ -457,14 +444,10 @@ class DeadTank: BoardObject {
     }
     
     func description() -> String {
-        if board.objects[killedByIndex] is Tank {
-            return "killed by \((board.objects[killedByIndex] as! Tank).playerDemographics.firstName) \((board.objects[killedByIndex] as! Tank).playerDemographics.lastName), who currently has \((board.objects[killedByIndex] as! Tank).fuel)􀵞, \((board.objects[killedByIndex] as! Tank).metal)􀇷, \((board.objects[killedByIndex] as! Tank).health)􀞽, and \((board.objects[killedByIndex] as! Tank).defense)􀙨.\((board.objects[killedByIndex] as! Tank).science ? " They escaped the Moon as part of a team of scientists." : "")"
+        if game.board.objects[killedByIndex] is Tank {
+            return "killed by \((game.board.objects[killedByIndex] as! Tank).playerDemographics.firstName) \((game.board.objects[killedByIndex] as! Tank).playerDemographics.lastName), who currently has \((game.board.objects[killedByIndex] as! Tank).fuel)􀵞, \((game.board.objects[killedByIndex] as! Tank).metal)􀇷, \((game.board.objects[killedByIndex] as! Tank).health)􀞽, and \((game.board.objects[killedByIndex] as! Tank).defense)􀙨.)"
         }
-        return "killed by \((board.objects[killedByIndex] as! DeadTank).playerDemographics.firstName) \((board.objects[killedByIndex] as! DeadTank).playerDemographics.lastName), who currently is currently dead, has \((board.objects[killedByIndex] as! DeadTank).essence)􀆿,  \((board.objects[killedByIndex] as! DeadTank).energy)􀋥, and was \((board.objects[killedByIndex] as! DeadTank).description())" 
-    }
-    
-    override func savedText() -> String {
-        return "DeadTank(appearance: \(appearance.savedText()), killedByIndex: \(killedByIndex), playerDemographics: \(playerDemographics.savedText()), dailyMessage: standardDailyMessage, essence: \(essence), energy: \(energy), \((virtualDelivery != nil) ? ("\"" + virtualDelivery! + "\"") : "nil")),\n"
+        return "killed by \((game.board.objects[killedByIndex] as! DeadTank).playerDemographics.firstName) \((game.board.objects[killedByIndex] as! DeadTank).playerDemographics.lastName), who currently is currently dead, has \((game.board.objects[killedByIndex] as! DeadTank).essence)􀆿,  \((game.board.objects[killedByIndex] as! DeadTank).energy)􀋥, and was \((game.board.objects[killedByIndex] as! DeadTank).description())" 
     }
     
     init(
@@ -475,11 +458,11 @@ class DeadTank: BoardObject {
             self.playerDemographics = playerDemographics
             self.dailyMessage = dailyMessage
             self.virtualDelivery = virtualDelivery
-            super.init(appearance, Coordinates(x: 500, y: 500, level: 0), 0, 0, 0, 0)
+            self.appearance = appearance
         }
     
     init(_ tank: Tank, _ killedByIndex: Int) {
-        let essenceEarned = {
+        let essenceEarned = { //TODO: Make this calculation less awful and account for new mechanics.
             var amount: Int = 0
             amount += Int(power(base: 1, exponent: tank.movementCost) * 1.5 + 0)
             amount += Int(power(base: 2, exponent: tank.movementRange) * 1 + 0)
@@ -497,12 +480,11 @@ class DeadTank: BoardObject {
         }
         self.killedByIndex = killedByIndex
         self.playerDemographics = tank.playerDemographics
-        self.dailyMessage = "You have died. Your achievemnts in life have been added together to grant you \(essenceEarned()) essence. You will now only recieve your status cards on Mortuus Mondays. As a dead tank you have two main currencies: Essesnce and Energy. Essence, as rementioned, is given by your achievements in your previous lifetime. Energy is given to you periodically."
+        self.dailyMessage = "You have died. Your achievemnts in life have been added together to grant you \(essenceEarned()) essence. You will now only recieve your status cards on Mortuus Mondays. As a dead tank you have two main currencies: Essesnce and Energy. Essence, as rementioned, is given by your achievements in your previous lifetime. Energy is given to you periodically." //TODO: This text might need changing with new mechanics
         self.virtualDelivery = tank.virtualDelivery
-        
+        self.appearance = tank.appearance
         self.essence = essenceEarned()
         self.energy = 1
-        super.init(tank.appearance, Coordinates(x: 0, y: 0), 0, 0, 0, 0)
     }
 }
 
@@ -579,13 +561,4 @@ class DeadAction {
             }
         }
     }
-}
-#Preview {
-    let exampleTank = Tank(appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: ""), coordinates: Coordinates(x: 0, y: 0, level: 0), playerDemographics: PlayerDemographics(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", kills: 0), fuel: 0, metal: 0, health: 0, defense: 0, movementCost: 0, movementRange: 0, gunRange: 0, gunDamage: 0, gunCost: 0, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 0, dailyMessage: String(repeating: "abcdefghijklmnopqrst ", count: 100), nil, true)
-    Text(exampleTank.formattedDailyMessage())
-        .font(.system(size: inch(0.15)))
-        .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
-        .foregroundColor(.black)
-        .multilineTextAlignment(.leading)
-        .fontDesign(.monospaced)
 }

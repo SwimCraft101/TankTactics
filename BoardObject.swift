@@ -8,7 +8,7 @@ import Foundation
 import SwiftUI
 import AppKit
 
-struct Coordinates: Equatable, Hashable {
+struct Coordinates: Equatable {
     var x: Int
     var y: Int
     var level: Int
@@ -48,7 +48,7 @@ struct Coordinates: Equatable, Hashable {
     }
 }
 
-struct Appearance: Equatable, Hashable {
+struct Appearance: Equatable {
     var fillColor: Color
     var strokeColor: Color
     var symbolColor: Color
@@ -59,170 +59,116 @@ struct Appearance: Equatable, Hashable {
     }
 }
 
-@Observable class BoardObject: Equatable, Hashable, Identifiable {
-    static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
-        return lhs.coordinates == rhs.coordinates &&
-        lhs.appearance == rhs.appearance
+struct AnyBoardObject: Equatable {
+    private let _base: any BoardObject
+    private let _isEqual: (AnyBoardObject) -> Bool
+
+    init<T: BoardObject & Equatable>(_ base: T) {
+        self._base = base
+        self._isEqual = { other in
+            guard let otherBase = other._base as? T else { return false }
+            return base == otherBase
+        }
+    }
+
+    static func == (lhs: AnyBoardObject, rhs: AnyBoardObject) -> Bool {
+        return lhs._isEqual(rhs)
+    }
+
+    var base: any BoardObject {
+        return _base
+    }
+}
+
+protocol BoardObject: AnyObject, Identifiable, Equatable {
+    var fuelDropped: Int { get set }
+    var metalDropped: Int { get set }
+    
+    var appearance: Appearance { get }
+    var coordinates: Coordinates? { get set }
+    
+    var health: Int { get set }
+    var defense: Int { get set }
+}
+
+extension BoardObject {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+class Wall: BoardObject {
+    var fuelDropped: Int = 0
+    var metalDropped: Int = 0
+    
+    let appearance: Appearance = Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "rectangle.fill")
+    var coordinates: Coordinates?
+    
+    var health: Int = 1
+    var defense: Int = 0
+    
+    var id: UUID = UUID()
+    
+    init(coordinates: Coordinates) {
+        self.coordinates = coordinates
+    }
+}
+
+class Gift: BoardObject {
+    static func == (lhs: Gift, rhs: Gift) -> Bool {
+        if lhs.fuelDropped != rhs.fuelDropped { return false }
+        if lhs.metalDropped != rhs.metalDropped { return false }
+        if lhs.appearance != rhs.appearance { return false }
+        if lhs.coordinates != rhs.coordinates { return false }
+        if lhs.health != rhs.health { return false }
+        if lhs.defense != rhs.defense { return false }
+        return true
     }
     
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(fuelDropped)
-        hasher.combine(metalDropped)
-        hasher.combine(appearance)
-        hasher.combine(coordinates)
-        hasher.combine(health)
-        hasher.combine(defense)
-    }
+    var fuelDropped: Int
+    var metalDropped: Int
     
-    func savedText() -> String {
-        return "BoardObject(\(appearance.savedText()), \(coordinates.savedText()), \(health), \(defense), \(fuelDropped), \(metalDropped))\n"
+    let appearance: Appearance
+    var coordinates: Coordinates?
+    
+    var health: Int = 1
+    var defense: Int = 0
+    
+    init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {
+        if fuelReward == 0 {
+            appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "square.grid.2x2")
+        } else if metalReward == 0 {
+            appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "fuelpump")
+        } else {
+            appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift")
+        }
+        self.fuelDropped = fuelReward
+        self.metalDropped = metalReward
+        self.coordinates = coordinates
+    }
+}
+
+class Placeholder: BoardObject {
+    static func == (lhs: Placeholder, rhs: Placeholder) -> Bool {
+        if lhs.fuelDropped != rhs.fuelDropped { return false }
+        if lhs.metalDropped != rhs.metalDropped { return false }
+        if lhs.appearance != rhs.appearance { return false }
+        if lhs.coordinates != rhs.coordinates { return false }
+        if lhs.health != rhs.health { return false }
+        if lhs.defense != rhs.defense { return false }
+        return true
     }
     
     var fuelDropped: Int = 0
     var metalDropped: Int = 0
     
-    var appearance: Appearance
-    var coordinates: Coordinates
+    let appearance = Appearance(fillColor: .gray, strokeColor: .black, symbolColor: .black, symbol: "questionmark.square.dashed")
+    var coordinates: Coordinates?
+    
     var health: Int = 1
     var defense: Int = 0
     
-    func tick() {
-        if health <= 0 {
-            board.objects.removeAll(where: {
-                $0 == self
-            })
-            if(fuelDropped > 0 || metalDropped > 0) {
-                board.objects.append(Gift(coordinates: self.coordinates, fuelReward: fuelDropped, metalReward: metalDropped))
-            }
-        }
-        if coordinates.level > 0 {
-            for tile in board.objects.filter({!($0 is Gift)}) {
-                if tile.coordinates.x == coordinates.x {
-                    if tile.coordinates.y == coordinates.y {
-                        if tile.coordinates.level == coordinates.level - 1 {
-                            return
-                        }
-                    }
-                }
-            }
-            coordinates.level -= 1
-            health -= 10
-        }
-    }
-    
-    func move(_ direction: [Direction]) {
-        for step in direction {
-            self.coordinates.x += step.changeInXValue()
-            self.coordinates.y += step.changeInYValue()
-        }
-    }
-    
-    init(appearance: Appearance, coordinates: Coordinates) {
-        self.appearance = appearance
+    init(coordinates: Coordinates) {
         self.coordinates = coordinates
-    }
-    
-    init(_ appearance: Appearance, _ coordinates: Coordinates, _ health: Int, _ defense: Int, _ fuelDropped: Int, _ metalDropped: Int) {
-        self.appearance = appearance
-        self.coordinates = coordinates
-        self.health = health
-        self.defense = defense
-        self.fuelDropped = fuelDropped
-        self.metalDropped = metalDropped
-    }
-}
-
-class Wall: BoardObject {
-    init(_ coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "rectangle.fill"), coordinates: coordinates)
-    }
-    
-    init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "rectangle.fill"), coordinates: coordinates)
-    }
-    
-    override func savedText() -> String {
-        return "w(\(coordinates.x),\(coordinates.y),\(coordinates.level)),"
-    }
-}
-
-class RedWall: BoardObject {
-    init(_ coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: Color(hex: 0x550000), strokeColor: Color(hex: 0x550000), symbolColor: Color(hex: 0x550000), symbol: "rectangle.fill"), coordinates: coordinates)
-        defense = 1000
-    }
-    
-    init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: Color(hex: 0x550000), strokeColor: Color(hex: 0x550000), symbolColor: Color(hex: 0x550000), symbol: "rectangle.fill"), coordinates: coordinates)
-        defense = 1000
-    }
-    
-    override func savedText() -> String {
-        return "r(\(coordinates.x),\(coordinates.y),\(coordinates.level)),"
-    }
-}
-
-class Gift: BoardObject {
-    init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {
-        if fuelReward == 0 {
-            super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "square.grid.2x2"), coordinates: coordinates)
-        } else if metalReward == 0 {
-            super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "fuelpump"), coordinates: coordinates)
-        } else {
-            super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift"), coordinates: coordinates)
-        }
-        fuelDropped = fuelReward
-        metalDropped = metalReward
-    }
-    override func savedText() -> String {
-        return "g(\(self.coordinates.x),\(self.coordinates.y),\(coordinates.level),\(self.fuelDropped),\(self.metalDropped)),"
-    }
-    override func tick() {
-        if health <= 0 {
-            board.objects.removeAll(where: {
-                $0 == self
-            })
-        }
-    }
-}
-
-class DeluxeGift: Gift {
-    override init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {
-        super.init(coordinates: coordinates, fuelReward: fuelReward, metalReward: metalReward)
-        self.appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift.fill")
-        self.coordinates = coordinates
-        fuelDropped = fuelReward
-        metalDropped = metalReward
-    }
-    init(coordinates: Coordinates) {
-        let totalReward: Int = 20
-        let metalReward: Int = Int.random(in: 0...totalReward)
-        let fuelReward: Int = totalReward - metalReward
-        super.init(coordinates: coordinates, fuelReward: fuelReward, metalReward: metalReward)
-        self.appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift.fill")
-        self.coordinates = coordinates
-        fuelDropped = fuelReward
-        metalDropped = metalReward
-    }
-    override func savedText() -> String {
-        return "d(\(self.coordinates.x),\(self.coordinates.y),\(coordinates.level),\(self.fuelDropped),\(self.metalDropped)),"
-    }
-}
-
-class TankPlaceholder: BoardObject {
-    init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .gray, strokeColor: .black, symbolColor: .black, symbol: "questionmark.square.dashed"), coordinates: coordinates)
-    }
-    override func savedText() -> String {
-        "TankPlaceholder(coordinates: \(coordinates.savedText()))"
-    }
-}
-
-class FireTile: BoardObject {
-    init(coordinates: Coordinates) {
-        super.init(appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .orange, symbol: "flame.fill"), coordinates: coordinates)
-    }
-    override func savedText() -> String {
-        "f(\(self.coordinates.x),\(self.coordinates.y)),"
     }
 }
