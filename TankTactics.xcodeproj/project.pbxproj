@@ -15,6 +15,7 @@
 		594D86F92CAF2F2B00916C89 /* MakePDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594D86F82CAF2F2B00916C89 /* MakePDF.swift */; };
 		595A2D092C6655A10086A452 /* StatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595A2D082C6655A10086A452 /* StatusCard.swift */; };
 		596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596376A42CFB5BB000059FCA /* DeadStatusCard.swift */; };
+		59B7E5582E3E5DD000105725 /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E5572E3E5DD000105725 /* Viewport.swift */; };
 		59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */; };
 		59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */; };
 		59DF70BE2BF553F8001E64B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 59DF70BD2BF553F8001E64B3 /* Assets.xcassets */; };
@@ -29,6 +30,7 @@
 		594D86F82CAF2F2B00916C89 /* MakePDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakePDF.swift; sourceTree = "<group>"; };
 		595A2D082C6655A10086A452 /* StatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusCard.swift; sourceTree = "<group>"; };
 		596376A42CFB5BB000059FCA /* DeadStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadStatusCard.swift; sourceTree = "<group>"; };
+		59B7E5572E3E5DD000105725 /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
 		59D77B232C93836600BD384A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoard.swift; sourceTree = "<group>"; };
 		59DF70B42BF553F7001E64B3 /* TankTactics.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TankTactics.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -57,6 +59,7 @@
 				5910A74C2E05F4A000B217BB /* Game.swift */,
 				5910A74E2E05F4DD00B217BB /* Message.swift */,
 				595A2D082C6655A10086A452 /* StatusCard.swift */,
+				59B7E5572E3E5DD000105725 /* Viewport.swift */,
 				596376A42CFB5BB000059FCA /* DeadStatusCard.swift */,
 				594D86F82CAF2F2B00916C89 /* MakePDF.swift */,
 				592B804F2C42AB9B008F41BF /* Direction.swift */,
@@ -161,6 +164,7 @@
 				59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */,
 				595A2D092C6655A10086A452 /* StatusCard.swift in Sources */,
 				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
+				59B7E5582E3E5DD000105725 /* Viewport.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
 				59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */,
 			);
