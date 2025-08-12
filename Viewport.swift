@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct Viewport: View {
+struct SquareViewport: View { //TODO: Support Rotations
     let coordinates: Coordinates
     let viewRenderSize: Int
     let highDetailSightRange: Int
@@ -16,7 +16,110 @@ struct Viewport: View {
     let radarRange: Int
     let showBorderWarning: Bool
     
-    func getAppearenceAtLocation(_ localCoordinates: Coordinates) -> Appearance { //TODO: make this less horrible
+    var body: some View {
+        GeometryReader { geometry in
+            Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
+                ForEach(-coordinates.y - viewRenderSize...(-coordinates.y) + viewRenderSize, id: \.self) { y in
+                    GridRow {
+                        ForEach((coordinates.x - viewRenderSize)...(coordinates.x + viewRenderSize), id: \.self) { x in
+                            TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: Coordinates(x: x, y: y, level: coordinates.level))
+                        }
+                    }
+                }
+            }
+            .frame(width: min(geometry.size.height, geometry.size.width), height: min(geometry.size.height, geometry.size.width), alignment: .center)
+        }
+    }
+}
+
+struct TriangleViewport: View { //TODO: Support rotations
+    let coordinates: Coordinates
+    let viewRenderSize: Int
+    let highDetailSightRange: Int
+    let lowDetailSightRange: Int
+    let radarRange: Int
+    let showBorderWarning: Bool
+    
+    var body: some View {
+        GeometryReader { geometry in
+            Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
+                ForEach(((coordinates.y - 1)...(coordinates.y + viewRenderSize)).reversed(), id: \.self) { y in
+                    GridRow {
+                        ForEach((coordinates.x - viewRenderSize)...(coordinates.x + 1), id: \.self) { x in
+                            if x - coordinates.x - y + coordinates.y + viewRenderSize > 1 {
+                                if y == coordinates.y - 1 && x == coordinates.x - viewRenderSize + 1 {
+                                    Text("X: \(coordinates.x)")
+                                        .font(.system(size: inch(CGFloat(Double(1.5) / (Double(viewRenderSize) + 2)))))
+                                } else if y == coordinates.y - 1 && x == coordinates.x - viewRenderSize + 2 {
+                                    Text("Y: \(coordinates.y)")
+                                        .font(.system(size: inch(CGFloat(Double(1.5) / (Double(viewRenderSize) + 2)))))
+                                } else if y == coordinates.y + viewRenderSize - 1 && x == coordinates.x + 1 {
+                                    EmptyView()
+                                } else if y == coordinates.y + viewRenderSize - 2 && x == coordinates.x + 1 {
+                                    Image(systemName: "location.north.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .padding(inch(CGFloat(Double(0.5) / (Double(viewRenderSize) + 2))))
+                                        .rotationEffect(Angle(degrees: 90)) //TODO: Support rotations
+                                } else {
+                                    TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: Coordinates(x: x, y: y, level: coordinates.level))
+                                }
+                            } else {
+                                BasicTileView(appearance: Appearance(fillColor: .white, symbol: ""))
+                            }
+                        }
+                    }
+                }
+            }
+            .frame(width: min(geometry.size.height, geometry.size.width), height: min(geometry.size.height, geometry.size.width), alignment: .center)
+        }
+    }
+}
+
+struct BasicTileView: View {
+    let appearance: Appearance
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let shortestLength = min(geometry.size.width, geometry.size.height)
+            ZStack {
+                RoundedRectangle(cornerRadius: shortestLength * 0.15)
+                    .foregroundColor(appearance.strokeColor ?? appearance.fillColor)
+                
+                RoundedRectangle(cornerRadius: shortestLength * 0.05)
+                    .foregroundColor(appearance.fillColor)
+                    .frame(width: shortestLength * 0.8, height: shortestLength * 0.8, alignment: .center)
+                
+                if appearance.symbolColor == nil {
+                    Image(systemName: appearance.symbol)
+                        .symbolRenderingMode(.multicolor)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: shortestLength * 0.7, height: shortestLength * 0.7, alignment: .center)
+                } else {
+                    Image(systemName: appearance.symbol)
+                        .symbolRenderingMode(.hierarchical)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundColor(appearance.symbolColor!)
+                        .frame(width: shortestLength * 0.7, height: shortestLength * 0.7, alignment: .center)
+                }
+            }
+            .frame(width: shortestLength, height: shortestLength, alignment: .center)
+        }
+    }
+}
+
+struct TileView: View {
+    
+    let coordinates: Coordinates
+    let highDetailSightRange: Int
+    let lowDetailSightRange: Int
+    let radarRange: Int
+    let showBorderWarning: Bool
+    let localCoordinates: Coordinates
+    
+    func getAppearenceAtLocation() -> Appearance { //TODO: make this less horrible
         if localCoordinates.inBounds() {
             for tile in game.board.objects { //if there is an object, it will be rendered here
                 if tile.coordinates != localCoordinates { //first and most important check: that this tile is in the correct location to be rendered.
@@ -49,13 +152,13 @@ struct Viewport: View {
                         return Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle") //pure white if in full range
                     }
                     let fog = Color(red: 0.9, green: 0.9, blue: 0.9)
-                    return Appearance(fillColor: fog, strokeColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if not in full range
+                    return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if not in full range
                 }
                 let fog = Color(red: 0.8, green: 0.8, blue: 0.8)
-                return Appearance(fillColor: fog, strokeColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if only in radar range
+                return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if only in radar range
             }
             let fog = Color(red: 0.7, green: 0.7, blue: 0.7)
-            return Appearance(fillColor: fog, strokeColor: fog, symbolColor: fog, symbol: "rectangle") // greyest if out of range
+            return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") // greyest if out of range
         } else {
             //renderer for out of bounds tiles
             if localCoordinates.distanceTo(coordinates) <= radarRange {
@@ -63,61 +166,15 @@ struct Viewport: View {
                     return showBorderWarning ? Appearance(fillColor: .black, strokeColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance
                 }
                 let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
-                return Appearance(fillColor: mysteryObject, strokeColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
+                return Appearance(fillColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
             }
             let fog = Color(red: 0.7, green: 0.7, blue: 0.7)
-            return Appearance(fillColor: fog, strokeColor: fog, symbolColor: fog, symbol: "rectangle")
+            return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle")
         }
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
-                ForEach(-coordinates.y - viewRenderSize...(-coordinates.y) + viewRenderSize, id: \.self) { y in
-                    GridRow {
-                        ForEach((coordinates.x - viewRenderSize)...(coordinates.x + viewRenderSize), id: \.self) { x in
-                            @State var thisTile = game.board.objects.first(
-                                where: { $0.coordinates == Coordinates(x: x, y: -y, level: coordinates.level) && !($0 is DeadTank)}) ?? nil
-                            let thisTileAppearance = getAppearenceAtLocation(Coordinates(x: x, y: -y, level: coordinates.level))
-                            TileView(appearance: thisTileAppearance)
-                        }
-                    }
-                }
-            }
-            .frame(width: min(geometry.size.height, geometry.size.width), height: min(geometry.size.height, geometry.size.width), alignment: .center)
-        }
-    }
-}
-
-struct BasicTileView: View {
-    let appearance: Appearance
-    
-    var body: some View {
-        GeometryReader { geometry in
-            let shortestLength = min(geometry.size.width, geometry.size.height, inch(1))
-            ZStack {
-                RoundedRectangle(cornerRadius: shortestLength * 0.15)
-                    .foregroundColor(appearance.strokeColor)
-                
-                RoundedRectangle(cornerRadius: shortestLength * 0.05)
-                    .foregroundColor(appearance.fillColor)
-                    .frame(width: shortestLength * 0.8, height: shortestLength * 0.8, alignment: .center)
-                    
-                Image(systemName: appearance.symbol)
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundColor(appearance.symbolColor)
-                    .frame(width: shortestLength * 0.7, height: shortestLength * 0.7, alignment: .center)
-            }
-            .frame(width: shortestLength, height: shortestLength, alignment: .center)
-        }
-    }
-}
-
-struct TileView: View {
-    let appearance: Appearance
-    var body: some View {
-        BasicTileView(appearance: appearance)
+        BasicTileView(appearance: getAppearenceAtLocation())
             /*.contextMenu {
                 if thisTile != nil {
                     if thisTile is Tank {
@@ -353,5 +410,9 @@ struct TileView: View {
 }
 
 #Preview {
-    TileView(appearance: Appearance(fillColor: .red, strokeColor: .green, symbolColor: .blue, symbol: "tree.circle"))
+    ZStack {
+        Color.white
+        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0), viewRenderSize: 7, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true)
+    }
+    .frame(width: inch(4), height: inch(4))
 }
