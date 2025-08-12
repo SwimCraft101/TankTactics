@@ -7,14 +7,14 @@
 import Foundation
 import SwiftUI
 
-struct Coordinates: Equatable, Codable {
+struct Coordinates: Equatable, Codable { //TODO: Add rotation support
     var x: Int
     var y: Int
     var level: Int
     
     func distanceTo(_ other: Coordinates) -> Int {
-        var deltax = abs(other.x - x)
-        var deltay = abs(other.y - y)
+        let deltax = abs(other.x - x)
+        let deltay = abs(other.y - y)
         return Int(deltax + deltay)
     }
     
@@ -46,13 +46,9 @@ struct Coordinates: Equatable, Codable {
 
 struct Appearance: Equatable, Codable {
     var fillColor: Color
-    var strokeColor: Color
-    var symbolColor: Color
+    var strokeColor: Color?
+    var symbolColor: Color?
     var symbol: String
-    
-    func savedText() -> String {
-        return "a(\(Int(NSColor(fillColor).cgColor.components![0] * 255)),\(Int(NSColor(fillColor).cgColor.components![1] * 255)),\(Int(NSColor(fillColor).cgColor.components![2] * 255)),\(Int(NSColor(strokeColor).cgColor.components![0] * 255)),\(Int(NSColor(strokeColor).cgColor.components![1] * 255)),\(Int(NSColor(strokeColor).cgColor.components![2] * 255)),\(Int(NSColor(symbolColor).cgColor.components![0] * 255)),\(Int(NSColor(symbolColor).cgColor.components![1] * 255)),\(Int(NSColor(symbolColor).cgColor.components![2] * 255)),\"\(symbol)\")"
-    }
 }
 
 enum BoardObjectType: String, Codable {
@@ -95,6 +91,8 @@ class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType 
     
     var health: Int
     var defense: Int
+    
+    //TODO: add solid/rigid collision system
     
     enum CodingKeys: String, CodingKey {
         case type
@@ -227,7 +225,7 @@ class Wall: BoardObject {
     }
 }
 
-class Gift: BoardObject {
+class Gift: BoardObject { //TODO: Support Modules in Gifts
     override var type: BoardObjectType { .gift }
     
     init(coordinates: Coordinates, fuelReward: Int, metalReward: Int) {

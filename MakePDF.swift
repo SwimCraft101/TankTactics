@@ -134,11 +134,11 @@ func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBo
     }
     for tankPair in tanksTwoByTwo {
         pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
-            StatusCardFront(tank: tankPair[0]!)
+            StatusCardFront(tank: tankPair[0]!, showBorderWarning: showBorderWarning)
                 .frame(width: inch(5), height: inch(8))
                 .border(.black, width: 1)
             if tankPair[1] != nil {
-                StatusCardFront(tank: tankPair[1]!)
+                StatusCardFront(tank: tankPair[1]!, showBorderWarning: showBorderWarning)
                     .frame(width: inch(5), height: inch(8))
                     .border(.black, width: 1)
             } else {

@@ -27,6 +27,7 @@ extension Color {
 
 struct StatusCardFront: View {
     let tank: Tank
+    let showBorderWarning: Bool
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -124,7 +125,7 @@ struct StatusCardBack: View {
                         }
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .leading)
-                    Viewport(coordinates: tank.coordinates!, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
+                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
                         .frame(width: inch(4), height: inch(4), alignment: .center)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
@@ -381,7 +382,7 @@ struct VirtualStatusCard: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                Viewport(coordinates: tank.coordinates ?? Coordinates(x: 0, y: 0, level: 0), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
+                SquareViewport(coordinates: tank.coordinates ?? Coordinates(x: 0, y: 0, level: 0), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
                     .frame(width: inch(4), height: inch(4), alignment: .center)
             }
             HStack(spacing: 0) {
@@ -397,3 +398,13 @@ struct VirtualStatusCard: View {
     }
 }
 
+#Preview {
+    let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", kills: 0))
+    ZStack {
+        Color.white
+        HStack {
+            StatusCardFront(tank: tank, showBorderWarning: true)
+            StatusCardBack(tank: tank, showBorderWarning: true)
+        }
+    }
+}
