@@ -67,7 +67,7 @@ struct StatusCardFront: View {
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
                     Spacer(minLength: inch(1))
-                    Text(tank.formattedDailyMessage())
+                    Text(/*tank.formattedDailyMessage()*/"")
                         .font(.system(size: inch(0.15)))
                         .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
                         .foregroundColor(.black)
@@ -125,8 +125,6 @@ struct StatusCardBack: View {
                         }
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .leading)
-                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
-                        .frame(width: inch(4), height: inch(4), alignment: .center)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
                 HStack(spacing: 0) {
@@ -149,142 +147,177 @@ struct StatusCardBack: View {
 struct ControlPanelView: View {
     let tank: Tank
     var body: some View {
-        VStack {
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    if tank.fuel >= tank.gunCost {
-                        HStack(spacing: 0) {
-                            ZStack {
-                                Rectangle()
-                                    .cornerRadius(inch(0.395 / CGFloat(tank.radarRange * 2 + 1)))
-                                    .foregroundColor(.white)
-                                Image(systemName: "multiply")
-                                    .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                                    .foregroundColor(.black)
-                                    .font(.system(size: inch(3 / CGFloat(tank.radarRange * 2 + 1))))
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    switch game.gameDay {
+                    case .monday:
+                        Text("") //MARK: Add Module Purchasing
+                    case .tuesday:
+                        Text("Moving and Firing are 50% cheaper today. Two Event Cards are availible.")
+                    case .wednesday:
+                        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+                            GridRow {
+                                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
+                                    .font(.system(size: inch(0.2)))
+                                Text("Movement Range")
+                                    .font(.system(size: inch(0.2)))
+                                    .lineLimit(1)
+                                Text("\(5/*MARK: get actual price*/)􀇷")
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
+                                    .font(.system(size: inch(0.15)))
                             }
-                            .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                            Text("Draw an 􀅾 over a tile \(tank.gunRange) or fewer away from you to fire at it. Optionally, draw an arrow to indicate the missile’s path. Deals \(tank.gunDamage) 􀲗.\nCosts \(tank.gunCost) 􀵞.")
-                                .font(.system(size: inch(0.1)))
-                                .italic()
-                                .foregroundColor(.black)
+                            
+                            GridRow {
+                                Image(systemName: {
+                                    switch tank.movementCost {
+                                    case 10, 9:
+                                        return "gauge.with.dots.needle.0percent"
+                                    case 8, 7:
+                                        return "gauge.with.dots.needle.33percent"
+                                    case 6, 5:
+                                        return "gauge.with.dots.needle.50percent"
+                                    case 4, 3:
+                                        return "gauge.with.dots.needle.67percent"
+                                    default: ///``` case 2, 1:
+                                        return "gauge.with.dots.needle.100percent"
+                                    }
+                                }())
+                                    .font(.system(size: inch(0.2)))
+                                Text("Movement Efficiency")
+                                    .font(.system(size: inch(0.2)))
+                                    .lineLimit(1)
+                                Text("\(5/*MARK: get actual price*/)􀇷")
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
+                                    .font(.system(size: inch(0.15)))
+                            }
                         }
-                    }
-                    if tank.fuel >= tank.movementCost {
-                        HStack(spacing: 0) {
-                            ZStack {
-                                Rectangle()
-                                    .cornerRadius(inch(0.395 / CGFloat(tank.radarRange * 2 + 1)))
-                                    .foregroundColor(.white)
-                                Image(systemName: "circle")
-                                    .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                                    .foregroundColor(.black)
-                                    .font(.system(size: inch(3 / CGFloat(tank.radarRange * 2 + 1))))
+                    case .thursday:
+                        EmptyView()
+                    case .friday:
+                        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+                            GridRow {
+                                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
+                                    .font(.system(size: inch(0.2)))
+                                Text("Weapon Range")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(5/*MARK: get actual price*/)􀇷")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
+                                    .font(.system(size: inch(0.2)))
                             }
-                            .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                            Text("Draw a 􀀀 over a tile \(tank.movementRange) or fewer away from you to move there. Optionally, draw an arrow to indicate your path.\nCosts \(tank.movementCost) 􀵞.")
-                                .font(.system(size: inch(0.1)))
-                                .italic()
-                                .foregroundColor(.black)
-                        }
-                    }
-                    if tank.metal >= 5 {
-                        HStack(spacing: 0) {
-                            ZStack {
-                                Rectangle()
-                                    .cornerRadius(inch(0.395 / CGFloat(tank.radarRange * 2 + 1)))
-                                    .foregroundColor(.white)
-                                Image(systemName: "square")
-                                    .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                                    .foregroundColor(.black)
-                                    .font(.system(size: inch(3 / CGFloat(tank.radarRange * 2 + 1))))
+                            
+                            GridRow {
+                                Image(systemName: {
+                                    switch tank.movementCost {
+                                    case 10, 9:
+                                        return "gauge.with.dots.needle.0percent"
+                                    case 8, 7:
+                                        return "gauge.with.dots.needle.33percent"
+                                    case 6, 5:
+                                        return "gauge.with.dots.needle.50percent"
+                                    case 4, 3:
+                                        return "gauge.with.dots.needle.67percent"
+                                    default: ///``` case 2, 1:
+                                        return "gauge.with.dots.needle.100percent"
+                                    }
+                                }())
+                                    .font(.system(size: inch(0.2)))
+                                Text("Movement Efficiency")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(5/*MARK: get actual price*/)􀇷")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
+                                    .font(.system(size: inch(0.2)))
                             }
-                            .frame(width: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)), height: inch(3.95 / CGFloat(tank.radarRange * 2 + 1)))
-                            Text("Draw a 􀂒 over a tile in the viewport adjacent to you to build a wall there.\nCosts 5 􀇷.")
-                                .font(.system(size: inch(0.1)))
-                                .italic()
-                                .foregroundColor(.black)
                         }
                     }
                 }
+                .frame(width: inch(3.5), height: inch(2.5), alignment: .topLeading)
+                Image(systemName: {
+                    switch game.gameDay {
+                    case .monday:
+                        return "square.on.square.dashed"
+                    case .tuesday:
+                        return "exclamationmark.triangle"
+                    case .wednesday:
+                        return "tire"
+                    case .thursday:
+                        return "storefront"
+                    case .friday:
+                        return "headlight.high.beam"
+                    }
+                }()) // image representing the GameDay
+                .resizable()
+                .scaledToFit()
+                .frame(width: inch(0.25), height: inch(0.25))
+                .frame(width: inch(0.5), height: inch(0.5), alignment: .topLeading)
+                .frame(width: inch(0.5), height: inch(2.5), alignment: .topTrailing)
             }
-            if tank.fuel < (tank.movementCost + tank.gunCost) && tank.fuel >= tank.movementCost && tank.fuel >= tank.gunCost {
-                Text("You cannot afford to both fire and move this turn.")
-                    .font(.system(size: inch(0.1)))
-                    .italic()
-                    .foregroundColor(.black)
-            }
-            UpgradeOption(name: "Movement Range", currentValue: tank.movementRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.movementRange), tank: tank).metalCost(), unit: "􀂒", icon: "car.rear.road.lane.distance.\(min(tank.movementRange, 5))", tankMetal: tank.metal, costUnit: "􀇷")
-            UpgradeOption(name: "Movement Cost", currentValue: tank.movementCost, minmaxValue: 1, upgradeIncrement: -1, upgradeCost: Action(.upgrade(.movementCost), tank: tank).metalCost(), unit: "􀵞", icon: "dollarsign.gauge.chart.leftthird.topthird.rightthird", tankMetal: tank.metal, costUnit: "􀇷")
-            Spacer()
-            UpgradeOption(name: "Gun Range", currentValue: tank.gunRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.gunRange), tank: tank).metalCost(), unit: "􀂒", icon: "headlight.high.beam", tankMetal: tank.metal, costUnit: "􀇷")
-            UpgradeOption(name: "Gun Damage", currentValue: tank.gunDamage, minmaxValue: 50, upgradeIncrement: 5, upgradeCost: Action(.upgrade(.gunDamage), tank: tank).metalCost(), unit: "􀲗", icon: "bandage", tankMetal: tank.metal, costUnit: "􀇷")
-            UpgradeOption(name: "Gun Cost", currentValue: tank.gunCost, minmaxValue: 7, upgradeIncrement: -1, upgradeCost: Action(.upgrade(.gunCost), tank: tank).metalCost(), unit: "􀵞", icon: "dollarsign.ring", tankMetal: tank.metal, costUnit: "􀇷")
-            Spacer()
-            if tank.highDetailSightRange < tank.lowDetailSightRange && tank.highDetailSightRange < tank.radarRange {
-                UpgradeOption(name: "Camera Range", currentValue: tank.highDetailSightRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.highDetailSightRange), tank: tank).metalCost(), unit: "􀂒", icon: "camera", tankMetal: tank.metal, costUnit: "􀇷")
-            }
-            if tank.lowDetailSightRange < tank.radarRange {
-                UpgradeOption(name: "LiDAR Range", currentValue: tank.lowDetailSightRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.lowDetailSightRange), tank: tank).metalCost(), unit: "􀂒", icon: "laser.burst", tankMetal: tank.metal, costUnit: "􀇷")
-            }
-            UpgradeOption(name: "RADAR Range", currentValue: tank.radarRange, minmaxValue: 7, upgradeIncrement: 1, upgradeCost: Action(.upgrade(.radarRange), tank: tank).metalCost(), unit: "􀂒", icon: "antenna.radiowaves.left.and.right", tankMetal: tank.metal, costUnit: "􀇷")
-            Spacer()
-            if tank.health < 100 {
-                UpgradeOption(name: "Repair Tank", currentValue: tank.health, minmaxValue: 100, upgradeIncrement: 5, upgradeCost: 3, unit: "%􀞽", icon: "wrench.and.screwdriver", tankMetal: tank.metal, costUnit: "􀇷")
-            }
-            Spacer()
-            Spacer()
+            .frame(width: inch(4), height: inch(2.5))
+            Grid {
+                GridRow {
+                    Text("")
+                        .font(.system(size: inch(0.2)))
+                    Text("􀐚")
+                        .font(.system(size: inch(0.2)))
+                    Text("􀈿")
+                        .font(.system(size: inch(0.2)))
+                    Text("􁘿")
+                        .font(.system(size: inch(0.2)))
+                }
+                GridRow {
+                    Text("􀵞")
+                        .font(.system(size: inch(0.2)))
+                    Text("__")
+                        .font(.system(size: inch(0.2)))
+                    Text("__")
+                        .font(.system(size: inch(0.2)))
+                    Text("__")
+                        .font(.system(size: inch(0.2)))
+                }
+                GridRow {
+                    Text("􀇷")
+                        .font(.system(size: inch(0.2)))
+                    Text("__")
+                        .font(.system(size: inch(0.2)))
+                    Text("__")
+                        .font(.system(size: inch(0.2)))
+                    Text("")
+                        .font(.system(size: inch(0.2)))
+                }
+            } //precedence, physical token, and Event Card spending
+            .frame(width: inch(4), height: inch(1.5), alignment: .topLeading)
         }
+        .frame(width: inch(4), height: inch(4))
     }
 }
 
 struct UpgradeOption: View {
     let name: String
     let currentValue: Int
-    let minmaxValue: Int
     let upgradeIncrement: Int
     let upgradeCost: Int
     let unit: String
     let icon: String
-    let tankMetal: Int
     let costUnit: String
     
-    func checkUpgrade() -> Bool {
-        if upgradeCost > tankMetal {
-            return false
-        }
-        if upgradeIncrement > 0 {
-            if currentValue + upgradeIncrement <= minmaxValue {
-                return true
-            } else {
-                return false
-            }
-        } else {
-            if currentValue + upgradeIncrement >= minmaxValue {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
-    
-    var body: some View {
-        if checkUpgrade() {
-            HStack(spacing: 0) {
-                Image(systemName: icon)
-                    .font(.system(size: inch(0.2)))
-                    .frame(width: inch(0.4))
-                    .foregroundColor(.black)
-                Text("\(name): \(currentValue) \(unit) 􁉂 \(currentValue + upgradeIncrement) \(unit) (Costs \(upgradeCost)\(costUnit))")
-                    .font(.system(size: inch(0.2)))
-                    .foregroundColor(.black)
-                Spacer()
-            }
-        } else {
-            EmptyView()
+    var body: some View { //MARK: redesign to be slimmer
+        HStack(spacing: 0) {
+            Image(systemName: icon)
+                .font(.system(size: inch(0.2)))
+                .frame(width: inch(0.4))
+                .foregroundColor(.black)
+            Text("\(name): \(currentValue) \(unit) 􁉂 \(currentValue + upgradeIncrement) \(unit) (Costs \(upgradeCost)\(costUnit))")
+                .font(.system(size: inch(0.2)))
+                .foregroundColor(.black)
+            Spacer()
         }
     }
 }
+
 
 struct MeterView: View {
     let value: Int
@@ -376,14 +409,12 @@ struct DirectionOptions: View {
     }
 }
 
-struct VirtualStatusCard: View {
+struct VirtualStatusCard: View { //MARK: rework to match standard Status Card
     let tank: Tank
     let showBorderWarning: Bool
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                SquareViewport(coordinates: tank.coordinates ?? Coordinates(x: 0, y: 0, level: 0), viewRenderSize: tank.radarRange, highDetailSightRange: tank.highDetailSightRange, lowDetailSightRange: tank.lowDetailSightRange, radarRange: tank.radarRange, showBorderWarning: showBorderWarning)
-                    .frame(width: inch(4), height: inch(4), alignment: .center)
             }
             HStack(spacing: 0) {
                 ControlPanelView(tank: tank)
@@ -399,12 +430,11 @@ struct VirtualStatusCard: View {
 }
 
 #Preview {
-    let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", kills: 0))
+    let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(), kills: 0))
     ZStack {
         Color.white
         HStack {
-            StatusCardFront(tank: tank, showBorderWarning: true)
-            StatusCardBack(tank: tank, showBorderWarning: true)
+            ControlPanelView(tank: tank)
         }
     }
 }

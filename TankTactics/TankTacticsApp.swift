@@ -117,12 +117,15 @@ import Foundation
                           game.board.objects.removeAll(where: {
                           $0 == thisTile})
                           }
-                          }*///TODO: Make the Context Menus work, assuming they are not replaced with a better system.
+                          }*///MARK: Make the Context Menus work, assuming they are not replaced with a better system.
                          }
                          }*/
                         let level = levelDisplayed
-                        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning)
-                            .frame(width: max(min(geometry.size.height, geometry.size.width), 300), height: max(min(geometry.size.height, geometry.size.width), 300), alignment: .center)
+                        ZStack {
+                            Color.white
+                            SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning)
+                                .frame(width: max(min(geometry.size.height, geometry.size.width), 300), height: max(min(geometry.size.height, geometry.size.width), 300), alignment: .center)
+                        }
                         VStack {
                             HStack {
                                 Spacer()
@@ -138,13 +141,13 @@ import Foundation
                                             }
                                             return false
                                         }) {
-                                            NSWorkspace.shared.open(URL(string: "mailto:\((virtualTank as! Tank).playerDemographics.virtualDelivery ?? " NO EMAIL ADDRESS WAS FOUND ")?subject=Tank Tactics: \(Date.now.addingTimeInterval(57600).formatted(date: .complete, time: .omitted))&body=\((virtualTank as! Tank).dailyMessage)")!)
+                                            NSWorkspace.shared.open(URL(string: "mailto:\((virtualTank as! Tank).playerDemographics.virtualDelivery ?? " NO EMAIL ADDRESS WAS FOUND ")?subject=Tank Tactics: \(Date.now.addingTimeInterval(57600).formatted(date: .complete, time: .omitted))&body=no body text here (:")!) //MARK: rework this?
                                             createAndSavePDF(from: [AnyView(VirtualStatusCard(tank: virtualTank as! Tank, showBorderWarning: showBorderWarning))], fileName: "Virtual Status Card for \((virtualTank as! Tank).playerDemographics.firstName) \((virtualTank as! Tank).playerDemographics.lastName)")
                                         }
                                     }
                                     Button("Print Dead Status") {
                                         saveDeadStatusCardsToPDF(game.board.objects.filter{ $0 is DeadTank } as! [DeadTank], doAlignmentCompensation: true)
-                                        //TODO: Make Dead Status Cards work in email
+                                        //MARK: Make Dead Status Cards work in email
                                     }
                                     Button("Open Game File") {
                                             uiBannerMessage = "Opening saved game file..."
