@@ -3,7 +3,7 @@ import SwiftUI
 
 @Observable class Board: Codable {
     var objects: [BoardObject]
-    var border: Int = 12 //last coordinate to be open space
+    var border: Int = 4 //last coordinate to be open space
     
     init(objects: [BoardObject]) {
         self.objects = objects

@@ -14,12 +14,6 @@ struct DeadStatusCardFront: View {
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
                     Spacer(minLength: inch(1.25))
-                    Text(tank.formattedDailyMessage())
-                        .font(.system(size: inch(0.15)))
-                        .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.leading)
-                        .fontDesign(.monospaced)
                 }
                 .rotationEffect(Angle(degrees: 90))
                 .frame(width: inch(5), height: inch(4), alignment: .center)
@@ -95,7 +89,7 @@ struct DeadStatusCardBack: View {
                         Spacer()
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .center)
-                    SquareViewport(coordinates: game.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false) //TODO: Might crash if killed by dead person. Make coordinates reference dynamically.
+                    SquareViewport(coordinates: game.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
                         .frame(width: inch(4), height: inch(4), alignment: .center)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
@@ -176,8 +170,8 @@ struct DeadControlPanelView: View {
                     }
                 }
             }
-            UpgradeOption(name: "Burn Essence", currentValue: tank.energy, minmaxValue: 10000000000, upgradeIncrement: 1, upgradeCost: 2, unit: "􀋥", icon: "bolt", tankMetal: tank.essence, costUnit: "􀆿")
-            UpgradeOption(name: "Channel Energy", currentValue: tank.essence, minmaxValue: 10000000000, upgradeIncrement: 1, upgradeCost: 2, unit: "􀆿", icon: "sparkles", tankMetal: tank.energy, costUnit: "􀋥")
+            UpgradeOption(name: "Burn Essence", currentValue: tank.energy, upgradeIncrement: 1, upgradeCost: 2, unit: "􀋥", icon: "bolt", costUnit: "􀆿")
+            UpgradeOption(name: "Channel Energy", currentValue: tank.essence, upgradeIncrement: 1, upgradeCost: 2, unit: "􀆿", icon: "sparkles", costUnit: "􀋥")
             Spacer()
             HStack(spacing: 0) {
                 Text("You were " + tank.description())

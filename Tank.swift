@@ -23,6 +23,18 @@ protocol Player: BoardObject {
     var doVirtualDelivery: Bool { get }
 }
 
+struct AccessibilitySettings: Codable {
+    var highContrast: Bool
+    var colorblind: Bool
+    var largeText: Bool
+    
+    init() {
+        self.highContrast = false
+        self.colorblind = false
+        self.largeText = false
+    }
+}
+
 struct PlayerDemographics: Codable {
     let firstName: String
     let lastName: String
@@ -30,16 +42,13 @@ struct PlayerDemographics: Codable {
     let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
     let deliveryNumber: String // Should be a Locker Number or Room Number
     let virtualDelivery: String? // Should be an email adress
-    let kills: Int //TODO: Move this value elsewhere
-    
-    func savedText() -> String {
-        "p(\"\(firstName)\",\"\(lastName)\",\"\(deliveryBuilding)\",\"\(deliveryType)\",\"\(deliveryNumber)\",\(kills))"
-    }
+    let accessibilitySettings: AccessibilitySettings
+    let kills: Int //MARK: Move this value elsewhere
 }
 
 class Action {
-    var tank: Tank
-    
+    let tankId: UUID
+    let precedence: Int
     enum ActionType {
         case move([Direction])
         case fire([Direction])
@@ -52,20 +61,19 @@ class Action {
             case gunRange
             case gunDamage
             case gunCost
-            case highDetailSightRange
-            case lowDetailSightRange
-            case radarRange
             case repair
         }
     }
     let type: ActionType
     
-    init(_ type: ActionType, tank: Tank) {
+    init(_ type: ActionType, tank: Tank, precedence: Int) {
         self.type = type
-        self.tank = tank
+        self.tankId = tank.uuid
+        self.precedence = precedence
     }
     
     func isAlowed() -> Bool {
+        let tank = game.board.objects.first(where: { $0.uuid == self.tankId }) as! Tank
         if self.fuelCost() > tank.fuel {
             return false
         }
@@ -76,6 +84,7 @@ class Action {
     }
     
     func fuelCost() -> Int {
+        let tank = game.board.objects.first(where: { $0.uuid == self.tankId }) as! Tank
         switch type {
         case .move:
             return tank.movementCost
@@ -89,6 +98,7 @@ class Action {
     }
     
     func metalCost() -> Int {
+        let tank = game.board.objects.first(where: { $0.uuid == self.tankId }) as! Tank
         switch type {
         case .move:
             return 0
@@ -108,65 +118,8 @@ class Action {
                 return Int(power(base: Double(tank.gunDamage), exponent: 1) * 0.2 + 1)
             case .gunCost:
                 return Int(power(base: Double(tank.gunCost), exponent: 1) * 1.5 + 0)
-            case .highDetailSightRange:
-                return Int(power(base: Double(tank.highDetailSightRange), exponent: 1) * 3 + 0)
-            case .lowDetailSightRange:
-                return Int(power(base: Double(tank.lowDetailSightRange), exponent: 1) * 2 + 0)
-            case .radarRange:
-                return Int(power(base: Double(tank.radarRange), exponent: 1) * 1 + 0)
             case .repair:
                 return 3
-            }
-        }
-    }
-    
-    func run() {
-        if self.isAlowed() {
-            switch type {
-            case .move(let directions):
-                tank.fuel -= self.fuelCost()
-                tank.move(directions)
-            case .fire(let directions):
-                tank.fuel -= self.fuelCost()
-                tank.fire(directions)
-            case .placeWall(let direction):
-                tank.metal -= self.metalCost()
-                tank.placeWall(direction)
-            case .upgrade(let upgradeType):
-                switch upgradeType {
-                case .movementCost:
-                    tank.metal -= self.metalCost()
-                    tank.movementCost -= 1
-                case .movementRange:
-                    tank.metal -= self.metalCost()
-                    tank.movementRange += 1
-                case .gunRange:
-                    tank.metal -= self.metalCost()
-                    tank.gunRange += 1
-                case .gunDamage:
-                    tank.metal -= self.metalCost()
-                    tank.gunDamage += 5
-                case .gunCost:
-                    tank.metal -= self.metalCost()
-                    tank.gunCost -= 1
-                case .highDetailSightRange:
-                    tank.metal -= self.metalCost()
-                    tank.highDetailSightRange += 1
-                case .lowDetailSightRange:
-                    tank.metal -= self.metalCost()
-                    tank.lowDetailSightRange += 1
-                case .radarRange:
-                    tank.metal -= self.metalCost()
-                    tank.radarRange += 1
-                case .repair:
-                    tank.metal -= self.metalCost()
-                    tank.health = min(100, tank.health + 5)
-                }
-            }
-            for deadTank in game.board.objects.filter({ $0 is DeadTank }) as! [DeadTank] {
-                if game.board.objects[deadTank.killedByIndex].id == tank.id {
-                    deadTank.energy += 1
-                }
             }
         }
     }
@@ -176,7 +129,6 @@ class Tank: BoardObject, Player {
     override var type: BoardObjectType { .tank }
     
     var playerDemographics: PlayerDemographics
-    var dailyMessage: String
     
     var fuel: Int
     var metal: Int
@@ -188,16 +140,13 @@ class Tank: BoardObject, Player {
     var gunDamage: Int
     var gunCost: Int
     
-    var highDetailSightRange: Int
-    var lowDetailSightRange: Int
-    var radarRange: Int
+    var modules: [Module]
     
     var doVirtualDelivery: Bool
     
     enum CodingKeys: String, CodingKey {
-        case playerDemographics, dailyMessage, fuel, metal, movementCost, movementRange,
-             gunRange, gunDamage, gunCost, highDetailSightRange, lowDetailSightRange,
-             radarRange, doVirtualDelivery
+        case playerDemographics, fuel, metal, movementCost, movementRange,
+             gunRange, gunDamage, gunCost, modules, doVirtualDelivery, uuid
     }
     
     init(
@@ -206,7 +155,6 @@ class Tank: BoardObject, Player {
         playerDemographics: PlayerDemographics
     ) {
         self.playerDemographics = playerDemographics
-        self.dailyMessage = ""
         self.fuel = 20
         self.metal = 20
         self.movementCost = 10
@@ -214,11 +162,9 @@ class Tank: BoardObject, Player {
         self.gunRange = 1
         self.gunDamage = 5
         self.gunCost = 10
-        self.highDetailSightRange = 1
-        self.lowDetailSightRange = 2
-        self.radarRange = 3
         self.doVirtualDelivery = false
-        super.init(fuelDropped: 20, metalDropped: 20, appearance: appearance, coordinates: coordinates, health: 100, defense: 0)
+        self.modules = [TutorialModule(isWeekTwo: false)]
+        super.init(fuelDropped: 20, metalDropped: 20, appearance: appearance, coordinates: coordinates, health: 100, defense: 0, uuid: UUID())
     }
     
     init(
@@ -237,7 +183,8 @@ class Tank: BoardObject, Player {
         highDetailSightRange: Int,
         lowDetailSightRange: Int,
         radarRange: Int,
-        dailyMessage: String
+        modules: [Module],
+        uuid: UUID?
     ) {
         self.fuel = fuel
         self.metal = metal
@@ -246,19 +193,15 @@ class Tank: BoardObject, Player {
         self.gunRange = gunRange
         self.gunDamage = gunDamage
         self.gunCost = gunCost
-        self.highDetailSightRange = highDetailSightRange
-        self.lowDetailSightRange = lowDetailSightRange
-        self.radarRange = radarRange
         self.playerDemographics = playerDemographics
-        self.dailyMessage = dailyMessage
         self.doVirtualDelivery = false
-        super.init(fuelDropped: fuel, metalDropped: metal, appearance: appearance, coordinates: coordinates, health: health, defense: defense)
+        self.modules = modules
+        super.init(fuelDropped: fuel, metalDropped: metal, appearance: appearance, coordinates: coordinates, health: health, defense: defense, uuid: uuid ?? UUID())
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.playerDemographics = try container.decode(PlayerDemographics.self, forKey: .playerDemographics)
-        self.dailyMessage = try container.decode(String.self, forKey: .dailyMessage)
         self.fuel = try container.decode(Int.self, forKey: .fuel)
         self.metal = try container.decode(Int.self, forKey: .metal)
         self.movementCost = try container.decode(Int.self, forKey: .movementCost)
@@ -266,18 +209,31 @@ class Tank: BoardObject, Player {
         self.gunRange = try container.decode(Int.self, forKey: .gunRange)
         self.gunDamage = try container.decode(Int.self, forKey: .gunDamage)
         self.gunCost = try container.decode(Int.self, forKey: .gunCost)
-        self.highDetailSightRange = try container.decode(Int.self, forKey: .highDetailSightRange)
-        self.lowDetailSightRange = try container.decode(Int.self, forKey: .lowDetailSightRange)
-        self.radarRange = try container.decode(Int.self, forKey: .radarRange)
         self.doVirtualDelivery = try container.decode(Bool.self, forKey: .doVirtualDelivery)
+        
+        
+        var modulesArray = try container.nestedUnkeyedContainer(forKey: .modules)
+        var modules: [Module] = []
+        
+        while !modulesArray.isAtEnd {
+            let moduleDecoder = try modulesArray.superDecoder()
+            let module = try Module.decode(from: moduleDecoder) // <-- Factory method
+            modules.append(module)
+        }
+        
+        self.modules = modules.filter({ $0 is ConduitModule }) + modules.filter({ !($0 is ConduitModule) }) //sorts modules with conduits first to avoid nesting Conduits.
+        
         try super.init(from: decoder)
+        
+        for module in self.modules {
+            module.tankId = self.uuid
+        }
     }
     
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(playerDemographics, forKey: .playerDemographics)
-        try container.encode(dailyMessage, forKey: .dailyMessage)
         try container.encode(fuel, forKey: .fuel)
         try container.encode(metal, forKey: .metal)
         try container.encode(movementCost, forKey: .movementCost)
@@ -285,25 +241,13 @@ class Tank: BoardObject, Player {
         try container.encode(gunRange, forKey: .gunRange)
         try container.encode(gunDamage, forKey: .gunDamage)
         try container.encode(gunCost, forKey: .gunCost)
-        try container.encode(highDetailSightRange, forKey: .highDetailSightRange)
-        try container.encode(lowDetailSightRange, forKey: .lowDetailSightRange)
-        try container.encode(radarRange, forKey: .radarRange)
         try container.encode(doVirtualDelivery, forKey: .doVirtualDelivery)
-    }
-    
-    func formattedDailyMessage() -> String {
-        var words = dailyMessage.split(separator: " ")
-        var rows: [String] = []
-        for row in 0...24 {
-            let rowMaxLength = Int(Double(25 - row) * 2 - 10.0)
-            if words.isEmpty { break }
-            rows.append(" ")
-            while rowMaxLength > rows[row].count + (words.first?.count ?? 9999999) {
-                rows[row] = "\(words.removeLast()) \(rows[row])"
-            }
-            rows[row] = " " + rows[row]
+        
+        var arrayContainer = container.nestedUnkeyedContainer(forKey: .modules)
+
+        for module in modules {
+            try module.encode(to: arrayContainer.superEncoder())
         }
-        return rows.reversed().joined(separator: "\n") + ["\n"]
     }
     
     func move(_ direction: [Direction]) {
@@ -351,14 +295,13 @@ class Tank: BoardObject, Player {
         }
     }
     
-    func placeWall(_ direction: Direction) {
-        let wallCoordinates = Coordinates(x: coordinates!.x + direction.changeInXValue(), y: coordinates!.y + direction.changeInYValue(), level: coordinates!.level)
-        for tile in game.board.objects {
-            if tile.coordinates == wallCoordinates {
-                return
-            }
+    func constrainFuelAndMetal() {
+        if modules.contains(where: { $0 is StorageModule }) {
+            return
+        } else {
+            fuel = min(fuel, 50)
+            metal = min(metal, 50)
         }
-        game.board.objects.append(Wall(coordinates: wallCoordinates))
     }
 }
 
@@ -367,13 +310,12 @@ class DeadTank: BoardObject, Player {
     
     var killedByIndex: Int
     var playerDemographics: PlayerDemographics
-    var dailyMessage: String
     var essence: Int
     var energy: Int
     var doVirtualDelivery: Bool
     
     enum CodingKeys: String, CodingKey {
-        case killedByIndex, playerDemographics, dailyMessage, essence, energy, doVirtualDelivery
+        case killedByIndex, playerDemographics, essence, energy, doVirtualDelivery
     }
     
     init(
@@ -383,15 +325,15 @@ class DeadTank: BoardObject, Player {
         dailyMessage: String,
         essence: Int,
         energy: Int,
-        doVirtualDelivery: Bool?
+        doVirtualDelivery: Bool?,
+        uuid: UUID?
     ) {
         self.killedByIndex = killedByIndex
         self.essence = essence
         self.energy = energy
         self.playerDemographics = playerDemographics
-        self.dailyMessage = dailyMessage
         self.doVirtualDelivery = doVirtualDelivery ?? false
-        super.init(fuelDropped: 0, metalDropped: 0, appearance: appearance, coordinates: nil, health: 0, defense: 0)
+        super.init(fuelDropped: 0, metalDropped: 0, appearance: appearance, coordinates: nil, health: 0, defense: 0, uuid: uuid ?? UUID())
     }
     
     init(_ tank: Tank, _ killedByIndex: Int) {
@@ -402,9 +344,6 @@ class DeadTank: BoardObject, Player {
             amount += Int(power(base: 2, exponent: tank.gunRange))
             amount += Int(power(base: 1, exponent: tank.gunDamage))
             amount += Int(power(base: 1, exponent: tank.gunCost) * 1.5)
-            amount += Int(power(base: 1, exponent: tank.highDetailSightRange) * 3)
-            amount += Int(power(base: 1, exponent: tank.lowDetailSightRange) * 2)
-            amount += Int(power(base: 1, exponent: tank.radarRange))
             amount += 20 * tank.playerDemographics.kills
             amount += Int(tank.fuel / 3)
             amount += Int(tank.metal / 3)
@@ -413,18 +352,16 @@ class DeadTank: BoardObject, Player {
         }
         self.killedByIndex = killedByIndex
         self.playerDemographics = tank.playerDemographics
-        self.dailyMessage = "You have died. Your achievements in life have been added together to grant you \(essenceEarned()) essence."
         self.doVirtualDelivery = tank.doVirtualDelivery
         self.essence = essenceEarned()
         self.energy = 1
-        super.init(fuelDropped: 0, metalDropped: 0, appearance: tank.appearance, coordinates: nil, health: 0, defense: 0)
+        super.init(fuelDropped: 0, metalDropped: 0, appearance: tank.appearance, coordinates: nil, health: 0, defense: 0, uuid: tank.uuid)
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.killedByIndex = try container.decode(Int.self, forKey: .killedByIndex)
         self.playerDemographics = try container.decode(PlayerDemographics.self, forKey: .playerDemographics)
-        self.dailyMessage = try container.decode(String.self, forKey: .dailyMessage)
         self.essence = try container.decode(Int.self, forKey: .essence)
         self.energy = try container.decode(Int.self, forKey: .energy)
         self.doVirtualDelivery = try container.decode(Bool.self, forKey: .doVirtualDelivery)
@@ -436,7 +373,6 @@ class DeadTank: BoardObject, Player {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(killedByIndex, forKey: .killedByIndex)
         try container.encode(playerDemographics, forKey: .playerDemographics)
-        try container.encode(dailyMessage, forKey: .dailyMessage)
         try container.encode(essence, forKey: .essence)
         try container.encode(energy, forKey: .energy)
         try container.encode(doVirtualDelivery, forKey: .doVirtualDelivery)
@@ -483,20 +419,6 @@ class DeadTank: BoardObject, Player {
         }
     }
     
-    func formattedDailyMessage() -> String {
-        var words = dailyMessage.split(separator: " ")
-        var rows: [String] = []
-        for row in 0...24 {
-            let rowMaxLength = Int(Double(25 - row) * 2 - 10.0)
-            if words.isEmpty { break }
-            rows.append(" ")
-            while rowMaxLength > rows[row].count + (words.first?.count ?? 9999999) {
-                rows[row] = "\(words.removeLast()) \(rows[row])"
-            }
-        }
-        return rows.reversed().joined(separator: "\n") + ["\n"]
-    }
-    
     func description() -> String {
         if let killer = game.board.objects[killedByIndex] as? Tank {
             return "killed by \(killer.playerDemographics.firstName) \(killer.playerDemographics.lastName), who currently has \(killer.fuel)􀵞, \(killer.metal)􀇷, \(killer.health)􀞽, and \(killer.defense)􀙨."
@@ -515,7 +437,7 @@ class DeadAction {
     enum ActionType {
         case placeWall([Direction])
         case placeGift([Direction])
-        case harmTank([Direction])
+        case harmTank([Direction]) //MARK: Switch to Tank uuids for this action
         case burnEssence
         case channelEnergy
     }

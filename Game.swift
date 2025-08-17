@@ -9,15 +9,24 @@ import Foundation
 import AppKit
 import UniformTypeIdentifiers
 import SwiftUICore
-
+#if DEBUG
+let playerDemographics = PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)
+#endif
 var game: TankTacticsGame = TankTacticsGame(board: Board(objects: [
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .blue, strokeColor: .green, symbolColor: .green, symbol: "tree"), coordinates: Coordinates(x: 1, y: 0, level: 0), health: 54, defense: 31),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .blue, strokeColor: .green, symbolColor: .green, symbol: "tree"), coordinates: Coordinates(x: 1, y: 0, level: 0), health: 54, defense: 31, uuid: UUID()),
+    Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerDemographics: PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)),
     Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)),
     Gift(coordinates: Coordinates(x: 1, y: 5, level: 0)),
-    Placeholder(coordinates: Coordinates(x: -1, y: 8, level: 0)),
-    Placeholder(coordinates: Coordinates(x: -1, y: 7, level: 0)),
+    Tank(appearance: Appearance(fillColor: .gray, symbolColor: .red, symbol: "sos"), coordinates: Coordinates(x: 1, y: 0, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .cyan, strokeColor: .red, symbol: "circle.hexagongrid.fill"), coordinates: Coordinates(x: 3, y: 1, level: 0), playerDemographics: playerDemographics),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .pink, strokeColor: .purple, symbolColor: .pink, symbol: "storefront.circle.fill"), coordinates: Coordinates(x: -2, y: 3, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .red, strokeColor: .green, symbol: "tree.fill"), coordinates: Coordinates(x: -4, y: -2, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .orange, symbol: "pc"), coordinates: Coordinates(x: 0, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .cyan, symbolColor: .red, symbol: "lock.desktopcomputer"), coordinates: Coordinates(x: 3, y: -1, level: 0), health: 54, defense: 31, uuid: UUID()),
+    Placeholder(coordinates: Coordinates(x: -1, y: -2, level: 0), uuid: nil),
+    Placeholder(coordinates: Coordinates(x: 5, y: 3, level: 0), uuid: nil),
     Gift(coordinates: Coordinates(x: -1, y: 6, level: 0)),
-                                                                   ]), gameDay: .wednesday)
+]), gameDay: .wednesday)
 
 func promptForDecodedFile<T: Decodable>(ofType type: T.Type) -> T? {
     let panel = NSOpenPanel()
