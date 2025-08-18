@@ -23,9 +23,12 @@ var game: TankTacticsGame = TankTacticsGame(board: Board(objects: [
     BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .red, strokeColor: .green, symbol: "tree.fill"), coordinates: Coordinates(x: -4, y: -2, level: 0), health: 54, defense: 31, uuid: UUID()),
     BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .orange, symbol: "pc"), coordinates: Coordinates(x: 0, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
     BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .cyan, symbolColor: .red, symbol: "lock.desktopcomputer"), coordinates: Coordinates(x: 3, y: -1, level: 0), health: 54, defense: 31, uuid: UUID()),
-    Placeholder(coordinates: Coordinates(x: -1, y: -2, level: 0), uuid: nil),
-    Placeholder(coordinates: Coordinates(x: 5, y: 3, level: 0), uuid: nil),
-    Gift(coordinates: Coordinates(x: -1, y: 6, level: 0)),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .green, symbolColor: .pink, symbol: "pencil.and.list.clipboard"), coordinates: Coordinates(x: 8, y: 1, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .orange, strokeColor: .purple, symbol: "widget.extralarge.badge.plus"), coordinates: Coordinates(x: -5, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .gray, strokeColor: .yellow, symbol: "drop.triangle.fill"), coordinates: Coordinates(x: 7, y: 4, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .cyan, symbol: "lightspectrum.horizontal"), coordinates: Coordinates(x: 6, y: -1, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
+    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), health: 54, defense: 31, uuid: UUID()),
 ]), gameDay: .wednesday)
 
 func promptForDecodedFile<T: Decodable>(ofType type: T.Type) -> T? {

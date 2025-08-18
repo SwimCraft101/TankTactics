@@ -170,8 +170,8 @@ struct DeadControlPanelView: View {
                     }
                 }
             }
-            UpgradeOption(name: "Burn Essence", currentValue: tank.energy, upgradeIncrement: 1, upgradeCost: 2, unit: "􀋥", icon: "bolt", costUnit: "􀆿")
-            UpgradeOption(name: "Channel Energy", currentValue: tank.essence, upgradeIncrement: 1, upgradeCost: 2, unit: "􀆿", icon: "sparkles", costUnit: "􀋥")
+            // MARK: UpgradeOption(name: "Burn Essence", currentValue: tank.energy, upgradeIncrement: 1, upgradeCost: 2, unit: "􀋥", icon: "bolt", costUnit: "􀆿")
+            // MARK: UpgradeOption(name: "Channel Energy", currentValue: tank.essence, upgradeIncrement: 1, upgradeCost: 2, unit: "􀆿", icon: "sparkles", costUnit: "􀋥")
             Spacer()
             HStack(spacing: 0) {
                 Text("You were " + tank.description())

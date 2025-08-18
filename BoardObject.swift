@@ -11,6 +11,45 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
     var x: Int
     var y: Int
     var level: Int
+    var rotation: CardinalDirection
+    
+    enum CardinalDirection: Codable {
+        case north
+        case east
+        case south
+        case west
+        
+        var letter: String {
+            switch self {
+            case .north: "N"
+            case .east: "E"
+            case .west: "W"
+            case .south: "S"
+            }
+        }
+        
+        var angle: Angle {
+            switch self {
+            case .north: Angle(degrees: 0)
+            case .east: Angle(degrees: -90)
+            case .west: Angle(degrees: 90)
+            case .south: Angle(degrees: 180)
+            }
+        }
+    }
+    
+    func viewOffset(right: Int, up: Int) -> Coordinates {
+        switch rotation {
+        case .north:
+            return Coordinates(x: x + right, y: y + up, level: level)
+        case .east:
+            return Coordinates(x: x + up, y: y - right, level: level)
+        case .south:
+            return Coordinates(x: x - right, y: y - up, level: level)
+        case .west:
+            return Coordinates(x: x - up, y: y + right, level: level)
+        }
+    }
     
     func distanceTo(_ other: Coordinates) -> Int {
         let deltax = abs(other.x - x)
@@ -31,16 +70,11 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
         return "c(\(x),\(y),\(level))"
     }
     
-    init(x: Int, y: Int) {
-        self.x = x
-        self.y = y
-        self.level = 0
-    }
-    
-    init(x: Int, y: Int, level: Int) {
+    init(x: Int, y: Int, level: Int = 0, rotation: CardinalDirection = .north) {
         self.x = x
         self.y = y
         self.level = level
+        self.rotation = rotation
     }
 }
 

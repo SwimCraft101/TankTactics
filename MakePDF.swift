@@ -69,7 +69,7 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
     }
 }
 
-func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) {
+func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) { //MARK: merge with living player function. allow Conduit fold-out flaps to be added as such. fetch status card info with the method of Tank and not directly.
     var workingTanks = tanks.filter({ !($0.doVirtualDelivery) })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[DeadTank?]] = []
@@ -150,7 +150,7 @@ func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBo
         }))
         pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
             if tankPair[1] != nil {
-                StatusCardBack(tank: tankPair[1]!, showBorderWarning: showBorderWarning)
+                tankPair[1]!.statusCardBack()
                     .frame(width: inch(5), height: inch(8))
                     .border(.black, width: 1)
             } else {
@@ -159,7 +159,7 @@ func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBo
                     .foregroundColor(.white)
                     .border(.black, width: 1)
             }
-            StatusCardBack(tank: tankPair[0]!, showBorderWarning: showBorderWarning)
+            tankPair[0]!.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
                 .border(.black, width: 1)
         }

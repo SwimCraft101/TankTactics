@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-struct SquareViewport: View { //MARK: Support Rotations
+struct SquareViewport: View {
     let coordinates: Coordinates
     let viewRenderSize: Int
     let highDetailSightRange: Int
@@ -19,10 +19,10 @@ struct SquareViewport: View { //MARK: Support Rotations
     var body: some View {
         GeometryReader { geometry in
             Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
-                ForEach((-coordinates.y - viewRenderSize...(-coordinates.y) + viewRenderSize), id: \.self) { y in
+                ForEach(((-viewRenderSize)...viewRenderSize).reversed(), id: \.self) { upOffset in
                     GridRow {
-                        ForEach((coordinates.x - viewRenderSize)...(coordinates.x + viewRenderSize), id: \.self) { x in
-                            TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: Coordinates(x: x, y: -y, level: coordinates.level))
+                        ForEach(((-viewRenderSize)...viewRenderSize), id: \.self) { rightOffset in
+                            TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset))
                         }
                     }
                 }
@@ -32,7 +32,7 @@ struct SquareViewport: View { //MARK: Support Rotations
     }
 }
 
-struct TriangleViewport: View { //MARK: Support rotations
+struct TriangleViewport: View {
     let coordinates: Coordinates
     let viewRenderSize: Int
     let highDetailSightRange: Int
@@ -43,29 +43,30 @@ struct TriangleViewport: View { //MARK: Support rotations
     var body: some View {
         GeometryReader { geometry in
             Grid(alignment: .center, horizontalSpacing: 0, verticalSpacing: 0) {
-                ForEach(((coordinates.y - 1)...(coordinates.y + viewRenderSize)).reversed(), id: \.self) { y in
+                ForEach(((-1)...viewRenderSize).reversed(), id: \.self) { upOffset in
                     GridRow {
-                        ForEach((coordinates.x - viewRenderSize)...(coordinates.x + 1), id: \.self) { x in
-                            if x - coordinates.x - y + coordinates.y + viewRenderSize > 1 {
-                                if y == coordinates.y - 1 && x == coordinates.x - viewRenderSize + 1 {
+                        ForEach(((-viewRenderSize)...1), id: \.self) { rightOffset in
+                            if rightOffset - upOffset + viewRenderSize > 1 {
+                                if upOffset == -1 &&  rightOffset + viewRenderSize == 1 {
                                     Text("X: \(coordinates.x)")
                                         .font(.system(size: inch(CGFloat(Double(1.5) / (Double(viewRenderSize) + 2)))))
-                                } else if y == coordinates.y - 1 && x == coordinates.x - viewRenderSize + 2 {
+                                } else if upOffset == -1 && rightOffset + viewRenderSize == 2 {
                                     Text("Y: \(coordinates.y)")
                                         .font(.system(size: inch(CGFloat(Double(1.5) / (Double(viewRenderSize) + 2)))))
-                                } else if y == coordinates.y + viewRenderSize - 1 && x == coordinates.x + 1 {
-                                    EmptyView()
-                                } else if y == coordinates.y + viewRenderSize - 2 && x == coordinates.x + 1 {
+                                } else if upOffset - viewRenderSize == -1 && rightOffset == 1 {
+                                    Text(coordinates.rotation.letter)
+                                        .font(.system(size: inch(CGFloat(Double(3) / (Double(viewRenderSize) + 2)))))
+                                } else if upOffset - viewRenderSize == -2 && rightOffset == 1 {
                                     Image(systemName: "location.north.fill")
                                         .resizable()
                                         .scaledToFit()
                                         .padding(inch(CGFloat(Double(0.5) / (Double(viewRenderSize) + 2))))
-                                        .rotationEffect(Angle(degrees: 90)) //MARK: Support rotations
+                                        .rotationEffect(coordinates.rotation.angle)
                                 } else {
-                                    TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: Coordinates(x: x, y: y, level: coordinates.level))
+                                    TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset))
                                 }
                             } else {
-                                BasicTileView(appearance: Appearance(fillColor: .white, symbol: ""))
+                                BasicTileView(appearance: Appearance(fillColor: Color(hex: 0x000000, alpha: 0), symbol: ""))
                             }
                         }
                     }
@@ -215,9 +216,11 @@ struct TileView: View {
 }
 
 #Preview {
-    ZStack {
-        Color.white
-        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0), viewRenderSize: 7, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true)
+    VStack {
+        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true)
+            .frame(width: inch(4), height: inch(4))
+        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true)
+            .frame(width: inch(4), height: inch(4))
     }
-    .frame(width: inch(4), height: inch(4))
+    .background(.white)
 }

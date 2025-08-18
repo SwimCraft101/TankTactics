@@ -21,6 +21,10 @@ func power(base: Double, exponent: Int) -> Double {
 protocol Player: BoardObject {
     var playerDemographics: PlayerDemographics { get }
     var doVirtualDelivery: Bool { get }
+    func statusCardFront() -> AnyView
+    func statusCardBack() -> AnyView
+    func statusCardConduitFront() -> AnyView?
+    func statusCardConduitBack() -> AnyView?
 }
 
 struct AccessibilitySettings: Codable {
@@ -210,8 +214,7 @@ class Tank: BoardObject, Player {
         self.gunDamage = try container.decode(Int.self, forKey: .gunDamage)
         self.gunCost = try container.decode(Int.self, forKey: .gunCost)
         self.doVirtualDelivery = try container.decode(Bool.self, forKey: .doVirtualDelivery)
-        
-        
+        /*
         var modulesArray = try container.nestedUnkeyedContainer(forKey: .modules)
         var modules: [Module] = []
         
@@ -222,7 +225,7 @@ class Tank: BoardObject, Player {
         }
         
         self.modules = modules.filter({ $0 is ConduitModule }) + modules.filter({ !($0 is ConduitModule) }) //sorts modules with conduits first to avoid nesting Conduits.
-        
+         */ self.modules = []
         try super.init(from: decoder)
         
         for module in self.modules {
@@ -302,6 +305,19 @@ class Tank: BoardObject, Player {
             fuel = min(fuel, 50)
             metal = min(metal, 50)
         }
+    }
+    
+    func statusCardBack() -> AnyView {
+        return AnyView(StatusCardBack(tank: self, showBorderWarning: false)) //MARK: reference real state of ShowBorderWarning
+    }
+    func statusCardFront() -> AnyView {
+        return AnyView(StatusCardFront(tank: self, showBorderWarning: false)) //MARK: reference real state of ShowBorderWarning
+    }
+    func statusCardConduitBack() -> AnyView? {
+        return nil //MARK: make this actually work
+    }
+    func statusCardConduitFront() -> AnyView? {
+        return nil //MARK: make this actually work
     }
 }
 
@@ -427,6 +443,19 @@ class DeadTank: BoardObject, Player {
             return "killed by \(killer.playerDemographics.firstName) \(killer.playerDemographics.lastName), who is dead, has \(killer.essence)􀆿, \(killer.energy)􀋥, and was \(killer.description())"
         }
         return "killed by natural causes."
+    }
+    
+    func statusCardBack() -> AnyView {
+        return AnyView(DeadStatusCardBack(tank: self))
+    }
+    func statusCardFront() -> AnyView {
+        return AnyView(DeadStatusCardFront(tank: self))
+    }
+    func statusCardConduitBack() -> AnyView? {
+        return nil
+    }
+    func statusCardConduitFront() -> AnyView? {
+        return nil
     }
 }
 
