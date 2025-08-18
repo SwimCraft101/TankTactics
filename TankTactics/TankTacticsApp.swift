@@ -149,10 +149,15 @@ import Foundation
                                         saveDeadStatusCardsToPDF(game.board.objects.filter{ $0 is DeadTank } as! [DeadTank], doAlignmentCompensation: true)
                                         //MARK: Make Dead Status Cards work in email
                                     }
+                                    Button("Print Full Board") {
+                                        createAndSavePDF(from: [AnyView(SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning).frame(width: inch(8), height: inch(8)))], fileName: "board")
+                                    }
                                     Button("Open Game File") {
                                             uiBannerMessage = "Opening saved game file..."
                                             if let loadedGame = promptForDecodedFile(ofType: TankTacticsGame.self) {
                                                 game = loadedGame
+                                            } else {
+                                                fatalError("File could not decode")
                                             }
                                             uiBannerMessage = "Done"
                                             uiBannerMessage = ""
@@ -218,5 +223,12 @@ extension Color: Codable {
         try container.encode(Double(g), forKey: .green)
         try container.encode(Double(b), forKey: .blue)
         try container.encode(Double(a), forKey: .alpha)
+    }
+}
+
+extension Collection {
+    /// Returns the element at the specified index if it is within bounds, otherwise nil.
+    subscript(safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }

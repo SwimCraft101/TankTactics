@@ -30,84 +30,103 @@ struct StatusCardFront: View {
     let showBorderWarning: Bool
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false) //MARK: reference real showBorderWarning value
+                .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
+                .rotationEffect(Angle(degrees: -90))
+                .frame(width: inch(5), height: inch(8), alignment: .topTrailing)
+            ControlPanelView(tank: tank)
+                .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
+                .rotationEffect(Angle(degrees: -90))
+                .frame(width: inch(5), height: inch(8), alignment: .bottomLeading)
                 VStack(spacing: 0) {
-                    Spacer()
-                    Text(tank.playerDemographics.firstName)
+                    HStack(spacing: 0) {
+                        Text(tank.playerDemographics.deliveryType)
+                            .foregroundColor(.black)
+                            .fontWeight(.medium)
+                            .font(.system(size: inch(0.35)))
+                        Text(" \(tank.playerDemographics.deliveryNumber)")
+                            .foregroundColor(.black)
+                            .fontWeight(.black)
+                            .font(.system(size: inch(0.35)))
+                    }
+                    Text(tank.playerDemographics.deliveryBuilding)
                         .foregroundColor(.black)
-                        .fontWeight(.ultraLight)
+                        .fontWeight(.light)
                         .font(.system(size: inch(0.35)))
+                        .italic()
+                }
+                .frame(width: inch(2.5), height: inch(1), alignment: .center)
+                .frame(width: inch(3.5), height: inch(1), alignment: .leading)
+                .frame(width: inch(4), height: inch(1), alignment: .trailing)
+                .frame(width: inch(4), height: inch(4), alignment: .bottom)
+                .rotationEffect(Angle(degrees: 90))
+                .frame(width: inch(5), height: inch(8), alignment: .top)
+                VStack(spacing: 0) {
                     Text(tank.playerDemographics.lastName)
                         .foregroundColor(.black)
                         .fontWeight(.bold)
                         .font(.system(size: inch(0.35)))
-                }
-                .rotationEffect(Angle(degrees: -90))
-                .frame(width: inch(4.5), height: inch(4), alignment: .center)
-                VStack(spacing: 0) {
-                    Text(tank.playerDemographics.deliveryBuilding)
-                        .foregroundColor(Color(red: 0.4, green: 0.4, blue: 0.4))
-                        .fontWeight(.light)
-                        .font(.system(size: inch(0.35)))
-                    HStack(spacing: 0) {
-                        Text(tank.playerDemographics.deliveryType)
-                            .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
-                            .fontWeight(.medium)
-                            .font(.system(size: inch(0.35)))
-                        Text("\(tank.playerDemographics.deliveryNumber)")
-                            .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
-                            .fontWeight(.black)
-                            .font(.system(size: inch(0.35)))
-                    }
-                    Spacer()
-                }
-                .rotationEffect(Angle(degrees: -90))
-                .frame(width: inch(4.5), height: inch(4), alignment: .center)
-            }
-            VStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    Spacer(minLength: inch(1))
-                    Text(/*tank.formattedDailyMessage()*/"")
-                        .font(.system(size: inch(0.15)))
-                        .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
+                    Text(tank.playerDemographics.firstName)
                         .foregroundColor(.black)
-                        .multilineTextAlignment(.leading)
-                        .fontDesign(.monospaced)
+                        .fontWeight(.ultraLight)
+                        .font(.system(size: inch(0.35)))
                 }
-                .rotationEffect(Angle(degrees: 90))
-                .frame(width: inch(5), height: inch(4), alignment: .center)
-                Spacer()
-            }
+                .frame(width: inch(2.5), height: inch(1), alignment: .center)
+                .frame(width: inch(3.5), height: inch(1), alignment: .leading)
+                .frame(width: inch(4), height: inch(1), alignment: .trailing)
+                .frame(width: inch(4), height: inch(4), alignment: .bottom)
+                .rotationEffect(Angle(degrees: -90))
+                .frame(width: inch(5), height: inch(8), alignment: .bottom)
+            
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    Image("")
-                        .frame(width: inch(4.5), height: inch(4), alignment: .center)
                     if tank.fuel >= tank.metal {
-                        MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
+                        fuelMeter(tank.fuel)
                     } else {
-                        MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
+                        metalMeter(tank.metal)
                     }
-                    Spacer()
                 }
+                .frame(width: inch(5), height: inch(4), alignment: .leading)
                 HStack(spacing: 0) {
-                    Spacer()
-                    MeterView(value: tank.health, max: 100, color: .red, label: "health", icon: "bolt.heart")
-                    Image("")
-                        .frame(width: inch(4.5), height: inch(4), alignment: .center)
+                    healthMeter(tank.health)
                 }
+                .frame(width: inch(5), height: inch(4), alignment: .trailing)
                 
             }
-            Text("") //empty for now (:
+            Text("This text renders on the back of the Status Card.") //empty for now (:
                 .font(.system(size: inch(0.15)))
                 .italic()
                 .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .center)
-                .rotationEffect(Angle(degrees: 45))
+                .rotationEffect(Angle(degrees: -45))
+            
         }
     }
 }
 
 struct StatusCardBack: View {
     let tank: Tank
+    var topModule: Module? {
+        let availibleModules = tank.modules
+        if availibleModules.isEmpty { return nil }
+        if availibleModules[0] is ConduitModule && availibleModules[1] is ConduitModule {
+            return availibleModules[safe: 2]
+        }
+        if availibleModules[0] is ConduitModule {
+            return availibleModules[safe: 1]
+        }
+        return availibleModules[safe: 0]
+    }
+    var bottomModule: Module? {
+        let availibleModules = tank.modules
+        if availibleModules.count < 2 { return nil }
+        if availibleModules[0] is ConduitModule && availibleModules[1] is ConduitModule {
+            return availibleModules[safe: 3]
+        }
+        if availibleModules[0] is ConduitModule {
+            return availibleModules[safe: 2]
+        }
+        return availibleModules[safe: 1]
+    }
     let showBorderWarning: Bool
     var body: some View {
         ZStack {
@@ -115,21 +134,31 @@ struct StatusCardBack: View {
                 HStack(spacing: 0) {
                     HStack(spacing: 0) {
                         if tank.fuel >= tank.metal {
-                            MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
-                            MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
+                            fuelMeter(tank.fuel)
+                            metalMeter(tank.metal)
                         } else if tank.fuel + tank.metal > 0 {
-                            MeterView(value: tank.metal, max: 60, color: .yellow, label: "metal", icon: "square.grid.2x2")
-                            MeterView(value: tank.fuel, max: 60, color: .green, label: "fuel", icon: "fuelpump")
+                            metalMeter(tank.metal)
+                            fuelMeter(tank.fuel)
                         } else {
-                            MeterView(value: tank.defense, max: 20, color: .blue, label: "defense", icon: "shield.righthalf.filled")
+                            defenseMeter(tank.defense)
                         }
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .leading)
+                    if topModule == nil {
+                        TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false) //MARK: reference real value of ShowBorderWarning
+                            .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
+                    } else {
+                        ModuleView(module: topModule!)
+                    }
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
                 HStack(spacing: 0) {
-                    ControlPanelView(tank: tank)
-                        .frame(width: inch(4), height: inch(4), alignment: .topLeading)
+                    if bottomModule == nil {
+                        ControlPanelView(tank: tank)
+                            .frame(width: inch(4), height: inch(4), alignment: .topLeading)
+                    } else {
+                        ModuleView(module: bottomModule!)
+                    }
                     HStack(spacing: 0) {
                         if tank.fuel + tank.metal > 0 {
                             MeterView(value: tank.defense, max: 20, color: .blue, label: "defense", icon: "shield.righthalf.filled")
@@ -292,32 +321,9 @@ struct ControlPanelView: View {
             .frame(width: inch(4), height: inch(1.5), alignment: .topLeading)
         }
         .frame(width: inch(4), height: inch(4))
+        .foregroundColor(.black)
     }
 }
-
-struct UpgradeOption: View {
-    let name: String
-    let currentValue: Int
-    let upgradeIncrement: Int
-    let upgradeCost: Int
-    let unit: String
-    let icon: String
-    let costUnit: String
-    
-    var body: some View { //MARK: redesign to be slimmer
-        HStack(spacing: 0) {
-            Image(systemName: icon)
-                .font(.system(size: inch(0.2)))
-                .frame(width: inch(0.4))
-                .foregroundColor(.black)
-            Text("\(name): \(currentValue) \(unit) 􁉂 \(currentValue + upgradeIncrement) \(unit) (Costs \(upgradeCost)\(costUnit))")
-                .font(.system(size: inch(0.2)))
-                .foregroundColor(.black)
-            Spacer()
-        }
-    }
-}
-
 
 struct MeterView: View {
     let value: Int
@@ -334,21 +340,19 @@ struct MeterView: View {
                     .frame(width: inch(0.5), height: inch((CGFloat(min(value, max)) / CGFloat(max) * 4)), alignment: .bottom)
                 VStack(spacing: 0) {
                     if value > 0 {
-                        Spacer()
+                        
                         Text("\(value)")
                             .font(.system(size: inch(0.27)))
                             .foregroundColor(.black)
                             .bold()
                         Spacer()
-                        if (CGFloat(value) / CGFloat(max)) >= 0.12 {
-                            if (CGFloat(value) / CGFloat(max)) >= 0.2 {
-                                Image(systemName: icon)
-                                    .font(.system(size: inch(0.28)))
-                                    .foregroundColor(.black)
-                            }
-                            Text(label)
-                                .font(.system(size: inch(0.14)))
-                                .foregroundColor(.black)
+                        if (CGFloat(value) / CGFloat(max)) >= 0.22 {
+                        Image(systemName: icon)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: inch(0.4), height: inch(0.4))
+                            .frame(width: inch(0.5), height: inch(0.5))
+                            .foregroundColor(.black)
                         }
                     }
                 }
@@ -361,6 +365,22 @@ struct MeterView: View {
                 .foregroundColor(.white)
         }
     }
+}
+
+func fuelMeter(_ value: Int) -> MeterView {
+    return MeterView(value: value, max: 50, color: .green, label: "Fuel", icon: "fuelpump")
+}
+
+func metalMeter(_ value: Int) -> MeterView {
+    return MeterView(value: value, max: 50, color: .yellow, label: "Metal", icon: "square.grid.2x2")
+}
+
+func healthMeter(_ value: Int) -> MeterView {
+    return MeterView(value: value, max: 100, color: .red, label: "Health", icon: "bolt.heart")
+}
+
+func defenseMeter(_ value: Int) -> MeterView {
+    return MeterView(value: value, max: 10, color: .blue, label: "Defense", icon: "shield.lefthalf.filled")
 }
 
 struct DirectionOptions: View {
@@ -432,9 +452,9 @@ struct VirtualStatusCard: View { //MARK: rework to match standard Status Card
 #Preview {
     let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(), kills: 0))
     ZStack {
-        Color.white
-        HStack {
-            ControlPanelView(tank: tank)
+        HStack(spacing: 0) {
+            StatusCardFront(tank: tank, showBorderWarning: false)
         }
+        .background(.white)
     }
 }

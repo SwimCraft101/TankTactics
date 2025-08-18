@@ -266,7 +266,7 @@ class WebsitePlugModule: Module { override var type: ModuleType { .websitePlug }
 
 class RadarModule: Module { override var type: ModuleType { .radar } // note that this subclass needs no special encoder and decoder logic as it stores no extra data.
     override var view: any View {
-        SquareViewport(coordinates: game.board.objects.first(where: { $0.uuid == tankId! })!.coordinates!, viewRenderSize: 5, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false)
+        SquareViewport(coordinates: game.board.objects.first(where: { $0.uuid == tankId! })!.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false)
     }
 }
 
