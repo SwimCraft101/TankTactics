@@ -93,7 +93,7 @@ struct StatusCardFront: View {
                 .frame(width: inch(5), height: inch(4), alignment: .trailing)
                 
             }
-            Text("This text renders on the back of the Status Card.") //empty for now (:
+            Text("") //renders on back of card
                 .font(.system(size: inch(0.15)))
                 .italic()
                 .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .center)
