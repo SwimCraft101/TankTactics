@@ -48,6 +48,10 @@ struct PlayerDemographics: Codable {
     let virtualDelivery: String? // Should be an email adress
     let accessibilitySettings: AccessibilitySettings
     let kills: Int //MARK: Move this value elsewhere
+    
+    var fullName: String {
+        "\(firstName) \(lastName)"
+    }
 }
 
 class Action {
@@ -145,6 +149,30 @@ class Tank: BoardObject, Player {
     var gunCost: Int
     
     var modules: [Module]
+    
+    var displayedModules: [Module] {
+        let conduits = modules.filter{ $0 is ConduitModule }.count
+        var displayedModules: [Module] = []
+        for _ in 0...(1 + conduits) {
+            var displayableModules: [Module] = modules.filter({ !($0 is ConduitModule) })
+            displayedModules.append(displayableModules.removeFirst())
+        }
+        return displayedModules
+    }
+    
+    var storedModules: [Module] {
+        let conduits = modules.filter{ $0 is ConduitModule }.count
+        var workingModules = modules.filter({ !($0 is ConduitModule) })
+        workingModules.removeFirst()
+        workingModules.removeFirst()
+        if conduits >= 1 {
+            workingModules.removeFirst()
+        }
+        if conduits >= 2 {
+            workingModules.removeFirst()
+        }
+        return workingModules
+    }
     
     var doVirtualDelivery: Bool
     
@@ -298,10 +326,12 @@ class Tank: BoardObject, Player {
         }
     }
     
-    func constrainFuelAndMetal() {
-        if modules.contains(where: { $0 is StorageModule }) {
-            return
-        } else {
+    func constrainToMaximumValues() {
+        if storedModules.count > displayedModules.filter({ $0 is StorageModule }).count {
+            //MARK: Send "too many modules" message
+        }
+        
+        if displayedModules.contains(where: { $0 is StorageModule }) {} else {
             fuel = min(fuel, 50)
             metal = min(metal, 50)
         }

@@ -24,6 +24,7 @@ enum ModuleType: String, Codable {
     case drone
     case conduit
     case storage
+    case construction
     case module
 
     func name() -> String {
@@ -34,6 +35,7 @@ enum ModuleType: String, Codable {
         case .drone: return "Drone"
         case .conduit: return "Conduit"
         case .storage: return "Storage"
+        case .construction: return "Construction"
         case .module: return "SOMETHING IS VERY WRONG"
         }
     }
@@ -79,6 +81,8 @@ class Module: Codable { var type: ModuleType { .module }
             return try ConduitModule(from: decoder)
         case .storage:
             return try StorageModule(from: decoder)
+        case .construction:
+            return try ConstructionModule(from: decoder)
         case .module:
             return try Module(from: decoder)
         }
@@ -135,6 +139,8 @@ extension Module {
                 self.module = try ConduitModule(from: decoder)
             case .storage:
                 self.module = try StorageModule(from: decoder)
+            case .construction:
+                self.module = try ConstructionModule(from: decoder)
             case .module:
                 self.module = try Module(from: decoder)
             }
@@ -224,11 +230,11 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.thursday:
                 Text("""
-                        On Thrifty Thursdays, you can sell your Tank's Modules and Upgrades to receive metal and/or fuel back for them. This will be necessarily less than you purchased them for. The offers may vary somewhat over time.
+                        On Thrifty Thursdays (􁽇), you can sell your Tank's Modules and Upgrades to receive metal and/or fuel back for them. This will be necessarily less than you purchased them for. The offers may vary somewhat over time.
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.friday:
                 Text("""
-                        On Firearm Fridays, you can purchase several upgrades for your Tank's weapons. There are three different upgrades you can normally make. Weapon Range increases the distance you can fire away from your Tank. Weapon Damage increases the amount of damage your weapon deals. Weapon Efficiency reduces the cost to fire your weapon.
+                        On Firearm Fridays (􀾲), you can purchase several upgrades for your Tank's weapons. There are three different upgrades you can normally make. Weapon Range increases the distance you can fire away from your Tank. Weapon Damage increases the amount of damage your weapon deals. Weapon Efficiency reduces the cost to fire your weapon.
                 
                         You have reached the end of the Tutorial Module. It will disappear automatically before your next turn. Good luck, and enjoy Tank Tactics!
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
@@ -392,7 +398,7 @@ class ConduitModule: Module { override var type: ModuleType { .conduit } /// not
 }
 
 class StorageModule: Module { override var type: ModuleType { .storage }
-    var tank: Tank {
+    private var tank: Tank {
         game.board.objects.first(where: { $0.uuid == self.tankId })! as! Tank
     }
     
@@ -415,9 +421,51 @@ class StorageModule: Module { override var type: ModuleType { .storage }
     }
 }
 
+class ConstructionModule: Module { override var type: ModuleType { .construction }
+    private var tank: Tank {
+        game.board.objects.first(where: { $0.uuid == self.tankId })! as! Tank
+    }
+    
+    override var view: any View {
+        VStack(spacing: inch(0.5)) {
+            Text("Circle a tile type and a location directly adjacent to your tank to build that tile.")
+                .multilineTextAlignment(.center)
+                .font(.system(size: inch(0.2)))
+            HStack(spacing: inch(0)) {
+                VStack(spacing: inch(0.25)) {
+                    VStack(spacing: 0) {
+                        Text("Normal Wall")
+                            .font(.system(size: inch(0.2)))
+                        Text("Costs 5􀇷")
+                            .font(.system(size: inch(0.15)))
+                            .italic()
+                    }
+                    VStack(spacing: 0) {
+                        Text("Reinforced Wall")
+                            .font(.system(size: inch(0.2)))
+                        Text("Costs 20􀇷")
+                            .font(.system(size: inch(0.15)))
+                            .italic()
+                    }
+                    VStack(spacing: 0) {
+                        Text("Gift with __􀵞 __􀇷")
+                            .font(.system(size: inch(0.2)))
+                        Text("Costs the spent amount of 􀵞 and 􀇷")
+                            .font(.system(size: inch(0.15)))
+                            .italic()
+                    }
+                }
+                .frame(width: inch(2), height: inch(3), alignment: .top)
+                SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false) //MARK: Reference real state of ShowBorderWarning.
+                    .frame(width: inch(2), height: inch(3), alignment: .top)
+            }
+        }
+    }
+}
+
 #Preview {
     ZStack {
         Color.white
-        ModuleView(module: StorageModule(tankId: game.board.objects.first(where: { $0 is Tank })?.uuid ?? UUID()))
+        ModuleView(module: ConstructionModule(tankId: game.board.objects.first(where: { $0 is Tank })?.uuid ?? UUID()))
     }
 }
