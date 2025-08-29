@@ -41,8 +41,20 @@ enum ModuleType: String, Codable {
     }
 }
 
-class Module: Codable { var type: ModuleType { .module }
+class Module: Codable, Hashable { var type: ModuleType { .module }
     var tankId: UUID?
+    fileprivate var tank: Tank {
+        game.board.objects.first(where: { $0.uuid == tankId }) as! Tank
+    }
+    
+    static func == (lhs: Module, rhs: Module) -> Bool {
+        return lhs.tankId == rhs.tankId && lhs.type == rhs.type
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(tankId)
+        hasher.combine(type)
+    }
     
     enum CodingKeys: String, CodingKey {
         case type
@@ -184,13 +196,13 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 """).font(.system(size: inch(0.15)))
                     HStack(spacing: 0) {
                         let coordinates = Coordinates(x: 0, y: 0, level: 0)
-                        BasicTileView(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"))
-                        BasicTileView(appearance: Appearance(fillColor: .green, strokeColor: .green, symbolColor: .red, symbol: "sos"))
-                        BasicTileView(appearance: Wall(coordinates: coordinates).appearance)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 1, containedModule: nil, uuid: nil).appearance)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 0, containedModule: nil, uuid: nil).appearance)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 1, containedModule: nil, uuid: nil).appearance)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 0, containedModule: TutorialModule(isWeekTwo: false), uuid: nil).appearance)
+                        BasicTileView(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Appearance(fillColor: .green, strokeColor: .green, symbolColor: .red, symbol: "sos"), accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Wall(coordinates: coordinates).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 1, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 0, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 1, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 0, containedModule: TutorialModule(isWeekTwo: false), uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
                     }
                     .frame(height: inch(0.5), alignment: .bottom)
                 }
@@ -272,21 +284,21 @@ class WebsitePlugModule: Module { override var type: ModuleType { .websitePlug }
 
 class RadarModule: Module { override var type: ModuleType { .radar } // note that this subclass needs no special encoder and decoder logic as it stores no extra data.
     override var view: any View {
-        SquareViewport(coordinates: game.board.objects.first(where: { $0.uuid == tankId! })!.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false)
+        SquareViewport(coordinates: game.board.objects.first(where: { $0.uuid == tankId! })!.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
     }
 }
 
 class DroneModule: Module { override var type: ModuleType { .drone }
-    var droneId: UUID
+    var droneId: UUID?
     override var view: any View {
         VStack {
-            SquareViewport(coordinates: game.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 3, lowDetailSightRange: 3, radarRange: 3, showBorderWarning: false) //MARK: reference real state of value showBorderWarning
+            SquareViewport(coordinates: game.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 3, lowDetailSightRange: 3, radarRange: 3, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: reference real state of value showBorderWarning
         }
     }
     
-    init(droneId: UUID) {
+    init(droneId: UUID?, tankId: UUID?) {
         self.droneId = droneId
-        super.init(tankId: nil)
+        super.init(tankId: tankId)
     }
     
     enum CodingKeys: String, CodingKey {
@@ -326,7 +338,7 @@ class SpyModule: Module { override var type: ModuleType { .spy } // note that th
                     return false
                 }) as! [Tank]) { tank in
                     HStack(spacing: inch(0.1)) {
-                        BasicTileView(appearance: tank.appearance)
+                        BasicTileView(appearance: tank.appearance, accessibilitySettings: super.tank.playerDemographics.accessibilitySettings)
                             .frame(maxWidth: inch(0.5), maxHeight: inch(0.5))
                         Text("\(tank.health)􀞽")
                             .font(.system(size: inch(0.2)))
@@ -398,10 +410,6 @@ class ConduitModule: Module { override var type: ModuleType { .conduit } /// not
 }
 
 class StorageModule: Module { override var type: ModuleType { .storage }
-    private var tank: Tank {
-        game.board.objects.first(where: { $0.uuid == self.tankId })! as! Tank
-    }
-    
     override var view: any View {
         VStack(spacing: inch(0.25)) {
             HStack(spacing: inch(0.25)) {
@@ -422,10 +430,6 @@ class StorageModule: Module { override var type: ModuleType { .storage }
 }
 
 class ConstructionModule: Module { override var type: ModuleType { .construction }
-    private var tank: Tank {
-        game.board.objects.first(where: { $0.uuid == self.tankId })! as! Tank
-    }
-    
     override var view: any View {
         VStack(spacing: inch(0.5)) {
             Text("Circle a tile type and a location directly adjacent to your tank to build that tile.")
@@ -456,11 +460,55 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                     }
                 }
                 .frame(width: inch(2), height: inch(3), alignment: .top)
-                SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false) //MARK: Reference real state of ShowBorderWarning.
+                SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: Reference real state of ShowBorderWarning.
                     .frame(width: inch(2), height: inch(3), alignment: .top)
             }
         }
     }
+}
+
+class FactoryModule: Module {
+    override var view: any View {
+        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+            GridRow {
+                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
+                    .font(.system(size: inch(0.2)))
+                Text("Movement Range")
+                    .font(.system(size: inch(0.2)))
+                    .lineLimit(1)
+                Text("\(5/*MARK: get actual price*/)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
+                    .font(.system(size: inch(0.15)))
+            }
+
+            GridRow {
+                Image(systemName: {
+                    switch tank.movementCost {
+                    case 10, 9:
+                        return "gauge.with.dots.needle.0percent"
+                    case 8, 7:
+                        return "gauge.with.dots.needle.33percent"
+                    case 6, 5:
+                        return "gauge.with.dots.needle.50percent"
+                    case 4, 3:
+                        return "gauge.with.dots.needle.67percent"
+                    default: ///``` case 2, 1:
+                        return "gauge.with.dots.needle.100percent"
+                    }
+                }())
+                    .font(.system(size: inch(0.2)))
+                Text("Movement Efficiency")
+                    .font(.system(size: inch(0.2)))
+                    .lineLimit(1)
+                Text("\(5/*MARK: get actual price*/)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
+                    .font(.system(size: inch(0.15)))
+            }
+        }
+    }
+    
 }
 
 #Preview {

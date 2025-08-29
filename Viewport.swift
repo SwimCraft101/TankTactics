@@ -15,6 +15,7 @@ struct SquareViewport: View {
     let lowDetailSightRange: Int
     let radarRange: Int
     let showBorderWarning: Bool
+    let accessibilitySettings: AccessibilitySettings
     
     var body: some View {
         GeometryReader { geometry in
@@ -22,7 +23,7 @@ struct SquareViewport: View {
                 ForEach(((-viewRenderSize)...viewRenderSize).reversed(), id: \.self) { upOffset in
                     GridRow {
                         ForEach(((-viewRenderSize)...viewRenderSize), id: \.self) { rightOffset in
-                            TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset))
+                            TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
                         }
                     }
                 }
@@ -39,6 +40,7 @@ struct TriangleViewport: View {
     let lowDetailSightRange: Int
     let radarRange: Int
     let showBorderWarning: Bool
+    let accessibilitySettings: AccessibilitySettings
     
     var body: some View {
         GeometryReader { geometry in
@@ -50,23 +52,27 @@ struct TriangleViewport: View {
                                 if upOffset == -1 &&  rightOffset + viewRenderSize == 1 {
                                     Text("X: \(coordinates.x)")
                                         .font(.system(size: inch(CGFloat(Double(1.5) / (Double(viewRenderSize) + 2)))))
+                                        .foregroundStyle(.black)
                                 } else if upOffset == -1 && rightOffset + viewRenderSize == 2 {
                                     Text("Y: \(coordinates.y)")
                                         .font(.system(size: inch(CGFloat(Double(1.5) / (Double(viewRenderSize) + 2)))))
+                                        .foregroundStyle(.black)
                                 } else if upOffset - viewRenderSize == -1 && rightOffset == 1 {
                                     Text(coordinates.rotation.letter)
                                         .font(.system(size: inch(CGFloat(Double(3) / (Double(viewRenderSize) + 2)))))
+                                        .foregroundStyle(.black)
                                 } else if upOffset - viewRenderSize == -2 && rightOffset == 1 {
                                     Image(systemName: "location.north.fill")
                                         .resizable()
                                         .scaledToFit()
                                         .padding(inch(CGFloat(Double(0.5) / (Double(viewRenderSize) + 2))))
                                         .rotationEffect(coordinates.rotation.angle)
+                                        .foregroundStyle(.black)
                                 } else {
-                                    TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset))
+                                    TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
                                 }
                             } else {
-                                BasicTileView(appearance: Appearance(fillColor: Color(hex: 0x000000, alpha: 0), symbol: ""))
+                                BasicTileView(appearance: Appearance(fillColor: Color(hex: 0x000000, alpha: 0), symbol: ""), accessibilitySettings: accessibilitySettings)
                             }
                         }
                     }
@@ -79,6 +85,7 @@ struct TriangleViewport: View {
 
 struct BasicTileView: View {
     let appearance: Appearance?
+    let accessibilitySettings: AccessibilitySettings
     
     var body: some View {
         GeometryReader { geometry in
@@ -107,18 +114,19 @@ struct BasicTileView: View {
                 }
             }
             .frame(width: shortestLength, height: shortestLength, alignment: .center)
+            .contrast(accessibilitySettings.highContrast ? 1 : 1.0)
         }
     }
 }
 
 struct TileView: View {
-    
     let coordinates: Coordinates
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
     let showBorderWarning: Bool
     let localCoordinates: Coordinates
+    let accessibilitySettings: AccessibilitySettings
     
     func getAppearenceAtLocation() -> Appearance { //MARK: make this less horrible
         if localCoordinates.inBounds() {
@@ -179,7 +187,7 @@ struct TileView: View {
     
     var body: some View {
         let thisTile = game.board.objects.first(where: { $0.coordinates == localCoordinates && $0.appearance != nil })
-        BasicTileView(appearance: getAppearenceAtLocation())
+        BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
             .contextMenu {
                 if thisTile != nil {
                     if thisTile is Tank {
@@ -217,9 +225,9 @@ struct TileView: View {
 
 #Preview {
     VStack {
-        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true)
+        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
             .frame(width: inch(4), height: inch(4))
-        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true)
+        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
             .frame(width: inch(4), height: inch(4))
     }
     .background(.white)

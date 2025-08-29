@@ -123,7 +123,7 @@ import Foundation
                         let level = levelDisplayed
                         ZStack {
                             Color.white
-                            SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning)
+                            SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning, accessibilitySettings: AccessibilitySettings())
                                 .frame(width: max(min(geometry.size.height, geometry.size.width), 300), height: max(min(geometry.size.height, geometry.size.width), 300), alignment: .center)
                         }
                         VStack {
@@ -150,7 +150,7 @@ import Foundation
                                         //MARK: Make Dead Status Cards work in email
                                     }
                                     Button("Print Full Board") {
-                                        createAndSavePDF(from: [AnyView(SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning).frame(width: inch(8), height: inch(8)))], fileName: "board")
+                                        createAndSavePDF(from: [AnyView(SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning, accessibilitySettings: AccessibilitySettings()).frame(width: inch(8), height: inch(8)))], fileName: "board")
                                     }
                                     Button("Open Game File") {
                                             uiBannerMessage = "Opening saved game file..."

@@ -89,7 +89,7 @@ struct DeadStatusCardBack: View {
                         Spacer()
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .center)
-                    SquareViewport(coordinates: game.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
+                    SquareViewport(coordinates: game.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
                         .frame(width: inch(4), height: inch(4), alignment: .center)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
@@ -178,7 +178,7 @@ struct DeadControlPanelView: View {
                     .font(.system(size: inch(0.15)))
                     .foregroundColor(.black)
                     .frame(width: inch(3), height: inch(1))
-                BasicTileView(appearance: game.board.objects[tank.killedByIndex].appearance)
+                BasicTileView(appearance: game.board.objects[tank.killedByIndex].appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
             }
             .frame(width: inch(4), height: inch(1))
         }

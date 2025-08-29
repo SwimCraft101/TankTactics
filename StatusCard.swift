@@ -25,12 +25,69 @@ extension Color {
     }
 }
 
+struct TooManyModules: View {
+    let tank: Tank
+    var body: some View {
+        let numberOfConduits = tank.modules.filter { $0 is ConduitModule }.count
+        let numberOfStorages = tank.modules.filter { $0 is StorageModule }.count
+        
+        VStack {
+            Text("You have too many Modules!")
+                .font(.system(size: inch(0.325)))
+            Text("Select how to deal with them.")
+                .font(.system(size: inch(0.25)))
+                .italic()
+            Spacer()
+            Grid(horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+                GridRow {
+                    Text("Module")
+                        .font(.system(size: inch(0.15)))
+                        .italic()
+                    Text("Equip")
+                        .font(.system(size: inch(0.15)))
+                        .italic()
+                    if numberOfStorages > 0 {
+                        Text("Store")
+                            .font(.system(size: inch(0.15)))
+                            .italic()
+                    }
+                    Text("Remove")
+                        .font(.system(size: inch(0.15)))
+                        .italic()
+                }
+                ForEach(tank.modules.filter{!($0 is ConduitModule)}, id: \.self) { module in
+                    GridRow {
+                        Text(module.type.name())
+                            .font(.system(size: inch(0.25)))
+                        Image(systemName: "square")
+                            .resizable()
+                            .frame(width: inch(0.2), height: inch(0.2))
+                        if numberOfStorages > 0 {
+                            Image(systemName: "square")
+                                .resizable()
+                                .frame(width: inch(0.2), height: inch(0.2))
+                        }
+                        Image(systemName: "square")
+                            .resizable()
+                            .frame(width: inch(0.2), height: inch(0.2))
+                    }
+                }
+            }
+            Spacer()
+            Text("You may equip up to \(min(2 + numberOfConduits, 4)) Modules\(numberOfConduits > 0 ? " because of your \(numberOfConduits) Conduit \(numberOfConduits == 1 ? "Module" : "Modules")" : "")\(numberOfStorages > 0 ? ", and store one module for every Storage module you equip" : "").")
+                .font(.system(size: inch(0.15)))
+                .italic()
+        }
+        .frame(width: inch(4), height: inch(4), alignment: .top)
+    }
+}
+
 struct StatusCardFront: View {
     let tank: Tank
     let showBorderWarning: Bool
     var body: some View {
         ZStack {
-            TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false) //MARK: reference real showBorderWarning value
+            TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: reference real showBorderWarning value
                 .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
                 .rotationEffect(Angle(degrees: -90))
                 .frame(width: inch(5), height: inch(8), alignment: .topTrailing)
@@ -81,14 +138,14 @@ struct StatusCardFront: View {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     if tank.fuel >= tank.metal {
-                        fuelMeter(tank.fuel)
+                        fuelMeter(tank)
                     } else {
-                        metalMeter(tank.metal)
+                        metalMeter(tank)
                     }
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .leading)
                 HStack(spacing: 0) {
-                    healthMeter(tank.health)
+                    healthMeter(tank)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .trailing)
                 
@@ -134,18 +191,18 @@ struct StatusCardBack: View {
                 HStack(spacing: 0) {
                     HStack(spacing: 0) {
                         if tank.fuel >= tank.metal {
-                            fuelMeter(tank.fuel)
-                            metalMeter(tank.metal)
+                            fuelMeter(tank)
+                            metalMeter(tank)
                         } else if tank.fuel + tank.metal > 0 {
-                            metalMeter(tank.metal)
-                            fuelMeter(tank.fuel)
+                            metalMeter(tank)
+                            fuelMeter(tank)
                         } else {
-                            defenseMeter(tank.defense)
+                            defenseMeter(tank)
                         }
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .leading)
                     if topModule == nil {
-                        TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false) //MARK: reference real value of ShowBorderWarning
+                        TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: reference real value of ShowBorderWarning
                             .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
                     } else {
                         ModuleView(module: topModule!)
@@ -228,9 +285,20 @@ struct ControlPanelView: View {
                     case .friday:
                         Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
                             GridRow {
-                                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
+                                Image(systemName: "dot.scope")
                                     .font(.system(size: inch(0.2)))
                                 Text("Weapon Range")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(5/*MARK: get actual price*/)􀇷")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
+                                    .font(.system(size: inch(0.2)))
+                            }
+                            
+                            GridRow {
+                                Image(systemName: "bandage")
+                                    .font(.system(size: inch(0.2)))
+                                Text("Weapon Damage")
                                     .font(.system(size: inch(0.2)))
                                 Text("\(5/*MARK: get actual price*/)􀇷")
                                     .font(.system(size: inch(0.2)))
@@ -367,20 +435,20 @@ struct MeterView: View {
     }
 }
 
-func fuelMeter(_ value: Int) -> MeterView {
-    return MeterView(value: value, max: 50, color: .green, label: "Fuel", icon: "fuelpump")
+func fuelMeter(_ tank: Tank) -> MeterView {
+    return MeterView(value: tank.fuel, max: 50, color: .green.opacity(tank.playerDemographics.accessibilitySettings.highContrast || tank.playerDemographics.accessibilitySettings.colorblind ? 0.5 : 1), label: "Fuel", icon: "fuelpump")
 }
 
-func metalMeter(_ value: Int) -> MeterView {
-    return MeterView(value: value, max: 50, color: .yellow, label: "Metal", icon: "square.grid.2x2")
+func metalMeter(_ tank: Tank) -> MeterView {
+    return MeterView(value: tank.metal, max: 50, color: .yellow.opacity(tank.playerDemographics.accessibilitySettings.highContrast || tank.playerDemographics.accessibilitySettings.colorblind ? 0.5 : 1), label: "Metal", icon: "square.grid.2x2")
 }
 
-func healthMeter(_ value: Int) -> MeterView {
-    return MeterView(value: value, max: 100, color: .red, label: "Health", icon: "bolt.heart")
+func healthMeter(_ tank: Tank) -> MeterView {
+    return MeterView(value: tank.health, max: 100, color: .red.opacity(tank.playerDemographics.accessibilitySettings.highContrast || tank.playerDemographics.accessibilitySettings.colorblind ? 0.5 : 1), label: "Health", icon: "bolt.heart")
 }
 
-func defenseMeter(_ value: Int) -> MeterView {
-    return MeterView(value: value, max: 10, color: .blue, label: "Defense", icon: "shield.lefthalf.filled")
+func defenseMeter(_ tank: Tank) -> MeterView {
+    return MeterView(value: tank.defense, max: 10, color: .blue.opacity(tank.playerDemographics.accessibilitySettings.highContrast || tank.playerDemographics.accessibilitySettings.colorblind ? 0.5 : 1), label: "Defense", icon: "shield.lefthalf.filled")
 }
 
 struct DirectionOptions: View {
@@ -450,11 +518,21 @@ struct VirtualStatusCard: View { //MARK: rework to match standard Status Card
 }
 
 #Preview {
-    let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(), kills: 0))
-    ZStack {
-        HStack(spacing: 0) {
-            StatusCardFront(tank: tank, showBorderWarning: false)
-        }
-        .background(.white)
+    let uuid = UUID()
+    let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(highContrast: false, colorblind: false, largeText: false), kills: 0), fuel: 20, metal: 30, health: 84, defense: 2, movementCost: 10, movementRange: 2, gunRange: 2, gunDamage: 10, gunCost: 9, highDetailSightRange: 3, lowDetailSightRange: 4, radarRange: 5, modules: [
+        StorageModule(tankId: uuid),
+        ConduitModule(tankId: uuid),
+        ConduitModule(tankId: uuid),
+        RadarModule(tankId: uuid),
+        SpyModule(tankId: uuid),
+        ConstructionModule(tankId: uuid),
+        TutorialModule(isWeekTwo: false),
+    ], uuid: uuid)
+    
+    HStack(spacing: 0) {
+        fuelMeter(tank)
+        metalMeter(tank)
+        healthMeter(tank)
+        defenseMeter(tank)
     }
 }
