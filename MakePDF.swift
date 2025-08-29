@@ -17,16 +17,7 @@ func imageFromView(_ view: AnyView, size: CGSize) -> NSImage {
     let offscreenView = NSView(frame: CGRect(origin: .zero, size: size))
     offscreenView.addSubview(rootView)
     
-    let bitmapRep = NSBitmapImageRep(bitmapDataPlanes: nil,
-                                     pixelsWide: Int(size.width),
-                                     pixelsHigh: Int(size.height),
-                                     bitsPerSample: 8,
-                                     samplesPerPixel: 4,
-                                     hasAlpha: true,
-                                     isPlanar: false,
-                                     colorSpaceName: .deviceRGB,
-                                     bytesPerRow: 0,
-                                     bitsPerPixel: 0)
+    let bitmapRep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height), bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
     
     offscreenView.cacheDisplay(in: offscreenView.bounds, to: bitmapRep!)
     
@@ -66,6 +57,98 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
             // Open the PDF file using the system's default viewer
             NSWorkspace.shared.open(tempFileURL)
         } catch {}
+    }
+}
+
+func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmentCompensation: Bool) {
+    var pages: [AnyView] = []
+    var playersToPrintInConduitMode: [Player] = players.filter { $0.statusCardConduitBack() != nil }
+    var playersToPrintNormally: [Player] = players.filter { $0.statusCardConduitBack() == nil }
+    var messages = messagesIn
+    
+    while playersToPrintInConduitMode.count > 0 {
+        let player = playersToPrintInConduitMode.removeFirst()
+        pages.append(AnyView(HStack(spacing:0) {
+            player.statusCardFront()
+                .frame(width: inch(5), height: inch(8))
+            VStack(spacing: 0) {
+                player.statusCardConduitFront()!
+                    .frame(width: inch(5), height: inch(4), alignment: .leading)
+                if !messages.isEmpty {
+                    MessageView(message: messages.first!)
+                        .frame(width: inch(5), height: inch(4), alignment: .center)
+                } else { //MARK: only print one Turn Report
+                    //TurnReport()//MARK: implement Turn Reports
+                    //.frame(width: inch(5), height: inch(4), alignment: .center)
+                }
+            }
+        }.frame(width: inch(10), height: inch(8)).border(.black, width: inch(0.05)).frame(width: inch(11), height: inch(8.5), alignment: .center)))
+        pages.append(AnyView(HStack(spacing:0) {
+            VStack(spacing: 0) {
+                player.statusCardConduitBack()!
+                    .frame(width: inch(5), height: inch(4), alignment: .leading)
+                if !messages.isEmpty {
+                    MessageBackView(message: messages.removeFirst())
+                        .frame(width: inch(5), height: inch(4), alignment: .center)
+                }
+            }
+            player.statusCardBack()
+                .frame(width: inch(5), height: inch(8))
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.05))
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+        ))
+    }
+    
+    while playersToPrintNormally.count > 1 {
+        let player1 = playersToPrintNormally.removeFirst()
+        let player2 = playersToPrintNormally.removeFirst()
+        
+        pages.append(AnyView(HStack(spacing:0) {
+            player1.statusCardFront()
+                .frame(width: inch(5), height: inch(8))
+            player2.statusCardFront()
+                .frame(width: inch(5), height: inch(8))
+        }.frame(width: inch(10), height: inch(8)).border(.black, width: inch(0.05)).frame(width: inch(11), height: inch(8.5), alignment: .center)))
+        pages.append(AnyView(HStack(spacing:0) {
+            player2.statusCardBack()
+                .frame(width: inch(5), height: inch(8))
+            player1.statusCardBack()
+                .frame(width: inch(5), height: inch(8))
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.05))
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+        ))
+    }
+    
+    if playersToPrintNormally.count > 0 {
+        let player = playersToPrintNormally.removeFirst()
+        pages.append(AnyView(HStack(spacing:0) {
+            player.statusCardFront()
+                .frame(width: inch(5), height: inch(8))
+            EmptyView()
+                .frame(width: inch(5), height: inch(8))
+        }.frame(width: inch(10), height: inch(8)).border(.black, width: inch(0.05)).frame(width: inch(11), height: inch(8.5), alignment: .center)))
+        pages.append(AnyView(HStack(spacing:0) {
+            EmptyView()
+            player.statusCardBack()
+                .frame(width: inch(5), height: inch(8))
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.05))
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+        ))
     }
 }
 

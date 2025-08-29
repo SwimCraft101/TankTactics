@@ -88,6 +88,7 @@ struct Appearance: Equatable, Codable {
 enum BoardObjectType: String, Codable {
     case boardObject
     case wall
+    case reinforcedWall
     case gift
     case placeholder
     case drone
@@ -148,6 +149,7 @@ class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType 
 
         switch type {
         case .wall: return try Wall(from: decoder)
+        case .reinforcedWall: return try ReinforcedWall(from: decoder)
         case .gift: return try Gift(from: decoder)
         case .placeholder: return try Placeholder(from: decoder)
         case .drone: return try Drone(from: decoder)
@@ -216,6 +218,8 @@ extension BoardObject {
                 self.object = try BoardObject(from: decoder)
             case .wall:
                 self.object = try Wall(from: decoder)
+            case .reinforcedWall:
+                self.object = try ReinforcedWall(from: decoder)
             case .gift:
                 self.object = try Gift(from: decoder)
             case .placeholder:
@@ -238,7 +242,7 @@ class Wall: BoardObject {
         super.init(
             fuelDropped: 0,
             metalDropped: 0,
-            appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "rectangle.fill"),
+            appearance: Appearance(fillColor: .black, symbolColor: .black, symbol: "rectangle.fill"),
             coordinates: coordinates,
             health: 1,
             defense: 0,
@@ -257,7 +261,49 @@ class Wall: BoardObject {
         super.init(
             fuelDropped: 0,
             metalDropped: 0,
-            appearance: Appearance(fillColor: .black, strokeColor: .black, symbolColor: .black, symbol: "rectangle.fill"),
+            appearance: Appearance(fillColor: .black, symbolColor: .black, symbol: "rectangle.fill"),
+            coordinates: try container.decode(Coordinates.self, forKey: .coordinates),
+            health: 1,
+            defense: 0,
+            uuid: try container.decode(UUID.self, forKey: .uuid)
+        )
+    }
+    
+    override func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(uuid, forKey: .uuid)
+        try container.encode(coordinates, forKey: .coordinates)
+    }
+}
+
+class ReinforcedWall: BoardObject {
+    override var type: BoardObjectType { .reinforcedWall }
+    
+    init(coordinates: Coordinates) {
+        super.init(
+            fuelDropped: 0,
+            metalDropped: 0,
+            appearance: Appearance(fillColor: .black, symbolColor: .red, symbol: "lock.fill"),
+            coordinates: coordinates,
+            health: 1,
+            defense: 0,
+            uuid: UUID()
+        )
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case type
+        case uuid
+        case coordinates
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        super.init(
+            fuelDropped: 0,
+            metalDropped: 0,
+            appearance: Appearance(fillColor: .black, symbolColor: .red, symbol: "lock.fill"),
             coordinates: try container.decode(Coordinates.self, forKey: .coordinates),
             health: 1,
             defense: 0,

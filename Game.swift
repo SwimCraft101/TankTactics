@@ -13,9 +13,9 @@ import SwiftUICore
 let playerDemographics = PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)
 #endif
 var game: TankTacticsGame = TankTacticsGame(board: Board(objects: [
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .blue, strokeColor: .green, symbolColor: .green, symbol: "tree"), coordinates: Coordinates(x: 1, y: 0, level: 0), health: 54, defense: 31, uuid: UUID()),
     Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerDemographics: PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)),
-    Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)),
+    Wall(coordinates: Coordinates(x: 1, y: 0, level: 0)),
+    ReinforcedWall(coordinates: Coordinates(x: 0, y: 0, level: 0)),
     Gift(coordinates: Coordinates(x: 1, y: 5, level: 0)),
     Tank(appearance: Appearance(fillColor: .gray, symbolColor: .red, symbol: "sos"), coordinates: Coordinates(x: 1, y: 0, level: 0), playerDemographics: playerDemographics),
     Tank(appearance: Appearance(fillColor: .cyan, strokeColor: .red, symbol: "circle.hexagongrid.fill"), coordinates: Coordinates(x: 3, y: 1, level: 0), playerDemographics: playerDemographics),
@@ -138,6 +138,25 @@ enum GameDay: Codable {
 @Observable class TankTacticsGame: Codable {
     var board: Board
     var gameDay: GameDay
+    var randomSeed: Int
+    var moduleOffered: Module? {
+        if gameDay == .monday {
+            switch randomSeed * 287230 % 10 {
+            case 0: return RadarModule(tankId: nil)
+            case 1: return RadarModule(tankId: nil)
+            case 2: return StorageModule(tankId: nil)
+            case 3: return StorageModule(tankId: nil)
+            case 4: return DroneModule(droneId: nil, tankId: nil)
+            case 5: return SpyModule(tankId: nil)
+            case 6: return ConduitModule(tankId: nil)
+            case 7: return FactoryModule(tankId: nil)
+            case 8: return FactoryModule(tankId: nil)
+            default: return ConstructionModule(tankId: nil)
+            }
+        }
+        return nil
+    }
+    
     
     enum CodingKeys: String, CodingKey {
         case board
@@ -148,6 +167,7 @@ enum GameDay: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.board = try container.decode(Board.self, forKey: .board)
         self.gameDay = try container.decode(GameDay.self, forKey: .gameDay)
+        self.randomSeed = Int.random(in: Int.min...Int.max)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -159,5 +179,6 @@ enum GameDay: Codable {
     init(board: Board, gameDay: GameDay) {
         self.board = board
         self.gameDay = gameDay
+        self.randomSeed = Int.random(in: Int.min...Int.max)
     }
 }

@@ -27,15 +27,21 @@ protocol Player: BoardObject {
     func statusCardConduitBack() -> AnyView?
 }
 
-struct AccessibilitySettings: Codable {
+struct AccessibilitySettings: Codable, Equatable {
     var highContrast: Bool
     var colorblind: Bool
     var largeText: Bool
     
-    init() {
+    init() { //default "lazy" initializer for when no accessibility settings are needed
         self.highContrast = false
         self.colorblind = false
         self.largeText = false
+    }
+    
+    init(highContrast: Bool, colorblind: Bool, largeText: Bool) { //regular initializer
+        self.highContrast = highContrast
+        self.colorblind = colorblind
+        self.largeText = largeText
     }
 }
 
@@ -51,85 +57,6 @@ struct PlayerDemographics: Codable {
     
     var fullName: String {
         "\(firstName) \(lastName)"
-    }
-}
-
-class Action {
-    let tankId: UUID
-    let precedence: Int
-    enum ActionType {
-        case move([Direction])
-        case fire([Direction])
-        case placeWall(Direction)
-        case upgrade(UpgradeType)
-        
-        enum UpgradeType {
-            case movementCost
-            case movementRange
-            case gunRange
-            case gunDamage
-            case gunCost
-            case repair
-        }
-    }
-    let type: ActionType
-    
-    init(_ type: ActionType, tank: Tank, precedence: Int) {
-        self.type = type
-        self.tankId = tank.uuid
-        self.precedence = precedence
-    }
-    
-    func isAlowed() -> Bool {
-        let tank = game.board.objects.first(where: { $0.uuid == self.tankId }) as! Tank
-        if self.fuelCost() > tank.fuel {
-            return false
-        }
-        if self.metalCost() > tank.metal {
-            return false
-        }
-        return true
-    }
-    
-    func fuelCost() -> Int {
-        let tank = game.board.objects.first(where: { $0.uuid == self.tankId }) as! Tank
-        switch type {
-        case .move:
-            return tank.movementCost
-        case .fire:
-            return tank.gunCost
-        case .placeWall:
-            return 0
-        case .upgrade:
-            return 0
-        }
-    }
-    
-    func metalCost() -> Int {
-        let tank = game.board.objects.first(where: { $0.uuid == self.tankId }) as! Tank
-        switch type {
-        case .move:
-            return 0
-        case .fire:
-            return 0
-        case .placeWall:
-            return 5
-        case .upgrade(let upgradeType):
-            switch upgradeType {
-            case .movementCost:
-                return Int(power(base: Double(tank.movementCost), exponent: 1) * 1.5 + 0)
-            case .movementRange:
-                return Int(power(base: Double(tank.movementRange), exponent: 2) * 1 + 0)
-            case .gunRange:
-                return Int(power(base: Double(tank.gunRange), exponent: 2) * 1 + 1)
-            case .gunDamage:
-                return Int(power(base: Double(tank.gunDamage), exponent: 1) * 0.2 + 1)
-            case .gunCost:
-                return Int(power(base: Double(tank.gunCost), exponent: 1) * 1.5 + 0)
-            case .repair:
-                return 3
-            }
-        }
     }
 }
 
