@@ -1,5 +1,4 @@
 import Observation
-import SwiftUI
 
 @Observable class Board: Codable {
     var objects: [BoardObject]
