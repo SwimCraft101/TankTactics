@@ -19,17 +19,17 @@ var game: TankTacticsGame = TankTacticsGame(board: Board(objects: [
     Gift(coordinates: Coordinates(x: 1, y: 5, level: 0)),
     Tank(appearance: Appearance(fillColor: .gray, symbolColor: .red, symbol: "sos"), coordinates: Coordinates(x: 1, y: 0, level: 0), playerDemographics: playerDemographics),
     Tank(appearance: Appearance(fillColor: .cyan, strokeColor: .red, symbol: "circle.hexagongrid.fill"), coordinates: Coordinates(x: 3, y: 1, level: 0), playerDemographics: playerDemographics),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .pink, strokeColor: .purple, symbolColor: .pink, symbol: "storefront.circle.fill"), coordinates: Coordinates(x: -2, y: 3, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .red, strokeColor: .green, symbol: "tree.fill"), coordinates: Coordinates(x: -4, y: -2, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .orange, symbol: "pc"), coordinates: Coordinates(x: 0, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .cyan, symbolColor: .red, symbol: "lock.desktopcomputer"), coordinates: Coordinates(x: 3, y: -1, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .green, symbolColor: .pink, symbol: "pencil.and.list.clipboard"), coordinates: Coordinates(x: 8, y: 1, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .orange, strokeColor: .purple, symbol: "widget.extralarge.badge.plus"), coordinates: Coordinates(x: -5, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .gray, strokeColor: .yellow, symbol: "drop.triangle.fill"), coordinates: Coordinates(x: 7, y: 4, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .cyan, symbol: "lightspectrum.horizontal"), coordinates: Coordinates(x: 6, y: -1, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), health: 54, defense: 31, uuid: UUID()),
-    BoardObject(fuelDropped: 0, metalDropped: 0, appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), health: 54, defense: 31, uuid: UUID()),
-]), gameDay: .wednesday)
+    Tank(appearance: Appearance(fillColor: .pink, strokeColor: .purple, symbolColor: .pink, symbol: "storefront.circle.fill"), coordinates: Coordinates(x: -2, y: 3, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .red, strokeColor: .green, symbol: "tree.fill"), coordinates: Coordinates(x: -4, y: -2, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .orange, symbol: "pc"), coordinates: Coordinates(x: 0, y: -3, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .cyan, symbolColor: .red, symbol: "lock.desktopcomputer"), coordinates: Coordinates(x: 3, y: -1, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .green, symbolColor: .pink, symbol: "pencil.and.list.clipboard"), coordinates: Coordinates(x: 8, y: 1, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .orange, strokeColor: .purple, symbol: "widget.extralarge.badge.plus"), coordinates: Coordinates(x: -5, y: -3, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .gray, strokeColor: .yellow, symbol: "drop.triangle.fill"), coordinates: Coordinates(x: 7, y: 4, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .cyan, symbol: "lightspectrum.horizontal"), coordinates: Coordinates(x: 6, y: -1, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), playerDemographics: playerDemographics),
+    Tank(appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), playerDemographics: playerDemographics),
+]), gameDay: .monday)
 
 func promptForDecodedFile<T: Decodable>(ofType type: T.Type) -> T? {
     let panel = NSOpenPanel()
@@ -141,7 +141,7 @@ enum GameDay: Codable {
     var randomSeed: Int
     var moduleOffered: Module? {
         if gameDay == .monday {
-            switch randomSeed * 287230 % 10 {
+            switch randomSeed &* 287230 % 10 {
             case 0: return RadarModule(tankId: nil)
             case 1: return RadarModule(tankId: nil)
             case 2: return StorageModule(tankId: nil)
@@ -157,6 +157,25 @@ enum GameDay: Codable {
         return nil
     }
     
+    var moduleOfferPrice: Int? {
+        if gameDay == .monday {
+            switch randomSeed &* 287230 % 10 {
+            case 0: return 15 + randomSeed &* 3545789 % 10
+            case 1: return 20 + randomSeed &* 3545789 % 10
+            case 2: return 20 + randomSeed &* 3545789 % 10
+            case 3: return 25 + randomSeed &* 3545789 % 10
+            case 4: return 45 + randomSeed &* 3545789 % 10
+            case 5: return 40 + randomSeed &* 3545789 % 10
+            case 6: return 50 + randomSeed &* 3545789 % 10
+            case 7: return 25 + randomSeed &* 3545789 % 10
+            case 8: return 30 + randomSeed &* 3545789 % 10
+            default: return 15 + randomSeed &* 3545789 % 10
+            }
+        }
+        return nil
+    }
+    
+    var eventCardBidders: [(UUID, Int)] = []
     
     enum CodingKeys: String, CodingKey {
         case board

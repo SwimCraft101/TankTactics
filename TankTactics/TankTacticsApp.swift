@@ -135,9 +135,8 @@ import Foundation
                                         for virtualTank in game.board.objects.filter({
                                             if $0 is Tank {
                                                 if ($0 as! Tank).doVirtualDelivery {
-                                                    return false
+                                                    return true
                                                 }
-                                                return true
                                             }
                                             return false
                                         }) {
