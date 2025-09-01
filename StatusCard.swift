@@ -189,40 +189,40 @@ struct StatusCardBack: View {
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
+                    if topModule == nil {
+                        TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: reference real value of ShowBorderWarning
+                            .frame(width: inch(4), height: inch(4), alignment: .topLeading)
+                    } else {
+                        ModuleView(module: topModule!)
+                    }
                     HStack(spacing: 0) {
                         if tank.fuel >= tank.metal {
-                            fuelMeter(tank)
                             metalMeter(tank)
+                            fuelMeter(tank)
                         } else if tank.fuel + tank.metal > 0 {
-                            metalMeter(tank)
                             fuelMeter(tank)
+                            metalMeter(tank)
                         } else {
                             defenseMeter(tank)
                         }
                     }
-                    .frame(width: inch(1), height: inch(4), alignment: .leading)
-                    if topModule == nil {
-                        TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: reference real value of ShowBorderWarning
-                            .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
-                    } else {
-                        ModuleView(module: topModule!)
-                    }
+                    .frame(width: inch(1), height: inch(4), alignment: .trailing)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
                 HStack(spacing: 0) {
-                    if bottomModule == nil {
-                        ControlPanelView(tank: tank)
-                            .frame(width: inch(4), height: inch(4), alignment: .topLeading)
-                    } else {
-                        ModuleView(module: bottomModule!)
-                    }
                     HStack(spacing: 0) {
+                        MeterView(value: tank.health, max: 100, color: .red, label: "health", icon: "bolt.heart")
                         if tank.fuel + tank.metal > 0 {
                             MeterView(value: tank.defense, max: 20, color: .blue, label: "defense", icon: "shield.righthalf.filled")
                         }
-                        MeterView(value: tank.health, max: 100, color: .red, label: "health", icon: "bolt.heart")
                     }
-                    .frame(width: inch(1), height: inch(4), alignment: .trailing)
+                    .frame(width: inch(1), height: inch(4), alignment: .leading)
+                    if bottomModule == nil {
+                        ControlPanelView(tank: tank)
+                            .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
+                    } else {
+                        ModuleView(module: bottomModule!)
+                    }
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .bottom)
             }
@@ -238,72 +238,23 @@ struct ControlPanelView: View {
                 VStack(spacing: 0) {
                     switch game.gameDay {
                     case .monday:
-                        Text("") //MARK: Add Module Purchasing
+                        Text("\(game.moduleOffered!.type.name()) Module \(game.moduleOfferPrice!)􀇷") //MARK: Add Module Purchasing
+                            .font(.system(size: inch(0.2)))
                     case .tuesday:
-                        Text("Moving and Firing are 50% cheaper today. Two Event Cards are availible.")
+                        Text("Moving and Firing are 50% cheaper today.\nTwo Event Cards are availible.")
+                            .font(.system(size: inch(0.2)))
                     case .wednesday:
-                        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+                        Grid(alignment: .center, horizontalSpacing: inch(0.05), verticalSpacing: 0) {
                             GridRow {
                                 Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
                                     .font(.system(size: inch(0.2)))
                                 Text("Movement Range")
                                     .font(.system(size: inch(0.2)))
                                     .lineLimit(1)
-                                Text("\(5/*MARK: get actual price*/)􀇷")
+                                Text("\(UpgradeMovementRange(tankId: tank.uuid, precedence: 0).metalCost)􀇷")
                                     .font(.system(size: inch(0.15)))
                                 Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
                                     .font(.system(size: inch(0.15)))
-                            }
-                            
-                            GridRow {
-                                Image(systemName: {
-                                    switch tank.movementCost {
-                                    case 10, 9:
-                                        return "gauge.with.dots.needle.0percent"
-                                    case 8, 7:
-                                        return "gauge.with.dots.needle.33percent"
-                                    case 6, 5:
-                                        return "gauge.with.dots.needle.50percent"
-                                    case 4, 3:
-                                        return "gauge.with.dots.needle.67percent"
-                                    default: ///``` case 2, 1:
-                                        return "gauge.with.dots.needle.100percent"
-                                    }
-                                }())
-                                    .font(.system(size: inch(0.2)))
-                                Text("Movement Efficiency")
-                                    .font(.system(size: inch(0.2)))
-                                    .lineLimit(1)
-                                Text("\(5/*MARK: get actual price*/)􀇷")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
-                                    .font(.system(size: inch(0.15)))
-                            }
-                        }
-                    case .thursday:
-                        EmptyView()
-                    case .friday:
-                        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
-                            GridRow {
-                                Image(systemName: "dot.scope")
-                                    .font(.system(size: inch(0.2)))
-                                Text("Weapon Range")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(5/*MARK: get actual price*/)􀇷")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
-                                    .font(.system(size: inch(0.2)))
-                            }
-                            
-                            GridRow {
-                                Image(systemName: "bandage")
-                                    .font(.system(size: inch(0.2)))
-                                Text("Weapon Damage")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(5/*MARK: get actual price*/)􀇷")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
-                                    .font(.system(size: inch(0.2)))
                             }
                             
                             GridRow {
@@ -324,9 +275,47 @@ struct ControlPanelView: View {
                                     .font(.system(size: inch(0.2)))
                                 Text("Movement Efficiency")
                                     .font(.system(size: inch(0.2)))
-                                Text("\(5/*MARK: get actual price*/)􀇷")
-                                    .font(.system(size: inch(0.2)))
+                                    .lineLimit(1)
+                                Text("\(UpgradeMovementCost(tankId: tank.uuid, precedence: 0).metalCost)􀇷")
+                                    .font(.system(size: inch(0.15)))
                                 Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
+                                    .font(.system(size: inch(0.15)))
+                            }
+                        }
+                    case .thursday:
+                        EmptyView() // MARK: Implement Thrift
+                    case .friday:
+                        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+                            GridRow {
+                                Image(systemName: "dot.scope")
+                                    .font(.system(size: inch(0.2)))
+                                Text("Weapon Range")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(UpgradeGunRange(tankId: tank.uuid, precedence: 0).metalCost)􀇷")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(tank.gunRange)􀂒 􀄫 \(tank.gunRange + 1)􀂒")
+                                    .font(.system(size: inch(0.2)))
+                            }
+                            
+                            GridRow {
+                                Image(systemName: "bandage")
+                                    .font(.system(size: inch(0.2)))
+                                Text("Weapon Damage")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(UpgradeGunDamage(tankId: tank.uuid, precedence: 0).metalCost)􀇷")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(tank.gunDamage)􀲗 􀄫 \(tank.gunDamage + 5)􀲗")
+                                    .font(.system(size: inch(0.2)))
+                            }
+                            
+                            GridRow {
+                                Image(systemName: "chart.bar.xaxis")
+                                    .font(.system(size: inch(0.2)))
+                                Text("Weapon Efficiency")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(UpgradeGunCost(tankId: tank.uuid, precedence: 0).metalCost)􀇷")
+                                    .font(.system(size: inch(0.2)))
+                                Text("\(tank.gunCost)􀵞 􀄫 \(tank.gunCost - 1)􀵞")
                                     .font(.system(size: inch(0.2)))
                             }
                         }
@@ -530,9 +519,7 @@ struct VirtualStatusCard: View { //MARK: rework to match standard Status Card
     ], uuid: uuid)
     
     HStack(spacing: 0) {
-        fuelMeter(tank)
-        metalMeter(tank)
-        healthMeter(tank)
-        defenseMeter(tank)
+        ControlPanelView(tank: tank)
     }
+    .background(.white)
 }

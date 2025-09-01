@@ -2,7 +2,7 @@ import Observation
 
 @Observable class Board: Codable {
     var objects: [BoardObject]
-    var border: Int = 0 //last coordinate to be open space, always encodes but currently does not decode.
+    var border: Int = 8 //last coordinate to be open space, always encodes for future compatibility but currently does not decode.
     
     init(objects: [BoardObject]) {
         self.objects = objects
