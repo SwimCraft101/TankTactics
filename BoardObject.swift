@@ -11,32 +11,7 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
     var x: Int
     var y: Int
     var level: Int
-    var rotation: CardinalDirection
-    
-    enum CardinalDirection: Codable {
-        case north
-        case east
-        case south
-        case west
-        
-        var letter: String {
-            switch self {
-            case .north: "N"
-            case .east: "E"
-            case .west: "W"
-            case .south: "S"
-            }
-        }
-        
-        var angle: Angle {
-            switch self {
-            case .north: Angle(degrees: 0)
-            case .east: Angle(degrees: -90)
-            case .west: Angle(degrees: 90)
-            case .south: Angle(degrees: 180)
-            }
-        }
-    }
+    var rotation: Direction
     
     func viewOffset(right: Int, up: Int) -> Coordinates {
         switch rotation {
@@ -70,7 +45,7 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
         return "c(\(x),\(y),\(level))"
     }
     
-    init(x: Int, y: Int, level: Int = 0, rotation: CardinalDirection = .north) {
+    init(x: Int, y: Int, level: Int = 0, rotation: Direction = .north) {
         self.x = x
         self.y = y
         self.level = level

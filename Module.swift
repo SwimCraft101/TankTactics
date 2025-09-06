@@ -25,6 +25,7 @@ enum ModuleType: String, Codable {
     case conduit
     case storage
     case construction
+    case factory
     case module
 
     func name() -> String {
@@ -36,6 +37,7 @@ enum ModuleType: String, Codable {
         case .conduit: return "Conduit"
         case .storage: return "Storage"
         case .construction: return "Construction"
+        case .factory: return "Factory"
         case .module: return "SOMETHING IS VERY WRONG"
         }
     }
@@ -95,6 +97,8 @@ class Module: Codable, Hashable { var type: ModuleType { .module }
             return try StorageModule(from: decoder)
         case .construction:
             return try ConstructionModule(from: decoder)
+        case .factory:
+            return try FactoryModule(from: decoder)
         case .module:
             return try Module(from: decoder)
         }
@@ -153,6 +157,8 @@ extension Module {
                 self.module = try StorageModule(from: decoder)
             case .construction:
                 self.module = try ConstructionModule(from: decoder)
+            case .factory:
+                self.module = try FactoryModule(from: decoder)
             case .module:
                 self.module = try Module(from: decoder)
             }
@@ -402,7 +408,7 @@ class SpyModule: Module { override var type: ModuleType { .spy } // note that th
     }
 }
 
-class ConduitModule: Module { override var type: ModuleType { .conduit } /// note that this subclass needs no special encoder and decoder logic as it stores no extra data. The modules contained in the conduit are simply taken from the Tank's `modules` array. All logic for displaying the connected modules within the Conduit is processed in the `StatusCard` code.
+class ConduitModule: Module { override var type: ModuleType { .conduit } /// note that this subclass needs no special encoder and decoder logic as it stores no extra data. The modules contained in the conduit are simply taken from the Tank's `displayedModules` array. All logic for displaying the connected modules within the Conduit is processed in the `StatusCard` code.
     override var view: any View { //displays only when tank has a conduit within another Conduit.
         Text("Unfortunately, Conduits may not be nested within each other.")
             .font(.system(size: inch(0.3)))
@@ -435,6 +441,7 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
             Text("Circle a tile type and a location directly adjacent to your tank to build that tile.")
                 .multilineTextAlignment(.center)
                 .font(.system(size: inch(0.2)))
+                .foregroundStyle(.black)
             HStack(spacing: inch(0)) {
                 VStack(spacing: inch(0.25)) {
                     VStack(spacing: 0) {
@@ -459,15 +466,56 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                             .italic()
                     }
                 }
+                .foregroundStyle(.black)
                 .frame(width: inch(2), height: inch(3), alignment: .top)
-                SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: Reference real state of ShowBorderWarning.
+                ZStack {
+                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: Reference real state of ShowBorderWarning.
+                        .frame(width: inch(2), height: inch(3), alignment: .top)
+                    Grid(alignment: .top, horizontalSpacing: 0, verticalSpacing: 0) {
+                        GridRow {
+                            Text("")
+                            Image(systemName: "circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: inch(1/2), height: inch(1/2))
+                                .frame(width: inch(2/3), height: inch(2/3))
+                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                            Text("")
+                        }
+                        GridRow {
+                            Image(systemName: "circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: inch(1/2), height: inch(1/2))
+                                .frame(width: inch(2/3), height: inch(2/3))
+                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                            Text("")
+                            Image(systemName: "circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: inch(1/2), height: inch(1/2))
+                                .frame(width: inch(2/3), height: inch(2/3))
+                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                        }
+                        GridRow {
+                            Text("")
+                            Image(systemName: "circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: inch(1/2), height: inch(1/2))
+                                .frame(width: inch(2/3), height: inch(2/3))
+                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                            Text("")
+                        }
+                    }
                     .frame(width: inch(2), height: inch(3), alignment: .top)
+                }
             }
         }
     }
 }
 
-class FactoryModule: Module {
+class FactoryModule: Module { override var type: ModuleType { .factory }
     override var view: any View {
         Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
             GridRow {

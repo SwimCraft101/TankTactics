@@ -72,7 +72,7 @@ struct TriangleViewport: View {
                                     TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
                                 }
                             } else {
-                                BasicTileView(appearance: Appearance(fillColor: Color(hex: 0x000000, alpha: 0), symbol: ""), accessibilitySettings: accessibilitySettings)
+                                BasicTileView(appearance: nil, accessibilitySettings: accessibilitySettings)
                             }
                         }
                     }
@@ -169,7 +169,7 @@ struct TileView: View {
                 let fog = Color(red: 0.8, green: 0.8, blue: 0.8)
                 return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if only in radar range
             }
-            let fog = Color(red: 0.7, green: 0.7, blue: 0.7)
+            let fog = Color.white
             return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") // greyest if out of range
         } else {
             //renderer for out of bounds tiles
@@ -225,7 +225,7 @@ struct TileView: View {
 
 #Preview {
     VStack {
-        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
+        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 100, lowDetailSightRange: 200, radarRange: 300, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
             .frame(width: inch(4), height: inch(4))
         SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
             .frame(width: inch(4), height: inch(4))
