@@ -62,8 +62,8 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
 
 func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmentCompensation: Bool) {
     var pages: [AnyView] = []
-    var playersToPrintInConduitMode: [Player] = players.filter { $0.statusCardConduitBack() != nil }
-    var playersToPrintNormally: [Player] = players.filter { $0.statusCardConduitBack() == nil }
+    var playersToPrintInConduitMode: [Player] = players.filter({ $0.statusCardConduitBack() != nil })
+    var playersToPrintNormally: [Player] = players.filter({ $0.statusCardConduitBack() == nil })
     var messages = messagesIn
     
     while playersToPrintInConduitMode.count > 0 {

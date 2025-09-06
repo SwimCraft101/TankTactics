@@ -77,28 +77,44 @@ class Tank: BoardObject, Player {
     
     var modules: [Module]
     
+    var equippedConduitModules: Int {
+            return min(modules.filter{ $0 is ConduitModule }.count, 2)
+    }
+    
+    var equippedStorageModules: Int {
+            return displayedModules.filter{ $0 is StorageModule }.count
+    }
+    
     var displayedModules: [Module] {
-        let conduits = modules.filter{ $0 is ConduitModule }.count
         var displayedModules: [Module] = []
-        for _ in 0...(1 + conduits) {
-            var displayableModules: [Module] = modules.filter({ !($0 is ConduitModule) })
+        var displayableModules: [Module] = modules.filter({ !($0 is ConduitModule) })
+           
+        for _ in 0...(1 + equippedConduitModules) {
+            if displayableModules.isEmpty { break }
             displayedModules.append(displayableModules.removeFirst())
         }
         return displayedModules
     }
     
-    var storedModules: [Module] {
-        let conduits = modules.filter{ $0 is ConduitModule }.count
+    var nonDisplayedModules: [Module] {
         var workingModules = modules.filter({ !($0 is ConduitModule) })
+        if workingModules.count < 2 + equippedConduitModules {
+            return []
+        }
         workingModules.removeFirst()
         workingModules.removeFirst()
-        if conduits >= 1 {
+        if equippedConduitModules >= 1 {
             workingModules.removeFirst()
         }
-        if conduits >= 2 {
+        if equippedConduitModules >= 2 {
             workingModules.removeFirst()
         }
         return workingModules
+    }
+    
+    var hasTooManyModules: Bool {
+        if nonDisplayedModules.count > equippedStorageModules { return true }
+        return false
     }
     
     var doVirtualDelivery: Bool
@@ -254,8 +270,8 @@ class Tank: BoardObject, Player {
     }
     
     func constrainToMaximumValues() {
-        if storedModules.count > displayedModules.filter({ $0 is StorageModule }).count {
-            //MARK: Send "too many modules" message
+        if nonDisplayedModules.count > displayedModules.filter({ $0 is StorageModule }).count {
+            //MARK: display "too many modules" message on Status Card
         }
         
         if displayedModules.contains(where: { $0 is StorageModule }) {} else {
@@ -271,10 +287,18 @@ class Tank: BoardObject, Player {
         return AnyView(StatusCardFront(tank: self, showBorderWarning: false)) //MARK: reference real state of ShowBorderWarning
     }
     func statusCardConduitBack() -> AnyView? {
-        return nil //MARK: make this actually work
+        if tank.hasTooManyModules {
+            return nil
+        }
+        if tank.displayedModules.count < 4 { return nil }
+        return AnyView(ModuleView(module: tank.displayedModules[3]))
     }
     func statusCardConduitFront() -> AnyView? {
-        return nil //MARK: make this actually work
+        if tank.hasTooManyModules {
+            return nil
+        }
+        if tank.displayedModules.count < 3 { return nil }
+        return AnyView(ModuleView(module: tank.displayedModules[2]))
     }
 }
 

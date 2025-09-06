@@ -11,8 +11,18 @@ import UniformTypeIdentifiers
 import SwiftUICore
 #if DEBUG
 let playerDemographics = PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)
+let uuid = UUID()
+let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(highContrast: false, colorblind: false, largeText: false), kills: 0), fuel: 20, metal: 30, health: 84, defense: 2, movementCost: 10, movementRange: 2, gunRange: 2, gunDamage: 10, gunCost: 9, highDetailSightRange: 3, lowDetailSightRange: 4, radarRange: 5, modules: [
+    ConduitModule(tankId: uuid),
+    ConduitModule(tankId: uuid),
+    RadarModule(tankId: uuid),
+    SpyModule(tankId: uuid),
+    ConstructionModule(tankId: uuid),
+    TutorialModule(isWeekTwo: false),
+], uuid: uuid)
 #endif
 var game: TankTacticsGame = TankTacticsGame(board: Board(objects: [
+    tank,
     Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerDemographics: PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)),
     Wall(coordinates: Coordinates(x: 1, y: 0, level: 0)),
     ReinforcedWall(coordinates: Coordinates(x: 0, y: 0, level: 0)),

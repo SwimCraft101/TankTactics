@@ -4,8 +4,9 @@
 //
 //  Created by Hilton Sherrard on 7/13/24.
 //
+import SwiftUI
 
-enum Direction {
+enum Direction: Codable {
     case north
     case east
     case south
@@ -30,6 +31,24 @@ enum Direction {
             return -1
         default:
             return 0
+        }
+    }
+    
+    var letter: String {
+        switch self {
+        case .north: "N"
+        case .east: "E"
+        case .west: "W"
+        case .south: "S"
+        }
+    }
+    
+    var angle: Angle {
+        switch self {
+        case .north: Angle(degrees: 0)
+        case .east: Angle(degrees: -90)
+        case .west: Angle(degrees: 90)
+        case .south: Angle(degrees: 180)
         }
     }
 }
