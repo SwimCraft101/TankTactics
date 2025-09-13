@@ -46,7 +46,7 @@ enum ModuleType: String, Codable {
 class Module: Codable, Hashable { var type: ModuleType { .module }
     var tankId: UUID?
     fileprivate var tank: Tank {
-        game.board.objects.first(where: { $0.uuid == tankId }) as! Tank
+        Game.shared.board.objects.first(where: { $0.uuid == tankId }) as! Tank
     }
     
     static func == (lhs: Module, rhs: Module) -> Bool {
@@ -170,7 +170,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
     let isWeekTwo: Bool
     override var view: any View {
         if !isWeekTwo {
-            switch game.gameDay {
+            switch Game.shared.gameDay {
             case .monday:
                 Text("""
                     Welcome to Tank Tactics!
@@ -202,13 +202,13 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 """).font(.system(size: inch(0.15)))
                     HStack(spacing: 0) {
                         let coordinates = Coordinates(x: 0, y: 0, level: 0)
-                        BasicTileView(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), accessibilitySettings: tank.playerDemographics.accessibilitySettings)
-                        BasicTileView(appearance: Appearance(fillColor: .green, strokeColor: .green, symbolColor: .red, symbol: "sos"), accessibilitySettings: tank.playerDemographics.accessibilitySettings)
-                        BasicTileView(appearance: Wall(coordinates: coordinates).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 1, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 0, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 1, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
-                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 0, containedModule: TutorialModule(isWeekTwo: false), uuid: nil).appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), accessibilitySettings: tank.playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: Appearance(fillColor: .green, strokeColor: .green, symbolColor: .red, symbol: "sos"), accessibilitySettings: tank.playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: Wall(coordinates: coordinates).appearance, accessibilitySettings: tank.playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 1, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 1, metalReward: 0, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 1, containedModule: nil, uuid: nil).appearance, accessibilitySettings: tank.playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: Gift(coordinates: coordinates, fuelReward: 0, metalReward: 0, containedModule: TutorialModule(isWeekTwo: false), uuid: nil).appearance, accessibilitySettings: tank.playerInfo.accessibilitySettings)
                     }
                     .frame(height: inch(0.5), alignment: .bottom)
                 }
@@ -229,7 +229,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             }
         } else {
-            switch game.gameDay {
+            switch Game.shared.gameDay {
             case .monday:
                 Text("""
                         Modules (􀯇) are a system of special actions and effects in Tank Tactics. On every Monday, every player will receive identical offers to purchase Modules for their Tank. Purchasing Modules places them in your Status Card indefinitely, however, only two modules can be equipped at a time under normal circumstances. If you have too many Modules, all of your Modules will be inoperable until you select two of them. Modules are not publicly documented in detail, but a link to a video explaining any module is available on request for players with that module.
@@ -244,7 +244,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 Text("""
                         Wheel Wednesday (􂥰) is the day when you can purchase upgrades for your Tank's drivetrain. There are two different upgrades you can make. Movement Efficiency, and Movement Speed. Movement Efficiency reduces the cost in fuel it takes to move. Movement Speed increases the distance you can move per turn.
                 
-                        Event Cards (􀈿) are a system of special actions in Tank Tactics. Similar to Precedence, whoever bids the most fuel or metal on a day will recieve an Event Card, however, only the highest bidder will actually pay for the card. Event Cards are not publicly documented in detail, but the card descriptions are clear and should not cause confusion. If you have any questions about a specific event card or Tank Tactics as a whole, talk to the Game Operator.
+                        Event Cards (􀈿) are a system of special actions in Tank Tactics. Similar to Precedence, whoever bids the most fuel or metal on a day will recieve an Event Card, however, only the highest bidder will actually pay for the card. Event Cards are not publicly documented in detail, but the card descriptions are clear and should not cause confusion. If you have any questions about a specific event card or Tank Tactics as a whole, talk to the game Operator.
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.thursday:
                 Text("""
@@ -290,7 +290,7 @@ class WebsitePlugModule: Module { override var type: ModuleType { .websitePlug }
 
 class RadarModule: Module { override var type: ModuleType { .radar } // note that this subclass needs no special encoder and decoder logic as it stores no extra data.
     override var view: any View {
-        SquareViewport(coordinates: game.board.objects.first(where: { $0.uuid == tankId! })!.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+        SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings)
     }
 }
 
@@ -298,7 +298,7 @@ class DroneModule: Module { override var type: ModuleType { .drone }
     var droneId: UUID?
     override var view: any View {
         VStack {
-            SquareViewport(coordinates: game.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 3, lowDetailSightRange: 3, radarRange: 3, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: reference real state of value showBorderWarning
+            SquareViewport(coordinates: Game.shared.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 3, lowDetailSightRange: 3, radarRange: 3, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: reference real state of value showBorderWarning
         }
     }
     
@@ -331,11 +331,11 @@ class SpyModule: Module { override var type: ModuleType { .spy } // note that th
                 .font(.system(size: inch(0.2)))
                 .italic()
             VStack(spacing: 0) {
-                ForEach(game.board.objects.filter({
+                ForEach(Game.shared.board.objects.filter({
                     if $0 is Tank {
                         if $0.uuid != self.tankId && self.tankId != nil {
                             if $0.coordinates != nil {
-                                if $0.coordinates!.distanceTo(game.board.objects.filter({ $0.uuid == self.tankId }).first!.coordinates!) <= 5 {
+                                if $0.coordinates!.distanceTo(Game.shared.board.objects.filter({ $0.uuid == self.tankId }).first!.coordinates!) <= 5 {
                                     return true
                                 }
                             }
@@ -344,7 +344,7 @@ class SpyModule: Module { override var type: ModuleType { .spy } // note that th
                     return false
                 }) as! [Tank]) { tank in
                     HStack(spacing: inch(0.1)) {
-                        BasicTileView(appearance: tank.appearance, accessibilitySettings: super.tank.playerDemographics.accessibilitySettings)
+                        BasicTileView(appearance: tank.appearance, accessibilitySettings: super.tank.playerInfo.accessibilitySettings)
                             .frame(maxWidth: inch(0.5), maxHeight: inch(0.5))
                         Text("\(tank.health)􀞽")
                             .font(.system(size: inch(0.2)))
@@ -424,11 +424,11 @@ class StorageModule: Module { override var type: ModuleType { .storage }
                 Text("\(tank.metal)􀇷")
                     .font(.system(size: inch(0.75)))
             }
-            if true/*MARK: tank active modules count*/ {
-                Text("Stored Module: \(tank.modules[0/*MARK: tank active modules system*/].type.name())")
+            if tank.nonDisplayedModules.isEmpty {
+                Text("No module is stored")
                     .font(.system(size: inch(0.25)))
             } else {
-                Text("No module is stored")
+                Text("Stored Module: \(tank.nonDisplayedModules[0].type.name())")
                     .font(.system(size: inch(0.25)))
             }
         }
@@ -469,7 +469,7 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                 .foregroundStyle(.black)
                 .frame(width: inch(2), height: inch(3), alignment: .top)
                 ZStack {
-                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: Reference real state of ShowBorderWarning.
+                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: Reference real state of ShowBorderWarning.
                         .frame(width: inch(2), height: inch(3), alignment: .top)
                     Grid(alignment: .top, horizontalSpacing: 0, verticalSpacing: 0) {
                         GridRow {
@@ -479,7 +479,7 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                                 .scaledToFit()
                                 .frame(width: inch(1/2), height: inch(1/2))
                                 .frame(width: inch(2/3), height: inch(2/3))
-                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                                .foregroundStyle(.black.opacity(tank.playerInfo.accessibilitySettings.highContrast ? 0.4 : 0.1))
                             Text("")
                         }
                         GridRow {
@@ -488,14 +488,14 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                                 .scaledToFit()
                                 .frame(width: inch(1/2), height: inch(1/2))
                                 .frame(width: inch(2/3), height: inch(2/3))
-                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                                .foregroundStyle(.black.opacity(tank.playerInfo.accessibilitySettings.highContrast ? 0.4 : 0.1))
                             Text("")
                             Image(systemName: "circle")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: inch(1/2), height: inch(1/2))
                                 .frame(width: inch(2/3), height: inch(2/3))
-                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                                .foregroundStyle(.black.opacity(tank.playerInfo.accessibilitySettings.highContrast ? 0.4 : 0.1))
                         }
                         GridRow {
                             Text("")
@@ -504,7 +504,7 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                                 .scaledToFit()
                                 .frame(width: inch(1/2), height: inch(1/2))
                                 .frame(width: inch(2/3), height: inch(2/3))
-                                .foregroundStyle(.black.opacity(tank.playerDemographics.accessibilitySettings.highContrast ? 0.4 : 0.1))
+                                .foregroundStyle(.black.opacity(tank.playerInfo.accessibilitySettings.highContrast ? 0.4 : 0.1))
                             Text("")
                         }
                     }
@@ -517,44 +517,7 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
 
 class FactoryModule: Module { override var type: ModuleType { .factory }
     override var view: any View {
-        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
-            GridRow {
-                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
-                    .font(.system(size: inch(0.2)))
-                Text("Movement Range")
-                    .font(.system(size: inch(0.2)))
-                    .lineLimit(1)
-                Text("\(5/*MARK: get actual price*/)􀇷")
-                    .font(.system(size: inch(0.15)))
-                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
-                    .font(.system(size: inch(0.15)))
-            }
-
-            GridRow {
-                Image(systemName: {
-                    switch tank.movementCost {
-                    case 10, 9:
-                        return "gauge.with.dots.needle.0percent"
-                    case 8, 7:
-                        return "gauge.with.dots.needle.33percent"
-                    case 6, 5:
-                        return "gauge.with.dots.needle.50percent"
-                    case 4, 3:
-                        return "gauge.with.dots.needle.67percent"
-                    default: ///``` case 2, 1:
-                        return "gauge.with.dots.needle.100percent"
-                    }
-                }())
-                    .font(.system(size: inch(0.2)))
-                Text("Movement Efficiency")
-                    .font(.system(size: inch(0.2)))
-                    .lineLimit(1)
-                Text("\(5/*MARK: get actual price*/)􀇷")
-                    .font(.system(size: inch(0.15)))
-                Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
-                    .font(.system(size: inch(0.15)))
-            }
-        }
+            fatalError("please implement FactoryModule")
     }
     
 }
@@ -562,6 +525,6 @@ class FactoryModule: Module { override var type: ModuleType { .factory }
 #Preview {
     ZStack {
         Color.white
-        ModuleView(module: ConstructionModule(tankId: game.board.objects.first(where: { $0 is Tank })?.uuid ?? UUID()))
+        ModuleView(module: ConstructionModule(tankId: Game.shared.board.objects.first(where: { $0 is Tank })?.uuid ?? UUID()))
     }
 }

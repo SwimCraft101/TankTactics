@@ -14,7 +14,7 @@ class TankAction {
     var metalCost: Int { 0 }
     
     unowned fileprivate var tank: Tank { // Makes a reference to the actual value of the Tank instead of a copy.
-        game.board.objects.first { $0.uuid == tankId } as! Tank
+        Game.shared.board.objects.first { $0.uuid == tankId } as! Tank
     }
     
     init(tankId: UUID, precedence: Int) {
@@ -23,7 +23,7 @@ class TankAction {
     }
     
     var isAllowed: Bool {
-        if tank.fuel < ((game.gameDay == .tuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost) + precedence { //halves and rounds up the fuel value on tuesdays
+        if tank.fuel < ((Game.shared.gameDay == .tuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost) + precedence { //halves and rounds up the fuel value on tuesdays
             return false
         }
         if tank.metal < metalCost {
@@ -34,12 +34,12 @@ class TankAction {
     
     func execute() -> Bool {
         if isAllowed {
-            tank.fuel -= ((game.gameDay == .tuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost)
+            tank.fuel -= ((Game.shared.gameDay == .tuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost)
             tank.metal -= metalCost
             tank.fuel -= precedence
             return true
         }
-        print("The game attempted to execute an action not allowable! Tank: \(tank)")
+        print("The TankTacticsGame.shared.data attempted to execute an action not allowable! Tank: \(tank)")
         return false
     }
 }
@@ -99,10 +99,10 @@ class Fire: TankAction {
 }
 
 class PurchaseModule: TankAction {
-    override var metalCost: Int { game.moduleOfferPrice! }
+    override var metalCost: Int { Game.shared.moduleOfferPrice! }
     
     override var isAllowed: Bool {
-        if game.gameDay != .monday { return false }
+        if Game.shared.gameDay != .monday { return false }
         if super.isAllowed {
             return true
         }
@@ -111,7 +111,7 @@ class PurchaseModule: TankAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            tank.modules.append(game.moduleOffered!)
+            tank.modules.append(Game.shared.moduleOffered!)
             return true
         }
         return false
@@ -138,7 +138,7 @@ class BidForEventCard: TankAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            game.eventCardBidders.append((tank.uuid, fuelBid + metalBid))
+            Game.shared.eventCardBidders.append((tank.uuid, fuelBid + metalBid))
             return true
         }
         return false
@@ -182,7 +182,7 @@ class ExtractPhysicalFuelOrMetal: TankAction {
 
 class WednesdayUpgrade: TankAction {
     override var isAllowed: Bool {
-        if game.gameDay != .wednesday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
+        if Game.shared.gameDay != .wednesday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
         if super.isAllowed {
             return true
         }
@@ -255,7 +255,7 @@ class SellModule: ThursdayAction {}//MARK: Implement this
 
 class FridayUpgrade: TankAction {
     override var isAllowed: Bool {
-        if game.gameDay != .friday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
+        if Game.shared.gameDay != .friday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
         if super.isAllowed {
             return true
         }

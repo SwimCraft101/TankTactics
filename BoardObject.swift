@@ -33,8 +33,8 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
     }
     
     func inBounds() -> Bool {
-        if(abs(x) <= game.board.border) {
-            if(abs(y) <= game.board.border) {
+        if(abs(x) <= Game.shared.board.border) {
+            if(abs(y) <= Game.shared.board.border) {
                 return true
             }
         }
@@ -61,14 +61,14 @@ struct Appearance: Equatable, Codable {
 }
 
 enum BoardObjectType: String, Codable {
-    case boardObject
-    case wall
-    case reinforcedWall
-    case gift
-    case placeholder
-    case drone
-    case tank
-    case deadTank
+    case boardObject = "Board Object"
+    case wall = "Wall"
+    case reinforcedWall = "Reinforced Wall"
+    case gift = "Gift"
+    case placeholder = "Tank Placeholder"
+    case drone = "Drone"
+    case tank = "Tank"
+    case deadTank = "Dead Tank"
 }
 
 class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType { .boardObject }

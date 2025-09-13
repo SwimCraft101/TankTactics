@@ -130,7 +130,7 @@ struct TileView: View {
     
     func getAppearenceAtLocation() -> Appearance { //MARK: make this less horrible
         if localCoordinates.inBounds() {
-            for tile in game.board.objects { //if there is an object, it will be rendered here
+            for tile in Game.shared.board.objects { //if there is an object, it will be rendered here
                 if tile.coordinates != localCoordinates { //first and most important check: that this tile is in the correct location to be rendered.
                     continue //skips to next object in the loop
                 }
@@ -186,7 +186,7 @@ struct TileView: View {
     }
     
     var body: some View {
-        let thisTile = game.board.objects.first(where: { $0.coordinates == localCoordinates && $0.appearance != nil })
+        let thisTile = Game.shared.board.objects.first(where: { $0.coordinates == localCoordinates && $0.appearance != nil })
         BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
             .contextMenu {
                 if thisTile != nil {
@@ -196,29 +196,34 @@ struct TileView: View {
                          }*/
                     }
                     Button("􀈑 Delete") {
-                        game.board.objects.removeAll(where: {
+                        Game.shared.board.objects.removeAll(where: {
                             $0 == thisTile})
                     }
                 } else {
                     Button("􀂒 Add Wall") {
-                        game.board.objects.append(Wall(coordinates: localCoordinates))
+                        Game.shared.board.objects.append(Wall(coordinates: localCoordinates))
                     }
                     Button("􀑉 Add Gift") {
-                        game.board.objects.append(Gift(coordinates: localCoordinates))
+                        Game.shared.board.objects.append(Gift(coordinates: localCoordinates))
                     }
-                    Button("􀭉 Add Placeholder") {
-                        game.board.objects.append(Placeholder(coordinates: localCoordinates, uuid: nil))
+                    Button("􀭉 Add New Tank") {
+                        Game.shared.board.objects.append(Tank(appearance: Placeholder(coordinates: localCoordinates, uuid: nil).appearance!, coordinates: localCoordinates, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", accessibilitySettings: AccessibilitySettings(), kills: 0)))
                     }
                 } //MARK: Make these reference coordinates correctly
             } //MARK: Make the Context Menus actually work, assuming they are not replaced with a new system
-            .onTapGesture {
+            .onTapGesture(count: 1) {
                 if thisTile != nil {
-                    game.board.objects.removeAll(where: {
-                        $0 == thisTile})
+                    if !(thisTile is Player) {
+                        Game.shared.board.objects.removeAll(where: { $0 == thisTile })
+                    }
                 } else {
-                    game.board.objects.append(Wall(coordinates: localCoordinates))
+                    Game.shared.board.objects.append(Wall(coordinates: localCoordinates))
                 }
-                
+            }
+            .onTapGesture(count: 2) {
+                Game.shared.board.objects.removeAll(where: {
+                    $0 == thisTile})
+                Game.shared.board.objects.append(Wall(coordinates: localCoordinates))
             }
     }
 }

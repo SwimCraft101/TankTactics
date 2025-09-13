@@ -1,5 +1,5 @@
 //
-//  Game.swift
+//  Game.shared.swift
 //  TankTactics
 //
 //  Created by Hilton Sherrard on 6/20/25.
@@ -10,40 +10,21 @@ import AppKit
 import UniformTypeIdentifiers
 import SwiftUICore
 #if DEBUG
-let playerDemographics = PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)
+let playerInfo = PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)
 let uuid = UUID()
-let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerDemographics: PlayerDemographics(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(highContrast: false, colorblind: false, largeText: false), kills: 0), fuel: 20, metal: 30, health: 84, defense: 2, movementCost: 10, movementRange: 2, gunRange: 2, gunDamage: 10, gunCost: 9, highDetailSightRange: 3, lowDetailSightRange: 4, radarRange: 5, modules: [
-    ConduitModule(tankId: uuid),
-    ConduitModule(tankId: uuid),
-    RadarModule(tankId: uuid),
-    SpyModule(tankId: uuid),
-    ConstructionModule(tankId: uuid),
-    TutorialModule(isWeekTwo: false),
+let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerInfo: PlayerInfo(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(highContrast: false, colorblind: false, largeText: false), kills: 0), fuel: 20, metal: 30, health: 84, defense: 2, movementCost: 10, movementRange: 2, gunRange: 2, gunDamage: 10, gunCost: 9, highDetailSightRange: 3, lowDetailSightRange: 4, radarRange: 5, modules: [
+        ConduitModule(tankId: uuid),
+        ConduitModule(tankId: uuid),
+        StorageModule(tankId: uuid),
+        SpyModule(tankId: uuid),
+        TutorialModule(isWeekTwo: false),
+        RadarModule(tankId: uuid),
 ], uuid: uuid)
 #endif
-var game: TankTacticsGame = TankTacticsGame(board: Board(objects: [
-    tank,
-    Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerDemographics: PlayerDemographics(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)),
-    Wall(coordinates: Coordinates(x: 1, y: 0, level: 0)),
-    ReinforcedWall(coordinates: Coordinates(x: 0, y: 0, level: 0)),
-    Gift(coordinates: Coordinates(x: 1, y: 5, level: 0)),
-    Tank(appearance: Appearance(fillColor: .gray, symbolColor: .red, symbol: "sos"), coordinates: Coordinates(x: 1, y: 0, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .cyan, strokeColor: .red, symbol: "circle.hexagongrid.fill"), coordinates: Coordinates(x: 3, y: 1, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .pink, strokeColor: .purple, symbolColor: .pink, symbol: "storefront.circle.fill"), coordinates: Coordinates(x: -2, y: 3, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .red, strokeColor: .green, symbol: "tree.fill"), coordinates: Coordinates(x: -4, y: -2, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .orange, symbol: "pc"), coordinates: Coordinates(x: 0, y: -3, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .cyan, symbolColor: .red, symbol: "lock.desktopcomputer"), coordinates: Coordinates(x: 3, y: -1, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .green, symbolColor: .pink, symbol: "pencil.and.list.clipboard"), coordinates: Coordinates(x: 8, y: 1, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .orange, strokeColor: .purple, symbol: "widget.extralarge.badge.plus"), coordinates: Coordinates(x: -5, y: -3, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .gray, strokeColor: .yellow, symbol: "drop.triangle.fill"), coordinates: Coordinates(x: 7, y: 4, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .cyan, symbol: "lightspectrum.horizontal"), coordinates: Coordinates(x: 6, y: -1, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), playerDemographics: playerDemographics),
-    Tank(appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), playerDemographics: playerDemographics),
-]), gameDay: .monday)
 
 func promptForDecodedFile<T: Decodable>(ofType type: T.Type) -> T? {
     let panel = NSOpenPanel()
-    panel.title = "Choose a Game File"
+    panel.title = "Choose a Game.shared File"
     panel.showsResizeIndicator = true
     panel.showsHiddenFiles = false
     panel.canChooseDirectories = false
@@ -145,10 +126,35 @@ enum GameDay: Codable {
     }
 }
 
-@Observable class TankTacticsGame: Codable {
+@Observable class Game: Codable {
+    static var shared: Game = Game(board: Board(objects: [
+        tank,
+        Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerInfo: PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centreee", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)),
+        Wall(coordinates: Coordinates(x: 1, y: 0, level: 0)),
+        ReinforcedWall(coordinates: Coordinates(x: 0, y: 0, level: 0)),
+        Gift(coordinates: Coordinates(x: 1, y: 5, level: 0)),
+        Tank(appearance: Appearance(fillColor: .gray, symbolColor: .red, symbol: "sos"), coordinates: Coordinates(x: 1, y: 0, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .cyan, strokeColor: .red, symbol: "circle.hexagongrid.fill"), coordinates: Coordinates(x: 3, y: 1, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .pink, strokeColor: .purple, symbolColor: .pink, symbol: "storefront.circle.fill"), coordinates: Coordinates(x: -2, y: 3, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .red, strokeColor: .green, symbol: "tree.fill"), coordinates: Coordinates(x: -4, y: -2, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .orange, symbol: "pc"), coordinates: Coordinates(x: 0, y: -3, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .cyan, symbolColor: .red, symbol: "lock.desktopcomputer"), coordinates: Coordinates(x: 3, y: -1, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .green, symbolColor: .pink, symbol: "pencil.and.list.clipboard"), coordinates: Coordinates(x: 8, y: 1, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .orange, strokeColor: .purple, symbol: "widget.extralarge.badge.plus"), coordinates: Coordinates(x: -5, y: -3, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .gray, strokeColor: .yellow, symbol: "drop.triangle.fill"), coordinates: Coordinates(x: 7, y: 4, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .cyan, symbol: "lightspectrum.horizontal"), coordinates: Coordinates(x: 6, y: -1, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), playerInfo: playerInfo),
+        Tank(appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), playerInfo: playerInfo),
+    ]), gameDay: .monday)
+    
     var board: Board
     var gameDay: GameDay
     var randomSeed: Int
+    
+    var actions: [TankAction] = []
+    
+    var messages: [Message] = []
+    
     var moduleOffered: Module? {
         if gameDay == .monday {
             switch randomSeed &* 287230 % 10 {
@@ -186,6 +192,16 @@ enum GameDay: Codable {
     }
     
     var eventCardBidders: [(UUID, Int)] = []
+    
+    func executeTurn() {
+        Tank.bindModules()
+        saveTurnToPDF(players: board.objects.filter({ $0 is Player }) as! [Player], messages: messages, doAlignmentCompensation: true)
+        actions.shuffle()
+        actions.sort(by: { $0.precedence <= $1.precedence })
+        for action in actions {
+            let _ = action.execute()
+        }
+    }
     
     enum CodingKeys: String, CodingKey {
         case board

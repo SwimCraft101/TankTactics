@@ -24,11 +24,11 @@ struct DeadStatusCardFront: View {
             VStack(spacing: 0) {
                 VStack(spacing: 0) {
                     Spacer()
-                    Text(tank.playerDemographics.firstName)
+                    Text(tank.playerInfo.firstName)
                         .foregroundColor(.black)
                         .fontWeight(.ultraLight)
                         .font(.system(size: inch(0.35)))
-                    Text(tank.playerDemographics.lastName)
+                    Text(tank.playerInfo.lastName)
                         .foregroundColor(.black)
                         .fontWeight(.bold)
                         .font(.system(size: inch(0.35)))
@@ -36,16 +36,16 @@ struct DeadStatusCardFront: View {
                 .rotationEffect(Angle(degrees: -90))
                 .frame(width: inch(4.5), height: inch(4), alignment: .center)
                 VStack(spacing: 0) {
-                    Text(tank.playerDemographics.deliveryBuilding)
+                    Text(tank.playerInfo.deliveryBuilding)
                         .foregroundColor(Color(red: 0.4, green: 0.4, blue: 0.4))
                         .fontWeight(.light)
                         .font(.system(size: inch(0.35)))
                     HStack(spacing: 0) {
-                        Text(tank.playerDemographics.deliveryType)
+                        Text(tank.playerInfo.deliveryType)
                             .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
                             .fontWeight(.medium)
                             .font(.system(size: inch(0.35)))
-                        Text("\(tank.playerDemographics.deliveryNumber)")
+                        Text("\(tank.playerInfo.deliveryNumber)")
                             .foregroundColor(Color(red: 0.3, green: 0.3, blue: 0.3))
                             .fontWeight(.black)
                             .font(.system(size: inch(0.35)))
@@ -79,6 +79,8 @@ struct DeadStatusCardFront: View {
 }
 
 struct DeadStatusCardBack: View {
+    
+    
     let tank: DeadTank
     var body: some View {
         ZStack {
@@ -89,7 +91,8 @@ struct DeadStatusCardBack: View {
                         Spacer()
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .center)
-                    SquareViewport(coordinates: game.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false, accessibilitySettings: tank.playerDemographics.accessibilitySettings) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
+                    SquareViewport(coordinates: Game.shared.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
+                        
                         .frame(width: inch(4), height: inch(4), alignment: .center)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .top)
@@ -109,6 +112,8 @@ struct DeadStatusCardBack: View {
 }
 
 struct DeadControlPanelView: View {
+    
+    
     let tank: DeadTank
     var body: some View {
         VStack(spacing:0) {
@@ -178,7 +183,7 @@ struct DeadControlPanelView: View {
                     .font(.system(size: inch(0.15)))
                     .foregroundColor(.black)
                     .frame(width: inch(3), height: inch(1))
-                BasicTileView(appearance: game.board.objects[tank.killedByIndex].appearance, accessibilitySettings: tank.playerDemographics.accessibilitySettings)
+                BasicTileView(appearance: Game.shared.board.objects[tank.killedByIndex].appearance, accessibilitySettings: tank.playerInfo.accessibilitySettings)
             }
             .frame(width: inch(4), height: inch(1))
         }

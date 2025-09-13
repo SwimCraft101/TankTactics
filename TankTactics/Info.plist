@@ -8,17 +8,17 @@
 			<key>CFBundleTypeIconSystemGenerated</key>
 			<integer>1</integer>
 			<key>CFBundleTypeName</key>
-			<string>Tank Tactics Game</string>
+			<string>Tank Tactics Game.shared</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Default</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>tankTactics.game</string>
+				<string>tankTactics.Game.shared</string>
 			</array>
 			<key>NSDocumentClass</key>
-			<string>Game</string>
+			<string>Game.shared</string>
 		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
@@ -29,16 +29,16 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>A Game file used for Tank Tactics</string>
+			<string>A Game.shared file used for Tank Tactics</string>
 			<key>UTTypeIcons</key>
 			<dict/>
 			<key>UTTypeIdentifier</key>
-			<string>tankTactics.game</string>
+			<string>tankTactics.Game.shared</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
-					<string>ttgame</string>
+					<string>ttGame.shared</string>
 				</array>
 			</dict>
 		</dict>
