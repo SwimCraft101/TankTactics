@@ -63,8 +63,56 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
 func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmentCompensation: Bool) {
     var pages: [AnyView] = []
     var playersToPrintInConduitMode: [Player] = players.filter({ $0.statusCardConduitBack() != nil })
+    playersToPrintInConduitMode.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
     var playersToPrintNormally: [Player] = players.filter({ $0.statusCardConduitBack() == nil })
+    playersToPrintNormally.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
+    var playersToPrintWithLargeText: [Player] = players.filter({ $0.playerInfo.accessibilitySettings.largeText })
     var messages = messagesIn
+    
+    while playersToPrintWithLargeText.count > 0 {
+        let player = playersToPrintWithLargeText.removeFirst()
+        pages.append(AnyView(HStack(spacing:0) {
+            player.statusCardFront()
+                .scaleEffect(21/16)
+                .rotationEffect(Angle(degrees: 90))
+        }
+            .frame(width: inch(10.5), height: inch(105/16))
+            .border(.black, width: inch(0.005))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
+        pages.append(AnyView(HStack(spacing:0) {
+            player.statusCardBack()
+                .scaleEffect(21/16)
+                .rotationEffect(Angle(degrees: -90))
+        }
+            .frame(width: inch(10.5), height: inch(105/16))
+            .border(.black, width: inch(0.005))
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+        ))
+        
+        if player.statusCardConduitBack() != nil {
+            pages.append(AnyView(HStack(spacing:0) {
+                player.statusCardConduitFront()
+                    .scaleEffect(21/16)
+            }
+                .frame(width: inch(21/4), height: inch(21/4))
+                .border(.black, width: inch(0.005))
+                .frame(width: inch(11), height: inch(8.5))))
+            pages.append(AnyView(HStack(spacing:0) {
+                player.statusCardConduitBack()
+                    .scaleEffect(21/16)
+            }
+                .frame(width: inch(21/4), height: inch(21/4))
+                .border(.black, width: inch(0.005))
+                .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+                .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+                .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+                .frame(width: inch(11), height: inch(8.5))
+            ))
+        }
+    }
     
     while playersToPrintInConduitMode.count > 0 {
         let player = playersToPrintInConduitMode.removeFirst()
@@ -72,31 +120,54 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             player.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
             VStack(spacing: 0) {
-                player.statusCardConduitFront()!
-                    .frame(width: inch(5), height: inch(4), alignment: .leading)
+                HStack(spacing: 0) {
+                    player.statusCardConduitFront()!
+                        .frame(width: inch(4), height: inch(4), alignment: .leading)
+                    Rectangle()
+                        .fill(Color.black)
+                        .frame(width: inch(0.005))
+                        .frame(width: inch(1), height: inch(4), alignment: .leading)
+                }
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(height: inch(0.005))
                 if !messages.isEmpty {
                     MessageView(message: messages.first!)
-                        .frame(width: inch(5), height: inch(4), alignment: .center)
+                        .frame(width: inch(5), height: inch(4))
                 } else { //MARK: only print one Turn Report
                     //TurnReport()//MARK: implement Turn Reports
                     //.frame(width: inch(5), height: inch(4), alignment: .center)
                 }
             }
-        }.frame(width: inch(10), height: inch(8)).border(.black, width: inch(0.05)).frame(width: inch(11), height: inch(8.5), alignment: .center)))
+            .frame(width: inch(5), height: inch(8), alignment: .top)
+        }
+            .border(.black, width: inch(0.005))
+            .frame(width: inch(10), height: inch(8))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
         pages.append(AnyView(HStack(spacing:0) {
             VStack(spacing: 0) {
-                player.statusCardConduitBack()!
-                    .frame(width: inch(5), height: inch(4), alignment: .leading)
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Color.black)
+                        .frame(width: inch(0.005))
+                        .frame(width: inch(1), height: inch(4), alignment: .trailing)
+                    player.statusCardConduitBack()!
+                        .frame(width: inch(4), height: inch(4), alignment: .trailing)
+                }
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(height: inch(0.005))
                 if !messages.isEmpty {
                     MessageBackView(message: messages.removeFirst())
-                        .frame(width: inch(5), height: inch(4), alignment: .center)
+                        .frame(width: inch(5), height: inch(4), alignment: .top)
                 }
             }
+            .frame(width: inch(5), height: inch(8), alignment: .top)
             player.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
         }
+            .border(.black, width: inch(0.005))
             .frame(width: inch(10), height: inch(8))
-            .border(.black, width: inch(0.05))
             .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
@@ -121,7 +192,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                 .frame(width: inch(5), height: inch(8))
         }
             .frame(width: inch(10), height: inch(8))
-            .border(.black, width: inch(0.05))
+            .border(.black, width: inch(0.005))
             .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
@@ -143,13 +214,14 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                 .frame(width: inch(5), height: inch(8))
         }
             .frame(width: inch(10), height: inch(8))
-            .border(.black, width: inch(0.05))
+            .border(.black, width: inch(0.005))
             .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
         ))
     }
+    createAndSavePDF(from: pages, fileName: "Turn")
 }
 
 func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) { //MARK: merge with living player function. allow Conduit fold-out flaps to be added as such. fetch status card info with the method of Tank and not directly.

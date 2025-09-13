@@ -19,12 +19,13 @@ func power(base: Double, exponent: Int) -> Double {
 }
 
 protocol Player: BoardObject {
-    var playerDemographics: PlayerDemographics { get }
-    var doVirtualDelivery: Bool { get }
+    var playerInfo: PlayerInfo { get set }
+    var doVirtualDelivery: Bool { get set }
     func statusCardFront() -> AnyView
     func statusCardBack() -> AnyView
     func statusCardConduitFront() -> AnyView?
     func statusCardConduitBack() -> AnyView?
+    func virtualStatusCard() -> AnyView
 }
 
 struct AccessibilitySettings: Codable, Equatable {
@@ -45,15 +46,15 @@ struct AccessibilitySettings: Codable, Equatable {
     }
 }
 
-struct PlayerDemographics: Codable {
-    let firstName: String
-    let lastName: String
-    let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
-    let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
-    let deliveryNumber: String // Should be a Locker Number or Room Number
-    let virtualDelivery: String? // Should be an email adress
-    let accessibilitySettings: AccessibilitySettings
-    let kills: Int //MARK: Move this value elsewhere
+struct PlayerInfo: Codable {
+    var firstName: String
+    var lastName: String
+    var deliveryBuilding: String // Should be North, Virginia, or Lingle halls
+    var deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
+    var deliveryNumber: String // Should be a Locker Number or Room Number
+    var virtualDelivery: String? // Should be an email adress
+    var accessibilitySettings: AccessibilitySettings
+    var kills: Int //MARK: Move this value elsewhere
     
     var fullName: String {
         "\(firstName) \(lastName)"
@@ -61,9 +62,17 @@ struct PlayerDemographics: Codable {
 }
 
 class Tank: BoardObject, Player {
+    static func bindModules() {
+        for tank in Game.shared.board.objects.filter({ $0 is Tank} ) as! [Tank] {
+            for module in tank.modules {
+                module.tankId = tank.uuid
+            }
+        }
+    }
+    
     override var type: BoardObjectType { .tank }
     
-    var playerDemographics: PlayerDemographics
+    var playerInfo: PlayerInfo
     
     var fuel: Int
     var metal: Int
@@ -120,16 +129,16 @@ class Tank: BoardObject, Player {
     var doVirtualDelivery: Bool
     
     enum CodingKeys: String, CodingKey {
-        case playerDemographics, fuel, metal, movementCost, movementRange,
+        case playerInfo, fuel, metal, movementCost, movementRange,
              gunRange, gunDamage, gunCost, modules, doVirtualDelivery, uuid
     }
     
     init(
         appearance: Appearance,
         coordinates: Coordinates,
-        playerDemographics: PlayerDemographics
+        playerInfo: PlayerInfo
     ) {
-        self.playerDemographics = playerDemographics
+        self.playerInfo = playerInfo
         self.fuel = 20
         self.metal = 20
         self.movementCost = 10
@@ -145,7 +154,7 @@ class Tank: BoardObject, Player {
     init(
         appearance: Appearance,
         coordinates: Coordinates,
-        playerDemographics: PlayerDemographics,
+        playerInfo: PlayerInfo,
         fuel: Int,
         metal: Int,
         health: Int,
@@ -168,7 +177,7 @@ class Tank: BoardObject, Player {
         self.gunRange = gunRange
         self.gunDamage = gunDamage
         self.gunCost = gunCost
-        self.playerDemographics = playerDemographics
+        self.playerInfo = playerInfo
         self.doVirtualDelivery = false
         self.modules = modules
         super.init(fuelDropped: fuel, metalDropped: metal, appearance: appearance, coordinates: coordinates, health: health, defense: defense, uuid: uuid ?? UUID())
@@ -176,7 +185,7 @@ class Tank: BoardObject, Player {
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.playerDemographics = try container.decode(PlayerDemographics.self, forKey: .playerDemographics)
+        self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
         self.fuel = try container.decode(Int.self, forKey: .fuel)
         self.metal = try container.decode(Int.self, forKey: .metal)
         self.movementCost = try container.decode(Int.self, forKey: .movementCost)
@@ -207,7 +216,7 @@ class Tank: BoardObject, Player {
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(playerDemographics, forKey: .playerDemographics)
+        try container.encode(playerInfo, forKey: .playerInfo)
         try container.encode(fuel, forKey: .fuel)
         try container.encode(metal, forKey: .metal)
         try container.encode(movementCost, forKey: .movementCost)
@@ -235,8 +244,8 @@ class Tank: BoardObject, Player {
                     health -= 10
                     return
                 }
-                for tile in game.board.objects {
-                    if tile.coordinates == coordinates && tile.id != id {
+                for tile in Game.shared.board.objects {
+                    if tile.coordinates == coordinates && tile.uuid != uuid {
                         if tile is Gift {
                             metal += tile.metalDropped
                             fuel += tile.fuelDropped
@@ -261,9 +270,9 @@ class Tank: BoardObject, Player {
         for step in direction {
             bulletPosition.x += step.changeInXValue()
             bulletPosition.y += step.changeInYValue()
-            for tileIndex in game.board.objects.indices {
-                if game.board.objects[tileIndex].coordinates == bulletPosition {
-                    game.board.objects[tileIndex].health -= (gunDamage - game.board.objects[tileIndex].defense)
+            for tileIndex in Game.shared.board.objects.indices {
+                if Game.shared.board.objects[tileIndex].coordinates == bulletPosition {
+                    Game.shared.board.objects[tileIndex].health -= (gunDamage - Game.shared.board.objects[tileIndex].defense)
                 }
             }
         }
@@ -300,25 +309,28 @@ class Tank: BoardObject, Player {
         if tank.displayedModules.count < 3 { return nil }
         return AnyView(ModuleView(module: tank.displayedModules[2]))
     }
+    func virtualStatusCard() -> AnyView {
+        return AnyView(VirtualStatusCard(tank: self, showBorderWarning: false))//MARK: reference real state of ShowBorderWarning
+    }
 }
 
 class DeadTank: BoardObject, Player {
     override var type: BoardObjectType { .deadTank }
     
     var killedByIndex: Int
-    var playerDemographics: PlayerDemographics
+    var playerInfo: PlayerInfo
     var essence: Int
     var energy: Int
     var doVirtualDelivery: Bool
     
     enum CodingKeys: String, CodingKey {
-        case killedByIndex, playerDemographics, essence, energy, doVirtualDelivery
+        case killedByIndex, playerInfo, essence, energy, doVirtualDelivery
     }
     
     init(
         appearance: Appearance,
         killedByIndex: Int,
-        playerDemographics: PlayerDemographics,
+        playerInfo: PlayerInfo,
         dailyMessage: String,
         essence: Int,
         energy: Int,
@@ -328,7 +340,7 @@ class DeadTank: BoardObject, Player {
         self.killedByIndex = killedByIndex
         self.essence = essence
         self.energy = energy
-        self.playerDemographics = playerDemographics
+        self.playerInfo = playerInfo
         self.doVirtualDelivery = doVirtualDelivery ?? false
         super.init(fuelDropped: 0, metalDropped: 0, appearance: appearance, coordinates: nil, health: 0, defense: 0, uuid: uuid ?? UUID())
     }
@@ -341,14 +353,14 @@ class DeadTank: BoardObject, Player {
             amount += Int(power(base: 2, exponent: tank.gunRange))
             amount += Int(power(base: 1, exponent: tank.gunDamage))
             amount += Int(power(base: 1, exponent: tank.gunCost) * 1.5)
-            amount += 20 * tank.playerDemographics.kills
+            amount += 20 * tank.playerInfo.kills
             amount += Int(tank.fuel / 3)
             amount += Int(tank.metal / 3)
             amount += Int(tank.defense)
             return Int(amount / 12)
         }
         self.killedByIndex = killedByIndex
-        self.playerDemographics = tank.playerDemographics
+        self.playerInfo = tank.playerInfo
         self.doVirtualDelivery = tank.doVirtualDelivery
         self.essence = essenceEarned()
         self.energy = 1
@@ -358,7 +370,7 @@ class DeadTank: BoardObject, Player {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.killedByIndex = try container.decode(Int.self, forKey: .killedByIndex)
-        self.playerDemographics = try container.decode(PlayerDemographics.self, forKey: .playerDemographics)
+        self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
         self.essence = try container.decode(Int.self, forKey: .essence)
         self.energy = try container.decode(Int.self, forKey: .energy)
         self.doVirtualDelivery = try container.decode(Bool.self, forKey: .doVirtualDelivery)
@@ -369,44 +381,44 @@ class DeadTank: BoardObject, Player {
         try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(killedByIndex, forKey: .killedByIndex)
-        try container.encode(playerDemographics, forKey: .playerDemographics)
+        try container.encode(playerInfo, forKey: .playerInfo)
         try container.encode(essence, forKey: .essence)
         try container.encode(energy, forKey: .energy)
         try container.encode(doVirtualDelivery, forKey: .doVirtualDelivery)
     }
     
     func placeWall(_ direction: [Direction]) {
-        var coordinates = game.board.objects[killedByIndex].coordinates!
+        var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
         if direction.count <= energy {
             for step in direction {
                 coordinates.x += step.changeInXValue()
                 coordinates.y += step.changeInYValue()
                 if !coordinates.inBounds() { return }
-                game.board.objects.append(Wall(coordinates: coordinates))
+                Game.shared.board.objects.append(Wall(coordinates: coordinates))
             }
         }
     }
     
     func placeGift(_ direction: [Direction]) {
-        var coordinates = game.board.objects[killedByIndex].coordinates!
+        var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
         if direction.count <= Int(energy / 2) {
             for step in direction {
                 coordinates.x += step.changeInXValue()
                 coordinates.y += step.changeInYValue()
                 if !coordinates.inBounds() { return }
-                game.board.objects.append(Gift(coordinates: coordinates))
+                Game.shared.board.objects.append(Gift(coordinates: coordinates))
             }
         }
     }
     
     func harmTank(_ direction: [Direction]) {
-        var coordinates = game.board.objects[killedByIndex].coordinates!
+        var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
         if direction.count <= Int(energy - 2) {
             for step in direction {
                 coordinates.x += step.changeInXValue()
                 coordinates.y += step.changeInYValue()
                 if !coordinates.inBounds() { return }
-                for tile in game.board.objects {
+                for tile in Game.shared.board.objects {
                     if tile.coordinates == coordinates, let target = tile as? Tank {
                         target.health -= 10
                         target.health = max(1, target.health)
@@ -417,11 +429,11 @@ class DeadTank: BoardObject, Player {
     }
     
     func description() -> String {
-        if let killer = game.board.objects[killedByIndex] as? Tank {
-            return "killed by \(killer.playerDemographics.firstName) \(killer.playerDemographics.lastName), who currently has \(killer.fuel)􀵞, \(killer.metal)􀇷, \(killer.health)􀞽, and \(killer.defense)􀙨."
+        if let killer = Game.shared.board.objects[killedByIndex] as? Tank {
+            return "killed by \(killer.playerInfo.firstName) \(killer.playerInfo.lastName), who currently has \(killer.fuel)􀵞, \(killer.metal)􀇷, \(killer.health)􀞽, and \(killer.defense)􀙨."
         }
-        if let killer = game.board.objects[killedByIndex] as? DeadTank {
-            return "killed by \(killer.playerDemographics.firstName) \(killer.playerDemographics.lastName), who is dead, has \(killer.essence)􀆿, \(killer.energy)􀋥, and was \(killer.description())"
+        if let killer = Game.shared.board.objects[killedByIndex] as? DeadTank {
+            return "killed by \(killer.playerInfo.firstName) \(killer.playerInfo.lastName), who is dead, has \(killer.essence)􀆿, \(killer.energy)􀋥, and was \(killer.description())"
         }
         return "killed by natural causes."
     }
@@ -437,6 +449,9 @@ class DeadTank: BoardObject, Player {
     }
     func statusCardConduitFront() -> AnyView? {
         return nil
+    }
+    func virtualStatusCard() -> AnyView {
+        fatalError("Dead Virtual Satus Card not implemented")
     }
 }
 

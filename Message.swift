@@ -21,9 +21,9 @@ struct MessageView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                BasicTileView(appearance: game.board.objects.first(where: { $0.uuid == message.sender })!.appearance, accessibilitySettings: (game.board.objects.first(where: { $0.uuid == message.recipient })! as! Tank).playerDemographics.accessibilitySettings)
+                BasicTileView(appearance: Game.shared.board.objects.first(where: { $0.uuid == message.sender })!.appearance, accessibilitySettings: (Game.shared.board.objects.first(where: { $0.uuid == message.recipient })! as! Tank).playerInfo.accessibilitySettings)
                     .frame(width: inch(0.5), height: inch(0.5), alignment: .center)
-                Text(" To \((game.board.objects.first(where: { $0.uuid == message.recipient })! as! Player).playerDemographics.fullName)")
+                Text(" To \((Game.shared.board.objects.first(where: { $0.uuid == message.recipient })! as! Player).playerInfo.fullName)")
                     .font(.system(size: inch(0.25)))
                     .italic()
             }
@@ -49,7 +49,7 @@ struct MessageBackView: View {
                 Spacer()
                 Text("Respond to ")
                     .font(.system(size: inch(0.25)))
-                BasicTileView(appearance: game.board.objects.first(where: { $0.uuid == message.sender })!.appearance, accessibilitySettings: (game.board.objects.first(where: { $0.uuid == message.recipient })! as! Tank).playerDemographics.accessibilitySettings)
+                BasicTileView(appearance: Game.shared.board.objects.first(where: { $0.uuid == message.sender })!.appearance, accessibilitySettings: (Game.shared.board.objects.first(where: { $0.uuid == message.recipient })! as! Tank).playerInfo.accessibilitySettings)
                     .frame(width: inch(0.25), height: inch(0.25), alignment: .center)
                 Text(":")
                     .font(.system(size: inch(0.25)))
@@ -66,8 +66,10 @@ struct MessageBackView: View {
 }
 
 #Preview {
-    let sender = game.board.objects.first(where: {$0 is Tank})!.uuid
-    let recipient = game.board.objects.last(where: {$0 is Tank})!.uuid
+    @Previewable 
+    
+    let sender = Game.shared.board.objects.first(where: {$0 is Tank})!.uuid
+    let recipient = Game.shared.board.objects.last(where: {$0 is Tank})!.uuid
     let text = """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eleifend in nisl in varius. Proin vestibulum viverra mauris et faucibus. Vivamus egestas dapibus cursus. Mauris efficitur sollicitudin enim ornare euismod. Nulla viverra sit amet ipsum in euismod. Curabitur at euismod tortor. Nunc tincidunt condimentum enim quis porta. Nam blandit lorem ultrices tellus faucibus placerat. Proin sed pulvinar libero.
         """

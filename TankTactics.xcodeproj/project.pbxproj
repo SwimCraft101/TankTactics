@@ -18,9 +18,11 @@
 		596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596376A42CFB5BB000059FCA /* DeadStatusCard.swift */; };
 		59B7E55A2E428E3800105725 /* Module.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E5592E428E3800105725 /* Module.swift */; };
 		59B7E55C2E451C5600105725 /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E55B2E451C5600105725 /* Viewport.swift */; };
+		59C8CD552E6F857400151076 /* Inspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59C8CD542E6F857400151076 /* Inspector.swift */; };
 		59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */; };
 		59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */; };
 		59DF70BE2BF553F8001E64B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 59DF70BD2BF553F8001E64B3 /* Assets.xcassets */; };
+		59E01EB12E75E61E002544A2 /* ThriftOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E01EB02E75E61E002544A2 /* ThriftOption.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,12 +37,14 @@
 		596376A42CFB5BB000059FCA /* DeadStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadStatusCard.swift; sourceTree = "<group>"; };
 		59B7E5592E428E3800105725 /* Module.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
 		59B7E55B2E451C5600105725 /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
+		59C8CD542E6F857400151076 /* Inspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inspector.swift; sourceTree = "<group>"; };
 		59D77B232C93836600BD384A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameBoard.swift; sourceTree = "<group>"; };
 		59DF70B42BF553F7001E64B3 /* TankTactics.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TankTactics.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankTacticsApp.swift; sourceTree = "<group>"; };
 		59DF70BD2BF553F8001E64B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		59DF70C22BF553F8001E64B3 /* TankTactics.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TankTactics.entitlements; sourceTree = "<group>"; };
+		59E01EB02E75E61E002544A2 /* ThriftOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThriftOption.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,7 +66,9 @@
 				592B7F7F2C3863E2001EA317 /* BoardObject.swift */,
 				592B80492C3A0A22008F41BF /* Tank.swift */,
 				5937400D2E5F959500E6C733 /* TankAction.swift */,
+				59C8CD542E6F857400151076 /* Inspector.swift */,
 				5910A74C2E05F4A000B217BB /* Game.swift */,
+				59E01EB02E75E61E002544A2 /* ThriftOption.swift */,
 				5910A74E2E05F4DD00B217BB /* Message.swift */,
 				595A2D082C6655A10086A452 /* StatusCard.swift */,
 				596376A42CFB5BB000059FCA /* DeadStatusCard.swift */,
@@ -170,7 +176,9 @@
 				596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */,
 				59B7E55A2E428E3800105725 /* Module.swift in Sources */,
 				59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */,
+				59E01EB12E75E61E002544A2 /* ThriftOption.swift in Sources */,
 				595A2D092C6655A10086A452 /* StatusCard.swift in Sources */,
+				59C8CD552E6F857400151076 /* Inspector.swift in Sources */,
 				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
 				59B7E55C2E451C5600105725 /* Viewport.swift in Sources */,
