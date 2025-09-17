@@ -39,7 +39,7 @@ class TankAction {
             tank.fuel -= precedence
             return true
         }
-        print("The TankTacticsGame.shared.data attempted to execute an action not allowable! Tank: \(tank)")
+        print("The game attempted to execute an action not allowable! Tank: \(tank)")
         return false
     }
 }
@@ -47,6 +47,7 @@ class TankAction {
 class Move: TankAction {
     override var fuelCost: Int { tank.movementCost }
     let vector: [Direction]
+    let rotation: Direction
     
     override var isAllowed: Bool {
         if super.isAllowed {
@@ -59,15 +60,16 @@ class Move: TankAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            tank.move(vector)
+            tank.move(vector, rotation)
             return true
         }
         return false
     }
     
-    init(_ vector: [Direction], tankID: UUID, precedence: Int) {
+    init(_ vector: [Direction], _ rotation: Direction, tankId: UUID, precedence: Int) {
         self.vector = vector
-        super.init(tankId: tankID, precedence: precedence)
+        self.rotation = rotation
+        super.init(tankId: tankId, precedence: precedence)
     }
 }
 
@@ -92,9 +94,9 @@ class Fire: TankAction {
         return false
     }
     
-    init(_ vector: [Direction], tankID: UUID, precedence: Int) {
+    init(_ vector: [Direction], tankId: UUID, precedence: Int) {
         self.vector = vector
-        super.init(tankId: tankID, precedence: precedence)
+        super.init(tankId: tankId, precedence: precedence)
     }
 }
 
@@ -180,7 +182,9 @@ class ExtractPhysicalFuelOrMetal: TankAction {
     }
 }
 
-class WednesdayUpgrade: TankAction {
+class Upgrade: TankAction {}
+
+class WednesdayUpgrade: Upgrade {
     override var isAllowed: Bool {
         if Game.shared.gameDay != .wednesday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
         if super.isAllowed {
@@ -247,19 +251,86 @@ class UpgradeMovementCost: WednesdayUpgrade {
     }
 }
 
-class ThursdayAction: TankAction {}//MARK: Implement this
-
-class SellUpgrade: ThursdayAction {}//MARK: Implement this
-
-class SellModule: ThursdayAction {}//MARK: Implement this
-
-class FridayUpgrade: TankAction {
+class Thrift: TankAction {
     override var isAllowed: Bool {
-        if Game.shared.gameDay != .friday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
-        if super.isAllowed {
-            return true
+        if Game.shared.gameDay != .thursday { return false }
+        return super.isAllowed
+    }
+    
+    init(tankId: UUID) {
+        super.init(tankId: tankId, precedence: 0) //All thrift Actions muct have no precedence
+    }
+}
+    
+class SellUpgrade: Thrift {
+    var upgrade: Upgrade
+    
+    init(upgrade: Upgrade, tankId: UUID) {
+        self.upgrade = upgrade
+        super.init(tankId: tankId)
+    }
+    
+    override func execute() -> Bool {
+        if super.execute() {
+            switch upgrade {
+            case is UpgradeMovementCost:
+                tank.movementCost += 1
+                return true
+            case is UpgradeMovementRange:
+                tank.movementRange += 1
+                return true
+            case is UpgradeGunCost:
+                tank.gunCost += 1
+                return true
+            case is UpgradeGunRange:
+                tank.gunRange += 1
+                return true
+            case is UpgradeGunDamage:
+                tank.gunDamage += 1
+                return true
+            default:
+                fatalError("An invalid upgrade was passed to SellUpgrade: \(upgrade)")
+            }
         }
         return false
+    }
+}
+
+class SellModule: Thrift {
+    var module: ModuleType
+    
+    override var metalCost: Int {
+        switch module {
+        case .radar: return -10 - Game.shared.randomSeed &* 219857 % 5
+        case .storage: return -15 - Game.shared.randomSeed &* 219857 % 5
+        case .drone: return -40 - Game.shared.randomSeed &* 219857 % 5
+        case .spy: return -35 - Game.shared.randomSeed &* 219857 % 5
+        case .conduit: return -45 - Game.shared.randomSeed &* 219857 % 5
+        case .factory: return -20 - Game.shared.randomSeed &* 219857 % 5
+        case .construction: return -10 - Game.shared.randomSeed &* 219857 % 5
+        case .tutorial: return -10
+        case .websitePlug: return -10
+        case .module: return -10 - Game.shared.randomSeed &* 219857 % 5
+        }
+    }
+    
+    init(module: ModuleType, tankId: UUID) {
+        self.module = module
+        super.init(tankId: tankId)
+    }
+    
+    override func execute() -> Bool {
+        if super.execute() {
+            tank.modules.remove(at: tank.modules.firstIndex{ $0.type == module }!)
+        }
+        return false
+    }
+}
+
+class FridayUpgrade: Upgrade {
+    override var isAllowed: Bool {
+        if Game.shared.gameDay != .friday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
+        return super.isAllowed
     }
     
     init(tankId: UUID) {
@@ -348,3 +419,104 @@ class UpgradeGunDamage: FridayUpgrade {
     }
 }
 
+class ConstructionAction: TankAction {
+    var direction: Direction
+    
+    var destinationCoordinates: Coordinates {
+        Coordinates(x: tank.coordinates!.x + direction.changeInXValue(), y: tank.coordinates!.y + direction.changeInYValue(), level: tank.coordinates!.level)
+    }
+    
+    override var isAllowed: Bool {
+        if super.isAllowed {
+            if tank.modules.contains(where: { $0 is ConstructionModule }) {
+                for object in Game.shared.board.objects {
+                    if object is Gift { continue }
+                    if object is DeadTank { continue }
+                    if object.coordinates == destinationCoordinates {
+                        return false
+                    }
+                }
+                return true
+            }
+        }
+        return false
+    }
+    
+    init(direction: Direction, tankId: UUID, precedence: Int) {
+        self.direction = direction
+        super.init(tankId: tankId, precedence: precedence)
+    }
+}
+
+class BuildWall: ConstructionAction {
+    override var metalCost: Int { 5 }
+    
+    override func execute() -> Bool {
+        if super.execute() {
+            Game.shared.board.objects.append(Wall(coordinates: destinationCoordinates))
+        }
+        return false
+    }
+}
+
+class BuildReinforcedWall: ConstructionAction {
+    override var metalCost: Int { 20 }
+    
+    override func execute() -> Bool {
+        if super.execute() {
+            Game.shared.board.objects.append(ReinforcedWall(coordinates: destinationCoordinates))
+        }
+        return false
+    }
+}
+
+class BuildGift: ConstructionAction {
+    var fuelAmount: Int
+    var metalAmount: Int
+    
+    override var fuelCost: Int { fuelAmount }
+    override var metalCost: Int { metalAmount }
+    
+    init(fuelAmount: Int, metalAmount: Int, direction: Direction, tankId: UUID, precedence: Int) {
+        self.fuelAmount = fuelAmount
+        self.metalAmount = metalAmount
+        super.init(direction: direction, tankId: tankId, precedence: precedence)
+    }
+    
+    override func execute() -> Bool {
+        if super.execute() {
+            Game.shared.board.objects.append(Gift(coordinates: destinationCoordinates, fuelReward: fuelAmount, metalReward: metalAmount, containedModule: nil, uuid: UUID()))
+        }
+        return false
+    }
+}
+
+class MoveDrone: TankAction {
+    override var fuelCost: Int { 2 }
+    
+    var direction: Direction
+    
+    var drone: Drone {
+        Game.shared.board.objects.first { (tank.modules.first { $0 is DroneModule } as! DroneModule).droneId == $0.uuid } as! Drone
+    }
+    
+    override var isAllowed: Bool {
+        if super.isAllowed {
+            return tank.modules.contains(where: { $0 is DroneModule })
+        }
+        return false
+    }
+    
+    override func execute() -> Bool {
+        if super.execute() {
+            drone.coordinates = Coordinates(x: drone.coordinates!.x + direction.changeInXValue(), y: drone.coordinates!.y + direction.changeInYValue(), level: drone.coordinates!.level)
+            return true
+        }
+        return false
+    }
+    
+    init(_ direction: Direction, tankId: UUID) {
+        self.direction = direction
+        super.init(tankId: tankId, precedence: 0)
+    }
+}

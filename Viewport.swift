@@ -91,8 +91,13 @@ struct BasicTileView: View {
         GeometryReader { geometry in
             let shortestLength = min(geometry.size.width, geometry.size.height)
             ZStack {
+                if appearance != nil {
+                    RoundedRectangle(cornerRadius: shortestLength * 0.15)
+                        .foregroundColor(accessibilitySettings.highContrast ? .black : .gray)
+                }
                 RoundedRectangle(cornerRadius: shortestLength * 0.15)
                     .foregroundColor(appearance?.strokeColor ?? appearance?.fillColor ?? Color.white.opacity(0))
+                    .frame(width: shortestLength * (accessibilitySettings.highContrast ? 0.95 : 0.99), height: shortestLength * (accessibilitySettings.highContrast ? 0.95 : 0.99))
                 
                 RoundedRectangle(cornerRadius: shortestLength * 0.05)
                     .foregroundColor(appearance?.fillColor ?? Color.white.opacity(0))
@@ -114,7 +119,7 @@ struct BasicTileView: View {
                 }
             }
             .frame(width: shortestLength, height: shortestLength, alignment: .center)
-            .contrast(accessibilitySettings.highContrast ? 1 : 1.0)
+            .contrast(accessibilitySettings.highContrast ? 3.0 : 1.0)
         }
     }
 }
@@ -127,6 +132,9 @@ struct TileView: View {
     let showBorderWarning: Bool
     let localCoordinates: Coordinates
     let accessibilitySettings: AccessibilitySettings
+    @State private var precedenceApplied: Int = 0
+    @State private var fuelForAction: Int = 0
+    @State private var metalForAction: Int = 0
     
     func getAppearenceAtLocation() -> Appearance { //MARK: make this less horrible
         if localCoordinates.inBounds() {
@@ -190,14 +198,119 @@ struct TileView: View {
         BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
             .contextMenu {
                 if thisTile != nil {
-                    if thisTile is Tank {
-                        /*Button("􀎚 Print Status...") {
-                         saveStatusCardsToPDF([thisTile as! Tank], doAlignmentCompensation: true, showBorderWarning: showBorderWarning)
-                         }*/
-                    }
-                    Button("􀈑 Delete") {
-                        Game.shared.board.objects.removeAll(where: {
-                            $0 == thisTile})
+                    if let tank = thisTile as? Tank {
+                        Picker(precedenceApplied == 0 ? "􁘿 Apply Precedence" : "􁘿 \(precedenceApplied) Precedence", selection: $precedenceApplied) {
+                            ForEach(0..<50) { i in
+                                Text("\(i)").tag(i)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        Menu("􁹫 Move") {
+                            RotatedDirectionOptions(depth: tank.movementRange, vector: []) { vector, rotation in
+                                Game.shared.actions.append(Move(vector, rotation, tankId: tank.uuid, precedence: precedenceApplied))
+                            }
+                        }
+                        Menu("􀅾 Fire") {
+                            DirectionOptions(depth: tank.gunRange, vector: []) { vector in
+                                Game.shared.actions.append(Fire(vector, tankId: tank.uuid, precedence: precedenceApplied))
+                            }
+                        }
+                        if Game.shared.gameDay == .monday {
+                            Button("􀯇 Purchase \(Game.shared.moduleOffered!.type.name())") {
+                                Game.shared.actions.append(PurchaseModule(tankId: tank.uuid))
+                            }
+                            .disabled(!(PurchaseModule(tankId: tank.uuid).isAllowed))
+                        }
+                        if Game.shared.gameDay == .wednesday || tank.modules.contains(where: { $0 is FactoryModule }) {
+                            Button("􂊼 Upgrade Movement Range") {
+                                Game.shared.actions.append(UpgradeMovementRange(tankId: tank.uuid))
+                            }
+                            .disabled(!(UpgradeMovementRange(tankId: tank.uuid).isAllowed))
+                            Button("􁐚 Upgrade Movement Efficiency") {
+                                Game.shared.actions.append(UpgradeMovementCost(tankId: tank.uuid))
+                            }
+                            .disabled(!(UpgradeMovementCost(tankId: tank.uuid).isAllowed))
+                        }
+                        if Game.shared.gameDay == .friday || tank.modules.contains(where: { $0 is FactoryModule }) {
+                            Button("􂇏 Upgrade Weapon Range") {
+                                Game.shared.actions.append(UpgradeGunRange(tankId: tank.uuid))
+                            }
+                            .disabled(!(UpgradeGunRange(tankId: tank.uuid).isAllowed))
+                            Button("􀎓 Upgrade Weapon Damage") {
+                                Game.shared.actions.append(UpgradeGunDamage(tankId: tank.uuid))
+                            }
+                            .disabled(!(UpgradeGunDamage(tankId: tank.uuid).isAllowed))
+                            Button("􀣉 Upgrade Weapon Efficiency") {
+                                Game.shared.actions.append(UpgradeGunCost(tankId: tank.uuid))
+                            }
+                            .disabled(!(UpgradeGunCost(tankId: tank.uuid).isAllowed))
+                        }
+                        if tank.modules.contains(where: { $0 is ConstructionModule }) {
+                            Menu("􀂒 Build Wall") {
+                                Button("􀄨 North") {
+                                    Game.shared.actions.append(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
+                                }
+                                .disabled(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                Button("􀄩 South") {
+                                    Game.shared.actions.append(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
+                                }
+                                .disabled(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                Button("􀄫 East") {
+                                    Game.shared.actions.append(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
+                                }
+                                .disabled(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                Button("􀄪 West") {
+                                    Game.shared.actions.append(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
+                                }
+                                .disabled(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                            }
+                            Menu("􀎡 Build Reinforced Wall") {
+                                    Button("􀄨 North") {
+                                        Game.shared.actions.append(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
+                                    }
+                                    .disabled(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                    Button("􀄩 South") {
+                                        Game.shared.actions.append(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
+                                    }
+                                    .disabled(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                    Button("􀄫 East") {
+                                        Game.shared.actions.append(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
+                                    }
+                                    .disabled(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                    Button("􀄪 West") {
+                                        Game.shared.actions.append(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
+                                    }
+                                    .disabled(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                            }
+                            Menu("􀑉 Build Gift") {
+                                Picker("Fuel: \(fuelForAction)", selection: $fuelForAction) {
+                                    ForEach(0..<50) { i in
+                                        Text("\(i)").tag(i)
+                                    }
+                                }
+                                Picker("Metal: \(metalForAction)", selection: $metalForAction) {
+                                    ForEach(0..<50) { i in
+                                        Text("\(i)").tag(i)
+                                    }
+                                }
+                                Button("􀄨 North") {
+                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied))
+                                }
+                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied).isAllowed)
+                                Button("􀄩 South") {
+                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied))
+                                }
+                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied).isAllowed)
+                                Button("􀄫 East") {
+                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
+                                }
+                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                Button("􀄪 West") {
+                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
+                                }
+                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                            }
+                        }
                     }
                 } else {
                     Button("􀂒 Add Wall") {

@@ -72,6 +72,9 @@ class Tank: BoardObject, Player {
     
     override var type: BoardObjectType { .tank }
     
+    static var isSolid: Bool { true }
+    static var isRigid: Bool { true }
+    
     var playerInfo: PlayerInfo
     
     var fuel: Int
@@ -233,56 +236,59 @@ class Tank: BoardObject, Player {
         }
     }
     
-    func move(_ direction: [Direction]) {
-        if direction.count <= movementRange {
-            for step in direction {
-                coordinates!.x += step.changeInXValue()
-                coordinates!.y += step.changeInYValue()
-                if !coordinates!.inBounds() {
-                    coordinates!.x -= step.changeInXValue()
-                    coordinates!.y -= step.changeInYValue()
-                    health -= 10
-                    return
-                }
-                for tile in Game.shared.board.objects {
-                    if tile.coordinates == coordinates && tile.uuid != uuid {
-                        if tile is Gift {
-                            metal += tile.metalDropped
-                            fuel += tile.fuelDropped
-                            tile.health = 0
-                        } else if tile is DeadTank {
-                            continue
-                        } else {
-                            coordinates!.x -= step.changeInXValue()
-                            coordinates!.y -= step.changeInYValue()
-                            health -= 10
-                            tile.health -= 10
-                            return
-                        }
+    func move(_ vector: [Direction], _ rotation: Direction) { //does not subtract fuel
+        for step in vector {
+            coordinates!.rotation = step
+            coordinates!.x += step.changeInXValue()
+            coordinates!.y += step.changeInYValue()
+            if !coordinates!.inBounds() {
+                coordinates!.x -= step.changeInXValue()
+                coordinates!.y -= step.changeInYValue()
+                health -= 10
+                return
+            }
+            for tile in Game.shared.board.objects {
+                if tile.coordinates == coordinates && tile.uuid != uuid {
+                    if tile is Gift {
+                        metal += tile.metalDropped
+                        fuel += tile.fuelDropped
+                        Game.shared.board.objects.removeAll(where: { $0.uuid == tile.uuid })
+                    } else if tile.isSolid {
+                        coordinates!.x -= step.changeInXValue()
+                        coordinates!.y -= step.changeInYValue()
+                        health -= 10
+                        tile.health -= 10
+                        return
                     }
                 }
             }
         }
+        coordinates!.rotation = rotation  
     }
     
-    func fire(_ direction: [Direction]) {
+    func fire(_ direction: [Direction]) { //does not subtract fuel
         var bulletPosition: Coordinates = coordinates!
         for step in direction {
             bulletPosition.x += step.changeInXValue()
             bulletPosition.y += step.changeInYValue()
-            for tileIndex in Game.shared.board.objects.indices {
-                if Game.shared.board.objects[tileIndex].coordinates == bulletPosition {
-                    Game.shared.board.objects[tileIndex].health -= (gunDamage - Game.shared.board.objects[tileIndex].defense)
+            for tile in Game.shared.board.objects {
+                if tile.coordinates == bulletPosition {
+                    if tile.isRigid { //pass over nonrigid objects
+                        tile.health -= (gunDamage - tile.defense)
+                        return
+                    }
                 }
+            }
+        }
+        for tile in Game.shared.board.objects { //come back at the end to check for rigid objects only at final position.
+            if tile.coordinates == bulletPosition {
+                tile.health -= (gunDamage - tile.defense)
+                return
             }
         }
     }
     
     func constrainToMaximumValues() {
-        if nonDisplayedModules.count > displayedModules.filter({ $0 is StorageModule }).count {
-            //MARK: display "too many modules" message on Status Card
-        }
-        
         if displayedModules.contains(where: { $0 is StorageModule }) {} else {
             fuel = min(fuel, 50)
             metal = min(metal, 50)
@@ -316,6 +322,9 @@ class Tank: BoardObject, Player {
 
 class DeadTank: BoardObject, Player {
     override var type: BoardObjectType { .deadTank }
+    
+    static var isSolid: Bool { false }
+    static var isRigid: Bool { false }
     
     var killedByIndex: Int
     var playerInfo: PlayerInfo

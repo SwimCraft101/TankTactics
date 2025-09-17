@@ -145,6 +145,7 @@ enum GameDay: Codable {
         Tank(appearance: Appearance(fillColor: .cyan, symbol: "lightspectrum.horizontal"), coordinates: Coordinates(x: 6, y: -1, level: 0), playerInfo: playerInfo),
         Tank(appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), playerInfo: playerInfo),
         Tank(appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), playerInfo: playerInfo),
+        Drone(coordinates: Coordinates(x: 4, y: -3), uuid: UUID())
     ]), gameDay: .monday)
     
     var board: Board
