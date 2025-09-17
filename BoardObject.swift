@@ -94,6 +94,9 @@ class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType 
         return true
     }
     
+    var isSolid: Bool { false }
+    var isRigid: Bool { false }
+    
     let uuid: UUID
     
     var fuelDropped: Int
@@ -213,6 +216,9 @@ extension BoardObject {
 class Wall: BoardObject {
     override var type: BoardObjectType { .wall }
     
+    static var isSolid: Bool { true }
+    static var isRigid: Bool { true }
+    
     init(coordinates: Coordinates) {
         super.init(
             fuelDropped: 0,
@@ -254,6 +260,9 @@ class Wall: BoardObject {
 
 class ReinforcedWall: BoardObject {
     override var type: BoardObjectType { .reinforcedWall }
+    
+    static var isSolid: Bool { true }
+    static var isRigid: Bool { true }
     
     init(coordinates: Coordinates) {
         super.init(
@@ -297,6 +306,9 @@ class ReinforcedWall: BoardObject {
 class Gift: BoardObject {
     override var type: BoardObjectType { .gift }
     let containedModule: Module?
+    
+    static var isSolid: Bool { false }
+    static var isRigid: Bool { false }
     
     init(coordinates: Coordinates, fuelReward: Int, metalReward: Int, containedModule: Module?, uuid: UUID?) {
         self.containedModule = containedModule
@@ -375,6 +387,9 @@ class Gift: BoardObject {
 class Placeholder: BoardObject {
     override var type: BoardObjectType { .placeholder }
     
+    static var isSolid: Bool { true }
+    static var isRigid: Bool { true }
+    
     init(coordinates: Coordinates, uuid: UUID?) {
         super.init(
             fuelDropped: 0,
@@ -413,6 +428,9 @@ class Placeholder: BoardObject {
 
 class Drone: BoardObject {
     override var type: BoardObjectType { .drone }
+    
+    static var isSolid: Bool { false }
+    static var isRigid: Bool { false }
     
     init(coordinates: Coordinates, uuid: UUID?) {
         super.init(

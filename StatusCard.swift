@@ -286,7 +286,7 @@ struct ControlPanelView: View {
                 VStack(spacing: 0) {
                     switch Game.shared.gameDay {
                     case .monday:
-                        Text("\(Game.shared.moduleOffered!.type.name()) Module \(Game.shared.moduleOfferPrice!)􀇷") //MARK: Add Module Purchasing
+                        Text("\(Game.shared.moduleOffered!.type.name()) Module \(Game.shared.moduleOfferPrice!)􀇷")
                             .font(.system(size: inch(0.2)))
                     case .tuesday:
                         Text("Moving and Firing are 50% cheaper today.\nTwo Event Cards are availible.")
@@ -331,7 +331,26 @@ struct ControlPanelView: View {
                             }
                         }
                     case .thursday:
-                        EmptyView() // MARK: Implement Thrift
+                        Text("Sell any of the following to gain Metal:")
+                            .font(.system(size: inch(0.1)))
+                        if tank.modules.count >= 1 {
+                            let module = tank.modules.randomElement()!
+                            ThriftOption(name: module.type.name(), metalOffered: SellModule(module: module.type, tankId: tank.uuid).metalCost)
+                        }
+                        switch Int.random(in: 0...4) {
+                        case 0:
+                            ThriftOption(name: "Movement Range", metalOffered: SellUpgrade(upgrade: UpgradeMovementRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
+                        case 1:
+                            ThriftOption(name: "Movement Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeMovementCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
+                        case 2:
+                            ThriftOption(name: "Weapon Range", metalOffered: SellUpgrade(upgrade: UpgradeGunRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
+                        case 3:
+                            ThriftOption(name: "Weapon Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeGunCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
+                        case 4:
+                            ThriftOption(name: "Weapon Damage", metalOffered: SellUpgrade(upgrade: UpgradeGunDamage(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
+                        default:
+                            fatalError()
+                        }
                     case .friday:
                         Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
                             GridRow {
@@ -427,6 +446,19 @@ struct ControlPanelView: View {
         }
         .frame(width: inch(4), height: inch(4))
         .foregroundColor(.black)
+    }
+}
+
+struct ThriftOption: View {
+    let name: String
+    let metalOffered: Int
+     
+    var body: some View {
+        HStack {
+            Text(name)
+                .font(.system(size: inch(0.2)))
+            Text("(\(metalOffered)􀇷)")
+        }
     }
 }
 
@@ -538,7 +570,6 @@ struct RotatedDirectionOptions: View {
     let depth: Int
     var vector: [Direction]
     var action: ([Direction], Direction) -> Void
-    var rotation: Direction
     
     struct RotationOptions: View {
         let label: String
@@ -548,16 +579,16 @@ struct RotatedDirectionOptions: View {
         var body: some View {
             Menu(label) {
                 Text("Choose a facing direction.")
-                Button("􀄨 North") {
+                Button("􀄨 Facing North") {
                     action(vector, .north)
                 }
-                Button("􀄩 South") {
+                Button("􀄩 Facing South") {
                     action(vector, .south)
                 }
-                Button("􀄫 East") {
+                Button("􀄫 Facing East") {
                     action(vector, .east)
                 }
-                Button("􀄪 West") {
+                Button("􀄪 Facing West") {
                     action(vector, .west)
                 }
             }
@@ -567,16 +598,16 @@ struct RotatedDirectionOptions: View {
     var body: some View {
         if depth > 1  {
             Menu("􀄨 North") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.north], action: action, rotation: rotation)
+                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.north], action: action)
             }
             Menu("􀄩 South") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.south], action: action, rotation: rotation)
+                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.south], action: action)
             }
             Menu("􀄫 East") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.east], action: action, rotation: rotation)
+                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.east], action: action)
             }
             Menu("􀄪 West") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.west], action: action, rotation: rotation)
+                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.west], action: action)
             }
             if vector != [] {
                 RotationOptions(label: "􀎫 Go!", action: action, vector: vector)

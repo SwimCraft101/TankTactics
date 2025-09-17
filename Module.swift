@@ -296,9 +296,19 @@ class RadarModule: Module { override var type: ModuleType { .radar } // note tha
 
 class DroneModule: Module { override var type: ModuleType { .drone }
     var droneId: UUID?
+    
+    var drone: Drone? {
+        Game.shared.board.objects.filter({ $0.uuid == droneId }).first as? Drone
+    }
+    
     override var view: any View {
         VStack {
             SquareViewport(coordinates: Game.shared.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 3, lowDetailSightRange: 3, radarRange: 3, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: reference real state of value showBorderWarning
+                .frame(width: inch(3), height: inch(3))
+            Text("Drone is at X: \(drone!.coordinates!.x) Y: \(drone!.coordinates!.y).")
+                .font(.system(size: inch(0.2)))
+            Text("Draw a 􀀀 adjacent to the drone to move it up to one space.")
+                .font(.system(size: inch(0.2)))
         }
     }
     
@@ -525,6 +535,6 @@ class FactoryModule: Module { override var type: ModuleType { .factory }
 #Preview {
     ZStack {
         Color.white
-        ModuleView(module: ConstructionModule(tankId: Game.shared.board.objects.first(where: { $0 is Tank })?.uuid ?? UUID()))
+        ModuleView(module: DroneModule(droneId: Game.shared.board.objects.first(where: { $0 is Drone })?.uuid, tankId: Game.shared.board.objects.first(where: { $0 is Tank })?.uuid ?? UUID()))
     }
 }
