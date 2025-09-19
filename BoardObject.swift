@@ -8,10 +8,30 @@ import Foundation
 import SwiftUI
 
 struct Coordinates: Equatable, Codable { //MARK: Add rotation support
-    var x: Int
-    var y: Int
-    var level: Int
-    var rotation: Direction
+    let x: Int
+    let y: Int
+    let level: Int
+    let rotation: Direction
+    
+    mutating func x(_ newX: Int) {
+        self = .init(x: newX, y: y, level: level, rotation: rotation)
+    }
+    
+    mutating func y(_ newY: Int) {
+        self = .init(x: x, y: newY, level: level, rotation: rotation)
+    }
+    
+    mutating func level(_ newLevel: Int) {
+        self = .init(x: x, y: y, level: newLevel, rotation: rotation)
+    }
+    
+    mutating func rotation(_ newRotation: Direction) {
+        self = .init(x: x, y: y, level: level, rotation: newRotation)
+    }
+    
+    mutating func moveBy(_ direction: Direction) {
+        self = .init(x: x + direction.changeInXValue, y: y + direction.changeInYValue, level: level, rotation: rotation)
+    }
     
     func viewOffset(right: Int, up: Int) -> Coordinates {
         switch rotation {
@@ -30,6 +50,13 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
         let deltax = abs(other.x - x)
         let deltay = abs(other.y - y)
         return Int(deltax + deltay)
+    }
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        if lhs.x != rhs.x { return false }
+        if lhs.y != rhs.y { return false }
+        if lhs.level != rhs.level { return false }
+        return true
     }
     
     func inBounds() -> Bool {
@@ -54,10 +81,33 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
 }
 
 struct Appearance: Equatable, Codable {
-    var fillColor: Color
-    var strokeColor: Color?
-    var symbolColor: Color?
-    var symbol: String
+    let fillColor: Color
+    let strokeColor: Color?
+    let symbolColor: Color?
+    let symbol: String
+    
+    mutating func fillColor(_ newFillColor: Color) {
+        self = .init(fillColor: newFillColor, strokeColor: strokeColor, symbolColor: symbolColor, symbol: symbol)
+    }
+    
+    mutating func strokeColor(_ newStrokeColor: Color?) {
+        self = .init(fillColor: fillColor, strokeColor: newStrokeColor, symbolColor: symbolColor, symbol: symbol)
+    }
+    
+    mutating func symbolColor(_ newSymbolColor: Color?) {
+        self = .init(fillColor: fillColor, strokeColor: strokeColor, symbolColor: newSymbolColor, symbol: symbol)
+    }
+    
+    mutating func symbol(_ newSymbol: String) {
+        self = .init(fillColor: fillColor, strokeColor: strokeColor, symbolColor: symbolColor, symbol: newSymbol)
+    }
+    
+    init(fillColor: Color, strokeColor: Color? = nil, symbolColor: Color? = nil, symbol: String) {
+        self.fillColor = fillColor
+        self.strokeColor = strokeColor
+        self.symbolColor = symbolColor
+        self.symbol = symbol
+    }
 }
 
 enum BoardObjectType: String, Codable {
@@ -71,6 +121,7 @@ enum BoardObjectType: String, Codable {
     case deadTank = "Dead Tank"
 }
 
+@Observable
 class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType { .boardObject }
     static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
         if lhs.coordinates != rhs.coordinates {

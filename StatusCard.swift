@@ -280,13 +280,16 @@ struct StatusCardBack: View {
 
 struct ControlPanelView: View {
     let tank: Tank
+    
+    @Environment(Game.self) private var game
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
-                    switch Game.shared.gameDay {
+                    switch game.gameDay {
                     case .monday:
-                        Text("\(Game.shared.moduleOffered!.type.name()) Module \(Game.shared.moduleOfferPrice!)􀇷")
+                        Text("\(game.moduleOffered!.type.name()) Module \(game.moduleOfferPrice!)􀇷")
                             .font(.system(size: inch(0.2)))
                     case .tuesday:
                         Text("Moving and Firing are 50% cheaper today.\nTwo Event Cards are availible.")
@@ -390,7 +393,7 @@ struct ControlPanelView: View {
                 }
                 .frame(width: inch(3.5), height: inch(2.5), alignment: .topLeading)
                 Image(systemName: {
-                    switch Game.shared.gameDay {
+                    switch game.gameDay {
                     case .monday:
                         return "square.on.square.dashed"
                     case .tuesday:
@@ -524,20 +527,14 @@ struct DirectionOptions: View {
     let depth: Int
     var vector: [Direction]
     var action: ([Direction]) -> Void
+    var rotation: Direction
     
     var body: some View {
-        if depth > 1  {
-            Menu("􀄨 North") {
-                DirectionOptions(depth: depth - 1, vector: vector + [.north], action: action)
-            }
-            Menu("􀄩 South") {
-                DirectionOptions(depth: depth - 1, vector: vector + [.south], action: action)
-            }
-            Menu("􀄫 East") {
-                DirectionOptions(depth: depth - 1, vector: vector + [.east], action: action)
-            }
-            Menu("􀄪 West") {
-                DirectionOptions(depth: depth - 1, vector: vector + [.west], action: action)
+        if depth > 1 {
+            ForEach(Direction.all, id: \.self) { direction in
+                Menu("\(direction.fromPerspectiveOf(rotation).arrowAndName) (\(direction.name))") {
+                    DirectionOptions(depth: depth - 1, vector: vector + [direction], action: action, rotation: rotation)
+                }
             }
             if vector != [] {
                 Button("􀎫 Go!") {
@@ -545,17 +542,10 @@ struct DirectionOptions: View {
                 }
             }
         } else {
-            Button("􀄨 North") {
-                action(vector + [.north])
-            }
-            Button("􀄩 South") {
-                action(vector + [.south])
-            }
-            Button("􀄫 East") {
-                action(vector + [.east])
-            }
-            Button("􀄪 West") {
-                action(vector + [.west])
+            ForEach(Direction.all, id: \.self) { direction in
+                Button("\(direction.fromPerspectiveOf(rotation).arrowAndName) (\(direction.name))") {
+                    action(vector + [direction])
+                }
             }
             if vector != [] {
                 Button("􀎫 Go!") {
@@ -570,56 +560,39 @@ struct RotatedDirectionOptions: View {
     let depth: Int
     var vector: [Direction]
     var action: ([Direction], Direction) -> Void
+    var rotation: Direction
     
     struct RotationOptions: View {
         let label: String
         let action: ([Direction], Direction) -> Void
         let vector: [Direction]
+        let rotation: Direction
         
         var body: some View {
             Menu(label) {
                 Text("Choose a facing direction.")
-                Button("􀄨 Facing North") {
-                    action(vector, .north)
-                }
-                Button("􀄩 Facing South") {
-                    action(vector, .south)
-                }
-                Button("􀄫 Facing East") {
-                    action(vector, .east)
-                }
-                Button("􀄪 Facing West") {
-                    action(vector, .west)
+                ForEach(Direction.all, id: \.self) { direction in
+                    Button("\(direction.fromPerspectiveOf(rotation).arrowAndName)wards (Facing \(direction.name))") {
+                        action(vector, direction)
+                    }
                 }
             }
         }
     }
     
     var body: some View {
-        if depth > 1  {
-            Menu("􀄨 North") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.north], action: action)
+        if depth > 1 {
+            ForEach(Direction.all, id: \.self) { direction in
+                Menu("\(direction.fromPerspectiveOf(rotation).arrowAndName) (\(direction.name))") {
+                    RotatedDirectionOptions(depth: depth - 1, vector: vector + [direction], action: action, rotation: rotation)
+                }
             }
-            Menu("􀄩 South") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.south], action: action)
-            }
-            Menu("􀄫 East") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.east], action: action)
-            }
-            Menu("􀄪 West") {
-                RotatedDirectionOptions(depth: depth - 1, vector: vector + [.west], action: action)
-            }
-            if vector != [] {
-                RotationOptions(label: "􀎫 Go!", action: action, vector: vector)
-            }
+            RotationOptions(label: "􀎫 Go!", action: action, vector: vector, rotation: rotation)
         } else {
-            RotationOptions(label: "􀄨 North", action: action, vector: vector + [.north])
-            RotationOptions(label: "􀄩 South", action: action, vector: vector + [.south])
-            RotationOptions(label: "􀄫 East", action: action, vector: vector + [.east])
-            RotationOptions(label: "􀄪 West", action: action, vector: vector + [.west])
-            if vector != [] {
-                RotationOptions(label: "􀎫 Go!", action: action, vector: vector)
+            ForEach(Direction.all, id: \.self) { direction in
+                RotationOptions(label: "\(direction.fromPerspectiveOf(rotation).arrowAndName) (\(direction.name))", action: action, vector: vector + [direction], rotation: rotation)
             }
+            RotationOptions(label: "􀎫 Go!", action: action, vector: vector, rotation: rotation)
         }
     }
 }

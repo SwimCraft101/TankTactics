@@ -23,7 +23,7 @@ struct SquareViewport: View {
                 ForEach(((-viewRenderSize)...viewRenderSize).reversed(), id: \.self) { upOffset in
                     GridRow {
                         ForEach(((-viewRenderSize)...viewRenderSize), id: \.self) { rightOffset in
-                            TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
+                            TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
                         }
                     }
                 }
@@ -69,7 +69,7 @@ struct TriangleViewport: View {
                                         .rotationEffect(coordinates.rotation.angle)
                                         .foregroundStyle(.black)
                                 } else {
-                                    TileView(coordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, localCoordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
+                                    TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
                                 }
                             } else {
                                 BasicTileView(appearance: nil, accessibilitySettings: accessibilitySettings)
@@ -125,29 +125,31 @@ struct BasicTileView: View {
 }
 
 struct TileView: View {
-    let coordinates: Coordinates
+    let centerCoordinates: Coordinates
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
     let showBorderWarning: Bool
-    let localCoordinates: Coordinates
+    let coordinates: Coordinates
     let accessibilitySettings: AccessibilitySettings
     @State private var precedenceApplied: Int = 0
     @State private var fuelForAction: Int = 0
     @State private var metalForAction: Int = 0
     
+    @Bindable private var game = Game.shared
+    
     func getAppearenceAtLocation() -> Appearance { //MARK: make this less horrible
-        if localCoordinates.inBounds() {
-            for tile in Game.shared.board.objects { //if there is an object, it will be rendered here
-                if tile.coordinates != localCoordinates { //first and most important check: that this tile is in the correct location to be rendered.
+        if coordinates.inBounds() {
+            for tile in game.board.objects { //if there is an object, it will be rendered here
+                if tile.coordinates != coordinates { //first and most important check: that this tile is in the correct location to be rendered.
                     continue //skips to next object in the loop
                 }
                 if tile.appearance == nil { //tile is invisible
                     continue //skip rendering invisible tiles
                 }
-                if tile.coordinates!.distanceTo(coordinates) <= radarRange {
-                    if tile.coordinates!.distanceTo(coordinates) <= lowDetailSightRange {
-                        if tile.coordinates!.distanceTo(coordinates) <= highDetailSightRange {
+                if tile.coordinates!.distanceTo(centerCoordinates) <= radarRange {
+                    if tile.coordinates!.distanceTo(centerCoordinates) <= lowDetailSightRange {
+                        if tile.coordinates!.distanceTo(centerCoordinates) <= highDetailSightRange {
                             //fully rendered
                             return tile.appearance!
                         } else {
@@ -166,9 +168,9 @@ struct TileView: View {
                 }
             }
             //renders if there is nothing there, but still requires inbounds
-            if coordinates.distanceTo(localCoordinates) <= radarRange {
-                if coordinates.distanceTo(localCoordinates) <= lowDetailSightRange {
-                    if coordinates.distanceTo(localCoordinates) <= highDetailSightRange {
+            if centerCoordinates.distanceTo(coordinates) <= radarRange {
+                if centerCoordinates.distanceTo(coordinates) <= lowDetailSightRange {
+                    if centerCoordinates.distanceTo(coordinates) <= highDetailSightRange {
                         return Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle") //pure white if in full range
                     }
                     let fog = Color(red: 0.9, green: 0.9, blue: 0.9)
@@ -181,8 +183,8 @@ struct TileView: View {
             return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") // greyest if out of range
         } else {
             //renderer for out of bounds tiles
-            if localCoordinates.distanceTo(coordinates) <= radarRange {
-                if localCoordinates.distanceTo(coordinates) <= lowDetailSightRange {
+            if coordinates.distanceTo(centerCoordinates) <= radarRange {
+                if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
                     return showBorderWarning ? Appearance(fillColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance!
                 }
                 let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
@@ -194,7 +196,7 @@ struct TileView: View {
     }
     
     var body: some View {
-        let thisTile = Game.shared.board.objects.first(where: { $0.coordinates == localCoordinates && $0.appearance != nil })
+        let thisTile = game.board.objects.first(where: { $0.coordinates == coordinates && $0.appearance != nil })
         BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
             .contextMenu {
                 if thisTile != nil {
@@ -206,79 +208,79 @@ struct TileView: View {
                         }
                         .pickerStyle(.menu)
                         Menu("􁹫 Move") {
-                            RotatedDirectionOptions(depth: tank.movementRange, vector: []) { vector, rotation in
-                                Game.shared.actions.append(Move(vector, rotation, tankId: tank.uuid, precedence: precedenceApplied))
-                            }
+                            RotatedDirectionOptions(depth: tank.movementRange, vector: [], action: { vector, rotation in
+                                game.queueAction(Move(vector, rotation, tankId: tank.uuid, precedence: precedenceApplied))
+                            }, rotation: tank.coordinates!.rotation)
                         }
                         Menu("􀅾 Fire") {
-                            DirectionOptions(depth: tank.gunRange, vector: []) { vector in
-                                Game.shared.actions.append(Fire(vector, tankId: tank.uuid, precedence: precedenceApplied))
-                            }
+                            DirectionOptions(depth: tank.gunRange, vector: [], action: { vector in
+                                game.queueAction(Fire(vector, tankId: tank.uuid, precedence: precedenceApplied))
+                            }, rotation: tank.coordinates!.rotation)
                         }
-                        if Game.shared.gameDay == .monday {
-                            Button("􀯇 Purchase \(Game.shared.moduleOffered!.type.name())") {
-                                Game.shared.actions.append(PurchaseModule(tankId: tank.uuid))
+                        if game.gameDay == .monday {
+                            Button("􀯇 Purchase \(game.moduleOffered!.type.name())") {
+                                game.queueAction(PurchaseModule(tankId: tank.uuid))
                             }
                             .disabled(!(PurchaseModule(tankId: tank.uuid).isAllowed))
                         }
-                        if Game.shared.gameDay == .wednesday || tank.modules.contains(where: { $0 is FactoryModule }) {
+                        if game.gameDay == .wednesday || tank.modules.contains(where: { $0 is FactoryModule }) {
                             Button("􂊼 Upgrade Movement Range") {
-                                Game.shared.actions.append(UpgradeMovementRange(tankId: tank.uuid))
+                                game.queueAction(UpgradeMovementRange(tankId: tank.uuid))
                             }
                             .disabled(!(UpgradeMovementRange(tankId: tank.uuid).isAllowed))
                             Button("􁐚 Upgrade Movement Efficiency") {
-                                Game.shared.actions.append(UpgradeMovementCost(tankId: tank.uuid))
+                                game.queueAction(UpgradeMovementCost(tankId: tank.uuid))
                             }
                             .disabled(!(UpgradeMovementCost(tankId: tank.uuid).isAllowed))
                         }
-                        if Game.shared.gameDay == .friday || tank.modules.contains(where: { $0 is FactoryModule }) {
+                        if game.gameDay == .friday || tank.modules.contains(where: { $0 is FactoryModule }) {
                             Button("􂇏 Upgrade Weapon Range") {
-                                Game.shared.actions.append(UpgradeGunRange(tankId: tank.uuid))
+                                game.queueAction(UpgradeGunRange(tankId: tank.uuid))
                             }
                             .disabled(!(UpgradeGunRange(tankId: tank.uuid).isAllowed))
                             Button("􀎓 Upgrade Weapon Damage") {
-                                Game.shared.actions.append(UpgradeGunDamage(tankId: tank.uuid))
+                                game.queueAction(UpgradeGunDamage(tankId: tank.uuid))
                             }
                             .disabled(!(UpgradeGunDamage(tankId: tank.uuid).isAllowed))
                             Button("􀣉 Upgrade Weapon Efficiency") {
-                                Game.shared.actions.append(UpgradeGunCost(tankId: tank.uuid))
+                                game.queueAction(UpgradeGunCost(tankId: tank.uuid))
                             }
                             .disabled(!(UpgradeGunCost(tankId: tank.uuid).isAllowed))
                         }
                         if tank.modules.contains(where: { $0 is ConstructionModule }) {
                             Menu("􀂒 Build Wall") {
                                 Button("􀄨 North") {
-                                    Game.shared.actions.append(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
                                 }
                                 .disabled(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                 Button("􀄩 South") {
-                                    Game.shared.actions.append(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
                                 }
                                 .disabled(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                 Button("􀄫 East") {
-                                    Game.shared.actions.append(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
                                 }
                                 .disabled(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                 Button("􀄪 West") {
-                                    Game.shared.actions.append(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
                                 }
                                 .disabled(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                             }
                             Menu("􀎡 Build Reinforced Wall") {
                                     Button("􀄨 North") {
-                                        Game.shared.actions.append(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
+                                        game.queueAction(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
                                     }
                                     .disabled(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                     Button("􀄩 South") {
-                                        Game.shared.actions.append(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
+                                        game.queueAction(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
                                     }
                                     .disabled(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                     Button("􀄫 East") {
-                                        Game.shared.actions.append(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
+                                        game.queueAction(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
                                     }
                                     .disabled(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                     Button("􀄪 West") {
-                                        Game.shared.actions.append(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
+                                        game.queueAction(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
                                     }
                                     .disabled(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                             }
@@ -294,49 +296,69 @@ struct TileView: View {
                                     }
                                 }
                                 Button("􀄨 North") {
-                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied))
+                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied))
                                 }
                                 .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied).isAllowed)
                                 Button("􀄩 South") {
-                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied))
+                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied))
                                 }
                                 .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied).isAllowed)
                                 Button("􀄫 East") {
-                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
                                 }
                                 .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
                                 Button("􀄪 West") {
-                                    Game.shared.actions.append(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
                                 }
                                 .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                            }
+                        }
+                        if tank.modules.contains(where: { $0 is DroneModule }) {
+                            Menu("􂖛 Move Drone") {
+                                Button("􀄨 North") {
+                                    game.queueAction(MoveDrone(.north, tankId: tank.uuid))
+                                }
+                                .disabled(MoveDrone(.north, tankId: tank.uuid).isAllowed)
+                                Button("􀄩 South") {
+                                    game.queueAction(MoveDrone(.south, tankId: tank.uuid))
+                                }
+                                .disabled(MoveDrone(.south, tankId: tank.uuid).isAllowed)
+                                Button("􀄫 East") {
+                                    game.queueAction(MoveDrone(.east, tankId: tank.uuid))
+                                }
+                                .disabled(MoveDrone(.east, tankId: tank.uuid).isAllowed)
+                                Button("􀄪 West") {
+                                    game.queueAction(MoveDrone(.west, tankId: tank.uuid))
+                                }
+                                .disabled(MoveDrone(.west, tankId: tank.uuid).isAllowed)
                             }
                         }
                     }
                 } else {
                     Button("􀂒 Add Wall") {
-                        Game.shared.board.objects.append(Wall(coordinates: localCoordinates))
+                        game.board.objects.append(Wall(coordinates: coordinates))
                     }
                     Button("􀑉 Add Gift") {
-                        Game.shared.board.objects.append(Gift(coordinates: localCoordinates))
+                        game.board.objects.append(Gift(coordinates: coordinates))
                     }
                     Button("􀭉 Add New Tank") {
-                        Game.shared.board.objects.append(Tank(appearance: Placeholder(coordinates: localCoordinates, uuid: nil).appearance!, coordinates: localCoordinates, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", accessibilitySettings: AccessibilitySettings(), kills: 0)))
+                        game.board.objects.append(Tank(appearance: Placeholder(coordinates: coordinates, uuid: nil).appearance!, coordinates: coordinates, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)))
                     }
                 } //MARK: Make these reference coordinates correctly
             } //MARK: Make the Context Menus actually work, assuming they are not replaced with a new system
             .onTapGesture(count: 1) {
                 if thisTile != nil {
                     if !(thisTile is Player) {
-                        Game.shared.board.objects.removeAll(where: { $0 == thisTile })
+                        game.board.objects.removeAll(where: { $0 == thisTile })
                     }
                 } else {
-                    Game.shared.board.objects.append(Wall(coordinates: localCoordinates))
+                    game.board.objects.append(Wall(coordinates: coordinates))
                 }
             }
             .onTapGesture(count: 2) {
-                Game.shared.board.objects.removeAll(where: {
+                game.board.objects.removeAll(where: {
                     $0 == thisTile})
-                Game.shared.board.objects.append(Wall(coordinates: localCoordinates))
+                game.board.objects.append(Wall(coordinates: coordinates))
             }
     }
 }

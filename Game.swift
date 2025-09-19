@@ -10,9 +10,9 @@ import AppKit
 import UniformTypeIdentifiers
 import SwiftUICore
 #if DEBUG
-let playerInfo = PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)
+let playerInfo = PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)
 let uuid = UUID()
-let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerInfo: PlayerInfo(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(highContrast: false, colorblind: false, largeText: false), kills: 0), fuel: 20, metal: 30, health: 84, defense: 2, movementCost: 10, movementRange: 2, gunRange: 2, gunDamage: 10, gunCost: 9, highDetailSightRange: 3, lowDetailSightRange: 4, radarRange: 5, modules: [
+let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .black, symbol: "xmark.triangle.circle.square"), coordinates: Coordinates(x: 0, y: 0), playerInfo: PlayerInfo(firstName: "first", lastName: "last", deliveryBuilding: "building", deliveryType: "type", deliveryNumber: "num", virtualDelivery: "email", accessibilitySettings: AccessibilitySettings(highContrast: false, colorblind: false, largeText: false), kills: 0, doVirtualDelivery: false), fuel: 20, metal: 30, health: 84, defense: 2, movementCost: 10, movementRange: 2, gunRange: 2, gunDamage: 10, gunCost: 9, highDetailSightRange: 3, lowDetailSightRange: 4, radarRange: 5, modules: [
         ConduitModule(tankId: uuid),
         ConduitModule(tankId: uuid),
         StorageModule(tankId: uuid),
@@ -126,10 +126,11 @@ enum GameDay: Codable {
     }
 }
 
-@Observable class Game: Codable {
+@Observable
+class Game: Codable {
     static var shared: Game = Game(board: Board(objects: [
         tank,
-        Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerInfo: PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centreee", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0)),
+        Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerInfo: PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centreee", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)),
         Wall(coordinates: Coordinates(x: 1, y: 0, level: 0)),
         ReinforcedWall(coordinates: Coordinates(x: 0, y: 0, level: 0)),
         Gift(coordinates: Coordinates(x: 1, y: 5, level: 0)),
@@ -153,6 +154,11 @@ enum GameDay: Codable {
     var randomSeed: Int
     
     var actions: [TankAction] = []
+    
+    func queueAction(_ action: TankAction) {
+        actions.append(action)
+        actions.sort(by: { $0.precedence > $1.precedence })
+    }
     
     var messages: [Message] = []
     
@@ -198,7 +204,7 @@ enum GameDay: Codable {
         Tank.bindModules()
         saveTurnToPDF(players: board.objects.filter({ $0 is Player }) as! [Player], messages: messages, doAlignmentCompensation: true)
         actions.shuffle()
-        actions.sort(by: { $0.precedence <= $1.precedence })
+        actions.sort(by: { $0.precedence > $1.precedence })
         for action in actions {
             let _ = action.execute()
         }

@@ -22,6 +22,7 @@
 		59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */; };
 		59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */; };
 		59DF70BE2BF553F8001E64B3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 59DF70BD2BF553F8001E64B3 /* Assets.xcassets */; };
+		59E01EB32E7CBEDC002544A2 /* ActionList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E01EB22E7CBECD002544A2 /* ActionList.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankTacticsApp.swift; sourceTree = "<group>"; };
 		59DF70BD2BF553F8001E64B3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		59DF70C22BF553F8001E64B3 /* TankTactics.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TankTactics.entitlements; sourceTree = "<group>"; };
+		59E01EB22E7CBECD002544A2 /* ActionList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +72,7 @@
 				595A2D082C6655A10086A452 /* StatusCard.swift */,
 				596376A42CFB5BB000059FCA /* DeadStatusCard.swift */,
 				594D86F82CAF2F2B00916C89 /* MakePDF.swift */,
+				59E01EB22E7CBECD002544A2 /* ActionList.swift */,
 				592B804F2C42AB9B008F41BF /* Direction.swift */,
 				59B7E55B2E451C5600105725 /* Viewport.swift */,
 				59DF70B62BF553F7001E64B3 /* TankTactics */,
@@ -178,6 +181,7 @@
 				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
 				59B7E55C2E451C5600105725 /* Viewport.swift in Sources */,
+				59E01EB32E7CBEDC002544A2 /* ActionList.swift in Sources */,
 				59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

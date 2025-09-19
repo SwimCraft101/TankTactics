@@ -43,7 +43,8 @@ enum ModuleType: String, Codable {
     }
 }
 
-class Module: Codable, Hashable { var type: ModuleType { .module }
+@Observable
+class Module: Codable, Hashable, Identifiable { var type: ModuleType { .module }
     var tankId: UUID?
     fileprivate var tank: Tank {
         Game.shared.board.objects.first(where: { $0.uuid == tankId }) as! Tank

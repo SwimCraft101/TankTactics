@@ -7,13 +7,23 @@
 
 import Foundation
 
-class TankAction {
+protocol SingleDirectionAction {
+    var direction: Direction { get }
+}
+
+protocol MultiDirectionAction {
+    var vector: [Direction] { get }
+}
+
+class TankAction: Identifiable {
     let tankId: UUID // The UUID of the Tank performing the Action
     let precedence: Int // The amount of Fuel spent on Precedence for the action
     var fuelCost: Int { 0 } /// __ _IMPORTANT:_ THE TANK FUEL COST DOES NOT INCLUDE THE VALUE OF PRECEDENCE, NOR THE VALUE SAVED ON TUESDAYS.__
     var metalCost: Int { 0 }
     
-    unowned fileprivate var tank: Tank { // Makes a reference to the actual value of the Tank instead of a copy.
+    var icon: String { fatalError("Base-class TankActions should never be rendered in this way.") }
+    
+    var tank: Tank {
         Game.shared.board.objects.first { $0.uuid == tankId } as! Tank
     }
     
@@ -44,10 +54,12 @@ class TankAction {
     }
 }
 
-class Move: TankAction {
+class Move: TankAction, MultiDirectionAction {
     override var fuelCost: Int { tank.movementCost }
     let vector: [Direction]
     let rotation: Direction
+    
+    override var icon: String { "righttriangle" }
     
     override var isAllowed: Bool {
         if super.isAllowed {
@@ -73,9 +85,11 @@ class Move: TankAction {
     }
 }
 
-class Fire: TankAction {
+class Fire: TankAction, MultiDirectionAction {
     override var fuelCost: Int { tank.gunCost }
     let vector: [Direction]
+    
+    override var icon: String { "multiply" }
     
     override var isAllowed: Bool {
         if super.isAllowed {
@@ -103,6 +117,8 @@ class Fire: TankAction {
 class PurchaseModule: TankAction {
     override var metalCost: Int { Game.shared.moduleOfferPrice! }
     
+    override var icon: String { "square.on.square.dashed" }
+    
     override var isAllowed: Bool {
         if Game.shared.gameDay != .monday { return false }
         if super.isAllowed {
@@ -127,6 +143,12 @@ class PurchaseModule: TankAction {
 class BidForEventCard: TankAction {
     let fuelBid: Int
     let metalBid: Int
+    
+    override var fuelCost: Int { fuelBid }
+    override var metalCost: Int { metalBid }
+    
+    override var icon: String { "text.document" }
+    
     override var isAllowed: Bool {
         if super.isAllowed {
             if fuelBid <= tank.fuel {
@@ -156,6 +178,12 @@ class BidForEventCard: TankAction {
 class ExtractPhysicalFuelOrMetal: TankAction {
     let fuelToExtract: Int
     let metalToExtract: Int
+    
+    override var fuelCost: Int { fuelToExtract }
+    override var metalCost: Int { metalToExtract }
+    
+    override var icon: String { "shippingbox" }
+    
     override var isAllowed: Bool {
         if super.isAllowed {
             if fuelToExtract <= tank.fuel {
@@ -212,9 +240,10 @@ class UpgradeMovementRange: WednesdayUpgrade {
             100, //level 8 to level 9
             110, //level 9 to level 10
             Int.max //there is no level 11
-            
         ][tank.movementRange]
     }
+    
+    override var icon: String { "car.rear.road.lane.distance.3" }
     
     override func execute() -> Bool {
         if super.execute() {
@@ -242,6 +271,8 @@ class UpgradeMovementCost: WednesdayUpgrade {
         ][tank.movementCost]
     }
     
+    override var icon: String { "gauge.with.dots.needle.50percent" }
+    
     override func execute() -> Bool {
         if super.execute() {
             tank.movementCost -= 1
@@ -256,6 +287,8 @@ class Thrift: TankAction {
         if Game.shared.gameDay != .thursday { return false }
         return super.isAllowed
     }
+    
+    override var icon: String { "storefront" }
     
     init(tankId: UUID) {
         super.init(tankId: tankId, precedence: 0) //All thrift Actions muct have no precedence
@@ -352,9 +385,10 @@ class UpgradeGunRange: FridayUpgrade {
             100, //level 8 to level 9
             110, //level 9 to level 10
             Int.max //there is no level 11
-            
         ][tank.gunRange]
     }
+    
+    override var icon: String { "dot.scope" }
     
     override func execute() -> Bool {
         if super.execute() {
@@ -379,9 +413,10 @@ class UpgradeGunCost: FridayUpgrade {
             8, //level 9 to level 8
             5, //level 10 to level 9
             0  //gunCost should never be 11, so this case should be unused
-            
         ][tank.gunCost]
     }
+    
+    override var icon: String { "bandage" }
     
     override func execute() -> Bool {
         if super.execute() {
@@ -406,9 +441,10 @@ class UpgradeGunDamage: FridayUpgrade {
             100, //level 40 to level 45
             110, //level 45 to level 50
             Int.max //there is no level 55
-            
         ][tank.gunDamage]
     }
+    
+    override var icon: String { "chart.bar.xaxis" }
     
     override func execute() -> Bool {
         if super.execute() {
@@ -419,11 +455,11 @@ class UpgradeGunDamage: FridayUpgrade {
     }
 }
 
-class ConstructionAction: TankAction {
+class ConstructionAction: TankAction, SingleDirectionAction {
     var direction: Direction
     
     var destinationCoordinates: Coordinates {
-        Coordinates(x: tank.coordinates!.x + direction.changeInXValue(), y: tank.coordinates!.y + direction.changeInYValue(), level: tank.coordinates!.level)
+        Coordinates(x: tank.coordinates!.x + direction.changeInXValue, y: tank.coordinates!.y + direction.changeInYValue, level: tank.coordinates!.level)
     }
     
     override var isAllowed: Bool {
@@ -457,6 +493,8 @@ class BuildWall: ConstructionAction {
         }
         return false
     }
+    
+    override var icon: String { "square" }
 }
 
 class BuildReinforcedWall: ConstructionAction {
@@ -468,6 +506,8 @@ class BuildReinforcedWall: ConstructionAction {
         }
         return false
     }
+    
+    override var icon: String { "lock.fill" }
 }
 
 class BuildGift: ConstructionAction {
@@ -489,9 +529,11 @@ class BuildGift: ConstructionAction {
         }
         return false
     }
+    
+    override var icon: String { "gift" }
 }
 
-class MoveDrone: TankAction {
+class MoveDrone: TankAction, SingleDirectionAction {
     override var fuelCost: Int { 2 }
     
     var direction: Direction
@@ -499,6 +541,8 @@ class MoveDrone: TankAction {
     var drone: Drone {
         Game.shared.board.objects.first { (tank.modules.first { $0 is DroneModule } as! DroneModule).droneId == $0.uuid } as! Drone
     }
+    
+    override var icon: String { "drone" }
     
     override var isAllowed: Bool {
         if super.isAllowed {
@@ -509,7 +553,7 @@ class MoveDrone: TankAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            drone.coordinates = Coordinates(x: drone.coordinates!.x + direction.changeInXValue(), y: drone.coordinates!.y + direction.changeInYValue(), level: drone.coordinates!.level)
+            drone.coordinates = Coordinates(x: drone.coordinates!.x + direction.changeInXValue, y: drone.coordinates!.y + direction.changeInYValue, level: drone.coordinates!.level)
             return true
         }
         return false
