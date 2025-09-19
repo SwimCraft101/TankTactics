@@ -20,7 +20,6 @@ func power(base: Double, exponent: Int) -> Double {
 
 protocol Player: BoardObject {
     var playerInfo: PlayerInfo { get set }
-    var doVirtualDelivery: Bool { get set }
     func statusCardFront() -> AnyView
     func statusCardBack() -> AnyView
     func statusCardConduitFront() -> AnyView?
@@ -29,9 +28,21 @@ protocol Player: BoardObject {
 }
 
 struct AccessibilitySettings: Codable, Equatable {
-    var highContrast: Bool
-    var colorblind: Bool
-    var largeText: Bool
+    let highContrast: Bool
+    let colorblind: Bool
+    let largeText: Bool
+    
+    mutating func highContrast(_ newValue: Bool) {
+        self = .init(highContrast: newValue, colorblind: colorblind, largeText: largeText)
+    }
+    
+    mutating func colorblind(_ newValue: Bool) {
+        self = .init(highContrast: highContrast, colorblind: newValue, largeText: largeText)
+    }
+    
+    mutating func largeText(_ newValue: Bool) {
+        self = .init(highContrast: highContrast, colorblind: colorblind, largeText: newValue)
+    }
     
     init() { //default "lazy" initializer for when no accessibility settings are needed
         self.highContrast = false
@@ -47,14 +58,43 @@ struct AccessibilitySettings: Codable, Equatable {
 }
 
 struct PlayerInfo: Codable {
-    var firstName: String
-    var lastName: String
-    var deliveryBuilding: String // Should be North, Virginia, or Lingle halls
-    var deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
-    var deliveryNumber: String // Should be a Locker Number or Room Number
-    var virtualDelivery: String? // Should be an email adress
-    var accessibilitySettings: AccessibilitySettings
-    var kills: Int //MARK: Move this value elsewhere
+    let firstName: String
+    let lastName: String
+    let deliveryBuilding: String // Should be North, Virginia, or Lingle halls
+    let deliveryType: String // Should be "locker" for North Hall, "room", or a house name for Lingle.
+    let deliveryNumber: String // Should be a Locker Number or Room Number
+    let virtualDelivery: String? // Should be an email adress
+    let accessibilitySettings: AccessibilitySettings
+    let kills: Int //MARK: Move this value elsewhere, maybe add a statistics system
+    let doVirtualDelivery: Bool
+    
+    mutating func firstName(_ newValue: String) {
+        self = .init(firstName: newValue, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func lastName(_ newValue: String) {
+        self = .init(firstName: firstName, lastName: newValue, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func deliveryBuilding(_ newValue: String) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: newValue, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func deliveryType(_ newValue: String) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: newValue, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func deliveryNumber(_ newValue: String) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: newValue, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func virtualDelivery(_ newValue: String?) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: newValue, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func accessibilitySettings(_ newValue: AccessibilitySettings) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: newValue, kills: kills, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func kills(_ newValue: Int) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: newValue, doVirtualDelivery: doVirtualDelivery)
+    }
+    mutating func doVirtualDelivery(_ newValue: Bool) {
+        self = .init(firstName: firstName, lastName: lastName, deliveryBuilding: deliveryBuilding, deliveryType: deliveryType, deliveryNumber: deliveryNumber, virtualDelivery: virtualDelivery, accessibilitySettings: accessibilitySettings, kills: kills, doVirtualDelivery: newValue)
+    }
     
     var fullName: String {
         "\(firstName) \(lastName)"
@@ -129,11 +169,9 @@ class Tank: BoardObject, Player {
         return false
     }
     
-    var doVirtualDelivery: Bool
-    
     enum CodingKeys: String, CodingKey {
         case playerInfo, fuel, metal, movementCost, movementRange,
-             gunRange, gunDamage, gunCost, modules, doVirtualDelivery, uuid
+             gunRange, gunDamage, gunCost, modules, uuid
     }
     
     init(
@@ -149,7 +187,6 @@ class Tank: BoardObject, Player {
         self.gunRange = 1
         self.gunDamage = 5
         self.gunCost = 10
-        self.doVirtualDelivery = false
         self.modules = [TutorialModule(isWeekTwo: false)]
         super.init(fuelDropped: 20, metalDropped: 20, appearance: appearance, coordinates: coordinates, health: 100, defense: 0, uuid: UUID())
     }
@@ -181,7 +218,6 @@ class Tank: BoardObject, Player {
         self.gunDamage = gunDamage
         self.gunCost = gunCost
         self.playerInfo = playerInfo
-        self.doVirtualDelivery = false
         self.modules = modules
         super.init(fuelDropped: fuel, metalDropped: metal, appearance: appearance, coordinates: coordinates, health: health, defense: defense, uuid: uuid ?? UUID())
     }
@@ -196,7 +232,6 @@ class Tank: BoardObject, Player {
         self.gunRange = try container.decode(Int.self, forKey: .gunRange)
         self.gunDamage = try container.decode(Int.self, forKey: .gunDamage)
         self.gunCost = try container.decode(Int.self, forKey: .gunCost)
-        self.doVirtualDelivery = try container.decode(Bool.self, forKey: .doVirtualDelivery)
         /*
         var modulesArray = try container.nestedUnkeyedContainer(forKey: .modules)
         var modules: [Module] = []
@@ -227,7 +262,6 @@ class Tank: BoardObject, Player {
         try container.encode(gunRange, forKey: .gunRange)
         try container.encode(gunDamage, forKey: .gunDamage)
         try container.encode(gunCost, forKey: .gunCost)
-        try container.encode(doVirtualDelivery, forKey: .doVirtualDelivery)
         
         var arrayContainer = container.nestedUnkeyedContainer(forKey: .modules)
 
@@ -238,12 +272,10 @@ class Tank: BoardObject, Player {
     
     func move(_ vector: [Direction], _ rotation: Direction) { //does not subtract fuel
         for step in vector {
-            coordinates!.rotation = step
-            coordinates!.x += step.changeInXValue()
-            coordinates!.y += step.changeInYValue()
+            coordinates?.rotation(step)
+            coordinates?.moveBy(step)
             if !coordinates!.inBounds() {
-                coordinates!.x -= step.changeInXValue()
-                coordinates!.y -= step.changeInYValue()
+                coordinates?.moveBy(step.opposite)
                 health -= 10
                 return
             }
@@ -254,8 +286,7 @@ class Tank: BoardObject, Player {
                         fuel += tile.fuelDropped
                         Game.shared.board.objects.removeAll(where: { $0.uuid == tile.uuid })
                     } else if tile.isSolid {
-                        coordinates!.x -= step.changeInXValue()
-                        coordinates!.y -= step.changeInYValue()
+                        coordinates?.moveBy(step.opposite)
                         health -= 10
                         tile.health -= 10
                         return
@@ -263,14 +294,13 @@ class Tank: BoardObject, Player {
                 }
             }
         }
-        coordinates!.rotation = rotation  
+        coordinates?.rotation(rotation)
     }
     
     func fire(_ direction: [Direction]) { //does not subtract fuel
         var bulletPosition: Coordinates = coordinates!
         for step in direction {
-            bulletPosition.x += step.changeInXValue()
-            bulletPosition.y += step.changeInYValue()
+            bulletPosition.moveBy(step)
             for tile in Game.shared.board.objects {
                 if tile.coordinates == bulletPosition {
                     if tile.isRigid { //pass over nonrigid objects
@@ -330,10 +360,9 @@ class DeadTank: BoardObject, Player {
     var playerInfo: PlayerInfo
     var essence: Int
     var energy: Int
-    var doVirtualDelivery: Bool
     
     enum CodingKeys: String, CodingKey {
-        case killedByIndex, playerInfo, essence, energy, doVirtualDelivery
+        case killedByIndex, playerInfo, essence, energy
     }
     
     init(
@@ -350,7 +379,6 @@ class DeadTank: BoardObject, Player {
         self.essence = essence
         self.energy = energy
         self.playerInfo = playerInfo
-        self.doVirtualDelivery = doVirtualDelivery ?? false
         super.init(fuelDropped: 0, metalDropped: 0, appearance: appearance, coordinates: nil, health: 0, defense: 0, uuid: uuid ?? UUID())
     }
     
@@ -370,7 +398,6 @@ class DeadTank: BoardObject, Player {
         }
         self.killedByIndex = killedByIndex
         self.playerInfo = tank.playerInfo
-        self.doVirtualDelivery = tank.doVirtualDelivery
         self.essence = essenceEarned()
         self.energy = 1
         super.init(fuelDropped: 0, metalDropped: 0, appearance: tank.appearance, coordinates: nil, health: 0, defense: 0, uuid: tank.uuid)
@@ -382,7 +409,6 @@ class DeadTank: BoardObject, Player {
         self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
         self.essence = try container.decode(Int.self, forKey: .essence)
         self.energy = try container.decode(Int.self, forKey: .energy)
-        self.doVirtualDelivery = try container.decode(Bool.self, forKey: .doVirtualDelivery)
         try super.init(from: decoder)
     }
     
@@ -393,15 +419,13 @@ class DeadTank: BoardObject, Player {
         try container.encode(playerInfo, forKey: .playerInfo)
         try container.encode(essence, forKey: .essence)
         try container.encode(energy, forKey: .energy)
-        try container.encode(doVirtualDelivery, forKey: .doVirtualDelivery)
     }
     
     func placeWall(_ direction: [Direction]) {
         var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
         if direction.count <= energy {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
+                coordinates.moveBy(step)
                 if !coordinates.inBounds() { return }
                 Game.shared.board.objects.append(Wall(coordinates: coordinates))
             }
@@ -412,8 +436,7 @@ class DeadTank: BoardObject, Player {
         var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
         if direction.count <= Int(energy / 2) {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
+                coordinates.moveBy(step)
                 if !coordinates.inBounds() { return }
                 Game.shared.board.objects.append(Gift(coordinates: coordinates))
             }
@@ -424,8 +447,7 @@ class DeadTank: BoardObject, Player {
         var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
         if direction.count <= Int(energy - 2) {
             for step in direction {
-                coordinates.x += step.changeInXValue()
-                coordinates.y += step.changeInYValue()
+                coordinates.moveBy(step)
                 if !coordinates.inBounds() { return }
                 for tile in Game.shared.board.objects {
                     if tile.coordinates == coordinates, let target = tile as? Tank {

@@ -12,7 +12,11 @@ enum Direction: Codable {
     case south
     case west
     
-    func changeInYValue() -> Int {
+    static var all: [Self] {
+        [.north, .south, .east, .west]
+    }
+    
+    var changeInYValue: Int {
         switch self {
         case .north:
             return 1
@@ -23,7 +27,7 @@ enum Direction: Codable {
         }
     }
     
-    func changeInXValue() -> Int {
+    var changeInXValue: Int {
         switch self {
         case .east:
             return 1
@@ -31,6 +35,19 @@ enum Direction: Codable {
             return -1
         default:
             return 0
+        }
+    }
+    
+    var opposite: Self {
+        switch self {
+        case .north:
+            return .south
+        case .south:
+            return .north
+        case .east:
+            return .west
+        case .west:
+            return .east
         }
     }
     
@@ -43,12 +60,67 @@ enum Direction: Codable {
         }
     }
     
+    var name: String {
+        switch self {
+        case .north: "North"
+        case .south: "South"
+        case .east: "East"
+        case .west: "West"
+        }
+    }
+    
+    func fromPerspectiveOf(_ perspective: Direction) -> RelativeDirection {
+        switch (self, perspective) {
+        case (.north, .north): return .up
+        case (.north, .east): return .right
+        case (.north, .south): return .down
+        case (.north, .west): return .left
+        case (.east, .north): return .left
+        case (.east, .east): return .up
+        case (.east, .south): return .right
+        case (.east, .west): return .down
+        case (.south, .north): return .down
+        case (.south, .east): return .left
+        case (.south, .south): return .up
+        case (.south, .west): return .right
+        case (.west, .north): return .right
+        case (.west, .east): return .down
+        case (.west, .south): return .left
+        case (.west, .west): return .up
+        }
+    }
+    
     var angle: Angle {
         switch self {
         case .north: Angle(degrees: 0)
         case .east: Angle(degrees: -90)
         case .west: Angle(degrees: 90)
         case .south: Angle(degrees: 180)
+        }
+    }
+}
+
+enum RelativeDirection {
+    case up
+    case down
+    case left
+    case right
+    
+    var arrowIcon: String {
+        switch self {
+        case .up: "arrow.up"
+        case .right: "arrow.right"
+        case .left: "arrow.left"
+        case .down: "arrow.down"
+        }
+    }
+    
+    var arrowAndName: String {
+        switch self {
+        case .up: "􀄨 Up"
+        case .right: "􀄫 Right"
+        case .left: "􀄪 Left"
+        case .down: "􀄩 Down"
         }
     }
 }

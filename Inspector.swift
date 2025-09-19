@@ -14,6 +14,8 @@ struct Inspector: View {
         self.object = object
     }
     
+    @Bindable private var game = Game.shared
+    
     var body: some View {
         ScrollView(.vertical) {
             VStack {
@@ -28,7 +30,7 @@ struct Inspector: View {
                 }
                 HStack {
                     Button("Delete", systemImage: "trash") {
-                        Game.shared.board.objects.removeAll { $0 == object }
+                        game.board.objects.removeAll { $0 === object }
                     }
                 }
                 HStack { // General Information
@@ -44,7 +46,7 @@ struct Inspector: View {
                             if object.coordinates == nil {
                                 object.coordinates = Coordinates(x: newValue, y: 0) // create if needed
                             } else {
-                                object.coordinates?.x = newValue
+                                object.coordinates!.x(newValue)
                             }
                         }
                     ), format: .number)
@@ -54,7 +56,7 @@ struct Inspector: View {
                             if object.coordinates == nil {
                                 object.coordinates = Coordinates(x: 0, y: newValue) // create if needed
                             } else {
-                                object.coordinates?.y = newValue
+                                object.coordinates!.y(newValue)
                             }
                         }
                     ), format: .number)
@@ -64,7 +66,7 @@ struct Inspector: View {
                             if object.coordinates == nil {
                                 object.coordinates = Coordinates(x: 0, y: 0, level: newValue) // create if needed
                             } else {
-                                object.coordinates?.level = newValue
+                                object.coordinates!.level(newValue)
                             }
                         }
                     ), format: .number)
@@ -92,24 +94,24 @@ struct Inspector: View {
                 HStack { // Information about Appearances
                     ColorPicker("Fill", selection: Binding<Color>(
                         get: { object.appearance!.fillColor },
-                        set: { object.appearance!.fillColor = $0 }
+                        set: { object.appearance!.fillColor($0) }
                     ))
                     ColorPicker("Stroke", selection: Binding<Color>(
                         get: { object.appearance!.strokeColor ?? object.appearance!.fillColor },
-                        set: { object.appearance!.strokeColor = $0 }
+                        set: { object.appearance!.strokeColor($0) }
                     ))
                     ColorPicker("Symbol", selection: Binding<Color>(
                         get: { object.appearance!.strokeColor ?? object.appearance!.fillColor },
-                        set: { object.appearance!.strokeColor = $0 }
+                        set: { object.appearance!.strokeColor($0) }
                     ))
                     .disabled(object.appearance!.symbolColor != nil)
                     Toggle("Use Multicolor Symbol", isOn: Binding<Bool>(
                         get: { object.appearance!.symbolColor == nil },
                         set: { useMulticolorSymbol in
                             if useMulticolorSymbol {
-                                object.appearance!.symbolColor = nil
+                                object.appearance!.symbolColor(nil)
                             } else {
-                                object.appearance!.symbolColor = .black
+                                object.appearance!.symbolColor(.black)
                             }
                         }
                     ))
@@ -117,31 +119,95 @@ struct Inspector: View {
                 .disabled(!(object is Player))
                 if let player = object as? Player {
                     VStack { // Tank/Player information
-                        let playerBinding: Binding<Player> = Binding(get: {
-                            return player
-                        }, set: { newValue in
-                            object = newValue
-                        })
-                        TextField("First Name", text: playerBinding.playerInfo.firstName)
-                        TextField("Last Name", text: playerBinding.playerInfo.lastName)
-                        TextField("Delivery Building", text: playerBinding.playerInfo.deliveryBuilding)
-                        TextField("Delivery Type", text: playerBinding.playerInfo.deliveryType)
-                        TextField("Delivery Number", text: playerBinding.playerInfo.deliveryNumber)
+                        if let tank = player as? Tank {
+                            Text("Modules")
+                            VStack {
+                                ForEach(tank.modules) { module in
+                                    Text(module.type.name())
+                                        .onTapGesture {
+                                            tank.modules.removeAll { $0 === module }
+                                            tank.modules.append(module)
+                                        }
+                                }
+                            }
+                        }
+                        TextField("First Name", text: Binding(get: {
+                            player.playerInfo.firstName
+                        }, set: {
+                            player.playerInfo.firstName($0)
+                        }))
+                        TextField("Last Name", text: Binding(get: {
+                            player.playerInfo.lastName
+                        }, set: {
+                            player.playerInfo.lastName($0)
+                        }))
+                        TextField("Delivery Building", text: Binding(get: {
+                            player.playerInfo.deliveryBuilding
+                        }, set: {
+                            player.playerInfo.deliveryBuilding($0)
+                        }))
+                        TextField("Delivery Type", text: Binding(get: {
+                            player.playerInfo.deliveryType
+                        }, set: {
+                            player.playerInfo.deliveryType($0)
+                        }))
+                        TextField("Delivery Number", text: Binding(get: {
+                            player.playerInfo.deliveryNumber
+                        }, set: {
+                            player.playerInfo.deliveryNumber($0)
+                        }))
                         TextField("Email Address", text: Binding(
                             get: { player.playerInfo.virtualDelivery ?? "" },
                             set: { newValue in
                                 if newValue == "" {
-                                    player.playerInfo.virtualDelivery = nil
+                                    player.playerInfo.virtualDelivery(nil)
                                     return
                                 }
-                                player.playerInfo.virtualDelivery = newValue
+                                player.playerInfo.virtualDelivery(newValue)
                             }
                         ))
-                        Toggle("Deliver by email", isOn: playerBinding.doVirtualDelivery)
+                        Toggle("Deliver by email", isOn: Binding(get: {
+                            player.playerInfo.doVirtualDelivery
+                        }, set: {
+                            player.playerInfo.doVirtualDelivery($0)
+                        }))
                         EmptyView().padding(.top, 10)
-                        Toggle("High Contrast", isOn: playerBinding.playerInfo.accessibilitySettings.highContrast)
-                        Toggle("Colorblind", isOn: playerBinding.playerInfo.accessibilitySettings.colorblind)
-                        Toggle("Large Text", isOn: playerBinding.playerInfo.accessibilitySettings.largeText)
+                        Toggle("High Contrast", isOn: Binding(
+                            get: {
+                                player.playerInfo.accessibilitySettings.highContrast
+                            },
+                            set: { newValue in
+                                player.playerInfo.accessibilitySettings({
+                                    var settings = player.playerInfo.accessibilitySettings
+                                    settings.highContrast(newValue)
+                                    return settings
+                                }())
+                            }
+                        ))
+                        Toggle("Colorblind", isOn: Binding(
+                            get: {
+                                player.playerInfo.accessibilitySettings.colorblind
+                            },
+                            set: { newValue in
+                                player.playerInfo.accessibilitySettings({
+                                    var settings = player.playerInfo.accessibilitySettings
+                                    settings.colorblind(newValue)
+                                    return settings
+                                }())
+                            }
+                        ))
+                        Toggle("Large Text", isOn: Binding(
+                            get: {
+                                player.playerInfo.accessibilitySettings.largeText
+                            },
+                            set: { newValue in
+                                player.playerInfo.accessibilitySettings({
+                                    var settings = player.playerInfo.accessibilitySettings
+                                    settings.largeText(newValue)
+                                    return settings
+                                }())
+                            }
+                        ))
                     }
                 }
             }

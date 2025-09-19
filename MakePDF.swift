@@ -78,7 +78,8 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
         }
             .frame(width: inch(10.5), height: inch(105/16))
             .border(.black, width: inch(0.005))
-            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)))
         pages.append(AnyView(HStack(spacing:0) {
             player.statusCardBack()
                 .scaleEffect(21/16)
@@ -90,6 +91,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)
         ))
         
         if player.statusCardConduitBack() != nil {
@@ -99,7 +101,8 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             }
                 .frame(width: inch(21/4), height: inch(21/4))
                 .border(.black, width: inch(0.005))
-                .frame(width: inch(11), height: inch(8.5))))
+                .frame(width: inch(11), height: inch(8.5))
+                .environment(Game.shared)))
             pages.append(AnyView(HStack(spacing:0) {
                 player.statusCardConduitBack()
                     .scaleEffect(21/16)
@@ -110,6 +113,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                 .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
                 .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
                 .frame(width: inch(11), height: inch(8.5))
+                .environment(Game.shared)
             ))
         }
     }
@@ -143,7 +147,8 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
         }
             .border(.black, width: inch(0.005))
             .frame(width: inch(10), height: inch(8))
-            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)))
         pages.append(AnyView(HStack(spacing:0) {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
@@ -172,6 +177,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)
         ))
     }
     
@@ -184,7 +190,11 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                 .frame(width: inch(5), height: inch(8))
             player2.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
-        }.frame(width: inch(10), height: inch(8)).border(.black, width: inch(0.05)).frame(width: inch(11), height: inch(8.5), alignment: .center)))
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.05))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)))
         pages.append(AnyView(HStack(spacing:0) {
             player2.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
@@ -197,6 +207,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)
         ))
     }
     
@@ -207,7 +218,10 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                 .frame(width: inch(5), height: inch(8))
             EmptyView()
                 .frame(width: inch(5), height: inch(8))
-        }.frame(width: inch(10), height: inch(8)).border(.black, width: inch(0.05)).frame(width: inch(11), height: inch(8.5), alignment: .center)))
+        }.frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.05))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)))
         pages.append(AnyView(HStack(spacing:0) {
             EmptyView()
             player.statusCardBack()
@@ -219,13 +233,14 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
             .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)
         ))
     }
     createAndSavePDF(from: pages, fileName: "Turn")
 }
 
 func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) { //MARK: merge with living player function. allow Conduit fold-out flaps to be added as such. fetch status card info with the method of Tank and not directly.
-    var workingTanks = tanks.filter({ !($0.doVirtualDelivery) })
+    var workingTanks = tanks.filter({ !($0.playerInfo.doVirtualDelivery) })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[DeadTank?]] = []
     while workingTanks.count > 0 {
@@ -275,7 +290,7 @@ func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool
 }
 
 func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBorderWarning: Bool) {
-    var workingTanks = tanks.filter({ !($0.doVirtualDelivery) })
+    var workingTanks = tanks.filter({ !($0.playerInfo.doVirtualDelivery) })
     var pages: [AnyView] = []
     var tanksTwoByTwo: [[Tank?]] = []
     while true {
