@@ -14,8 +14,9 @@ struct SquareViewport: View {
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
-    let showBorderWarning: Bool
     let accessibilitySettings: AccessibilitySettings
+    
+    @Binding var selectedObject: BoardObject
     
     var body: some View {
         GeometryReader { geometry in
@@ -23,7 +24,7 @@ struct SquareViewport: View {
                 ForEach(((-viewRenderSize)...viewRenderSize).reversed(), id: \.self) { upOffset in
                     GridRow {
                         ForEach(((-viewRenderSize)...viewRenderSize), id: \.self) { rightOffset in
-                            TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
+                            TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings, selectedObject: $selectedObject)
                         }
                     }
                 }
@@ -39,8 +40,9 @@ struct TriangleViewport: View {
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
-    let showBorderWarning: Bool
     let accessibilitySettings: AccessibilitySettings
+    
+    @Binding var selectedObject: BoardObject
     
     var body: some View {
         GeometryReader { geometry in
@@ -69,7 +71,7 @@ struct TriangleViewport: View {
                                         .rotationEffect(coordinates.rotation.angle)
                                         .foregroundStyle(.black)
                                 } else {
-                                    TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, showBorderWarning: showBorderWarning, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings)
+                                    TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings, selectedObject: $selectedObject)
                                 }
                             } else {
                                 BasicTileView(appearance: nil, accessibilitySettings: accessibilitySettings)
@@ -129,12 +131,13 @@ struct TileView: View {
     let highDetailSightRange: Int
     let lowDetailSightRange: Int
     let radarRange: Int
-    let showBorderWarning: Bool
     let coordinates: Coordinates
     let accessibilitySettings: AccessibilitySettings
     @State private var precedenceApplied: Int = 0
     @State private var fuelForAction: Int = 0
     @State private var metalForAction: Int = 0
+    
+    @Binding var selectedObject: BoardObject
     
     @Bindable private var game = Game.shared
     
@@ -185,7 +188,7 @@ struct TileView: View {
             //renderer for out of bounds tiles
             if coordinates.distanceTo(centerCoordinates) <= radarRange {
                 if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
-                    return showBorderWarning ? Appearance(fillColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance!
+                    return game.board.showBorderWarning ? Appearance(fillColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance!
                 }
                 let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
                 return Appearance(fillColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
@@ -195,10 +198,26 @@ struct TileView: View {
         }
     }
     
+    func fuelAndMetalAmountPicker() -> some View {
+        VStack {
+            Picker("Fuel: \(fuelForAction)", selection: $fuelForAction) {
+                ForEach(0..<50) { i in
+                    Text("\(i)").tag(i)
+                }
+            }
+            Picker("Metal: \(metalForAction)", selection: $metalForAction) {
+                ForEach(0..<50) { i in
+                    Text("\(i)").tag(i)
+                }
+            }
+        }
+    }
+    
     var body: some View {
         let thisTile = game.board.objects.first(where: { $0.coordinates == coordinates && $0.appearance != nil })
         BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
             .contextMenu {
+                
                 if thisTile != nil {
                     if let tank = thisTile as? Tank {
                         Picker(precedenceApplied == 0 ? "􁘿 Apply Precedence" : "􁘿 \(precedenceApplied) Precedence", selection: $precedenceApplied) {
@@ -206,7 +225,6 @@ struct TileView: View {
                                 Text("\(i)").tag(i)
                             }
                         }
-                        .pickerStyle(.menu)
                         Menu("􁹫 Move") {
                             RotatedDirectionOptions(depth: tank.movementRange, vector: [], action: { vector, rotation in
                                 game.queueAction(Move(vector, rotation, tankId: tank.uuid, precedence: precedenceApplied))
@@ -247,90 +265,48 @@ struct TileView: View {
                             }
                             .disabled(!(UpgradeGunCost(tankId: tank.uuid).isAllowed))
                         }
+                        Menu("􀈿 Bid For Event Card\(game.gameDay == .tuesday ? " (2 Availible)" : "")") {
+                            fuelAndMetalAmountPicker()
+                            Button("Confirm") {
+                                game.queueAction(BidForEventCard(fuelBid: fuelForAction, metalBid: metalForAction, tankId: tank.uuid))
+                            }
+                        }
+                        Menu("􀐚 Extract Physical Fuel and Metal") {
+                            fuelAndMetalAmountPicker()
+                            Button("Confirm") {
+                                game.queueAction(ExtractPhysicalFuelOrMetal(fuelToExtract: fuelForAction, metalToExtract: metalForAction, tankId: tank.uuid))
+                            }
+                        }
+                        Menu("􀐚 Redeem Physical Fuel and Metal") {
+                            fuelAndMetalAmountPicker()
+                            Button("Redeem") {
+                                tank.fuel += fuelForAction
+                                tank.metal += metalForAction
+                            }
+                        }
                         if tank.modules.contains(where: { $0 is ConstructionModule }) {
                             Menu("􀂒 Build Wall") {
-                                Button("􀄨 North") {
-                                    game.queueAction(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
-                                }
-                                .disabled(BuildWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                Button("􀄩 South") {
-                                    game.queueAction(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
-                                }
-                                .disabled(BuildWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                Button("􀄫 East") {
-                                    game.queueAction(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
-                                }
-                                .disabled(BuildWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                Button("􀄪 West") {
-                                    game.queueAction(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
-                                }
-                                .disabled(BuildWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                DirectionOptions(depth: 1, vector: [], action: { direction in
+                                    game.queueAction(BuildWall(direction: direction.first!, tankId: tank.uuid, precedence: precedenceApplied))
+                                }, rotation: tank.coordinates!.rotation)
                             }
                             Menu("􀎡 Build Reinforced Wall") {
-                                    Button("􀄨 North") {
-                                        game.queueAction(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied))
-                                    }
-                                    .disabled(BuildReinforcedWall(direction: .north, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                    Button("􀄩 South") {
-                                        game.queueAction(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied))
-                                    }
-                                    .disabled(BuildReinforcedWall(direction: .south, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                    Button("􀄫 East") {
-                                        game.queueAction(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
-                                    }
-                                    .disabled(BuildReinforcedWall(direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                    Button("􀄪 West") {
-                                        game.queueAction(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
-                                    }
-                                    .disabled(BuildReinforcedWall(direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                DirectionOptions(depth: 1, vector: [], action: { direction in
+                                    game.queueAction(BuildWall(direction: direction.first!, tankId: tank.uuid, precedence: precedenceApplied))
+                                }, rotation: tank.coordinates!.rotation)
                             }
                             Menu("􀑉 Build Gift") {
-                                Picker("Fuel: \(fuelForAction)", selection: $fuelForAction) {
-                                    ForEach(0..<50) { i in
-                                        Text("\(i)").tag(i)
-                                    }
-                                }
-                                Picker("Metal: \(metalForAction)", selection: $metalForAction) {
-                                    ForEach(0..<50) { i in
-                                        Text("\(i)").tag(i)
-                                    }
-                                }
-                                Button("􀄨 North") {
-                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied))
-                                }
-                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .north, tankId: tank.uuid,  precedence: precedenceApplied).isAllowed)
-                                Button("􀄩 South") {
-                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied))
-                                }
-                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .south, tankId: tank.uuid,  precedence: precedenceApplied).isAllowed)
-                                Button("􀄫 East") {
-                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied))
-                                }
-                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .east, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
-                                Button("􀄪 West") {
-                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied))
-                                }
-                                .disabled(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: .west, tankId: tank.uuid, precedence: precedenceApplied).isAllowed)
+                                fuelAndMetalAmountPicker()
+                                DirectionOptions(depth: 1, vector: [], action: { direction in
+                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: direction.first!, tankId: tank.uuid,  precedence: precedenceApplied))
+                                }, rotation: tank.coordinates!.rotation)
                             }
                         }
                         if tank.modules.contains(where: { $0 is DroneModule }) {
                             Menu("􂖛 Move Drone") {
-                                Button("􀄨 North") {
-                                    game.queueAction(MoveDrone(.north, tankId: tank.uuid))
-                                }
-                                .disabled(MoveDrone(.north, tankId: tank.uuid).isAllowed)
-                                Button("􀄩 South") {
-                                    game.queueAction(MoveDrone(.south, tankId: tank.uuid))
-                                }
-                                .disabled(MoveDrone(.south, tankId: tank.uuid).isAllowed)
-                                Button("􀄫 East") {
-                                    game.queueAction(MoveDrone(.east, tankId: tank.uuid))
-                                }
-                                .disabled(MoveDrone(.east, tankId: tank.uuid).isAllowed)
-                                Button("􀄪 West") {
-                                    game.queueAction(MoveDrone(.west, tankId: tank.uuid))
-                                }
-                                .disabled(MoveDrone(.west, tankId: tank.uuid).isAllowed)
+                                DirectionOptions(depth: 1, vector: [], action: { direction in
+                                    game.queueAction(MoveDrone(direction.first!, tankId: tank.uuid))
+                                }, rotation: .north)
                             }
                         }
                     }
@@ -344,15 +320,11 @@ struct TileView: View {
                     Button("􀭉 Add New Tank") {
                         game.board.objects.append(Tank(appearance: Placeholder(coordinates: coordinates, uuid: nil).appearance!, coordinates: coordinates, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)))
                     }
-                } //MARK: Make these reference coordinates correctly
-            } //MARK: Make the Context Menus actually work, assuming they are not replaced with a new system
+                }
+            }
             .onTapGesture(count: 1) {
                 if thisTile != nil {
-                    if !(thisTile is Player) {
-                        game.board.objects.removeAll(where: { $0 == thisTile })
-                    }
-                } else {
-                    game.board.objects.append(Wall(coordinates: coordinates))
+                    selectedObject = thisTile!
                 }
             }
             .onTapGesture(count: 2) {
@@ -363,11 +335,13 @@ struct TileView: View {
     }
 }
 
+let selectedObjectBindingDefault = Binding<BoardObject>(get: { BoardObject(fuelDropped: 0, metalDropped: 0, appearance: nil, health: 0, defense: 0, uuid: UUID()) }, set: { _ in fatalError() })
+
 #Preview {
     VStack {
-        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 100, lowDetailSightRange: 200, radarRange: 300, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
+        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 100, lowDetailSightRange: 200, radarRange: 300, accessibilitySettings: AccessibilitySettings(), selectedObject: selectedObjectBindingDefault)
             .frame(width: inch(4), height: inch(4))
-        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, showBorderWarning: true, accessibilitySettings: AccessibilitySettings())
+        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, accessibilitySettings: AccessibilitySettings(), selectedObject: selectedObjectBindingDefault)
             .frame(width: inch(4), height: inch(4))
     }
     .background(.white)

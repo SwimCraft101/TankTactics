@@ -15,6 +15,11 @@ protocol MultiDirectionAction {
     var vector: [Direction] { get }
 }
 
+protocol ArbitraryFuelAndMetalAmountAction {
+    var fuelAmount: Int { get }
+    var metalAmount: Int { get }
+}
+
 class TankAction: Identifiable {
     let tankId: UUID // The UUID of the Tank performing the Action
     let precedence: Int // The amount of Fuel spent on Precedence for the action
@@ -24,7 +29,7 @@ class TankAction: Identifiable {
     var icon: String { fatalError("Base-class TankActions should never be rendered in this way.") }
     
     var tank: Tank {
-        Game.shared.board.objects.first { $0.uuid == tankId } as! Tank
+        Game.shared.board.objects.first { $0.uuid == tankId } as? Tank ?? Game.shared.board.objects.first { $0 is Tank } as! Tank
     }
     
     init(tankId: UUID, precedence: Int) {
@@ -140,19 +145,16 @@ class PurchaseModule: TankAction {
     }
 }
 
-class BidForEventCard: TankAction {
-    let fuelBid: Int
-    let metalBid: Int
-    
-    override var fuelCost: Int { fuelBid }
-    override var metalCost: Int { metalBid }
+class BidForEventCard: TankAction, ArbitraryFuelAndMetalAmountAction {
+    let fuelAmount: Int
+    let metalAmount: Int
     
     override var icon: String { "text.document" }
     
     override var isAllowed: Bool {
         if super.isAllowed {
-            if fuelBid <= tank.fuel {
-                if metalBid <= tank.metal {
+            if fuelAmount <= tank.fuel {
+                if metalAmount <= tank.metal {
                     return true
                 }
             }
@@ -162,32 +164,32 @@ class BidForEventCard: TankAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            Game.shared.eventCardBidders.append((tank.uuid, fuelBid + metalBid))
+            Game.shared.eventCardBidders.append((tank.uuid, fuelAmount, metalAmount))
             return true
         }
         return false
     }
     
     init(fuelBid: Int, metalBid: Int, tankId: UUID) {
-        self.fuelBid = fuelBid
-        self.metalBid = metalBid
+        self.fuelAmount = fuelBid
+        self.metalAmount = metalBid
         super.init(tankId: tankId, precedence: 0)
     }
 }
 
-class ExtractPhysicalFuelOrMetal: TankAction {
-    let fuelToExtract: Int
-    let metalToExtract: Int
+class ExtractPhysicalFuelOrMetal: TankAction, ArbitraryFuelAndMetalAmountAction {
+    let fuelAmount: Int
+    let metalAmount: Int
     
-    override var fuelCost: Int { fuelToExtract }
-    override var metalCost: Int { metalToExtract }
+    override var fuelCost: Int { fuelAmount }
+    override var metalCost: Int { metalAmount }
     
     override var icon: String { "shippingbox" }
     
     override var isAllowed: Bool {
         if super.isAllowed {
-            if fuelToExtract <= tank.fuel {
-                if metalToExtract <= tank.metal {
+            if fuelAmount <= tank.fuel {
+                if metalAmount <= tank.metal {
                     return true
                 }
             }
@@ -197,15 +199,15 @@ class ExtractPhysicalFuelOrMetal: TankAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            //MARK: Add to Turn Report how many tokens to give each tank
+            Game.shared.notes.append("Give \(fuelAmount) fuel tokens and \(metalAmount) metal tokens to \(tank.playerInfo.fullName)")
             return true
         }
         return false
     }
     
     init(fuelToExtract: Int, metalToExtract: Int, tankId: UUID) {
-        self.fuelToExtract = fuelToExtract
-        self.metalToExtract = metalToExtract
+        self.fuelAmount = fuelToExtract
+        self.metalAmount = metalToExtract
         super.init(tankId: tankId, precedence: 0)
     }
 }
@@ -257,6 +259,7 @@ class UpgradeMovementRange: WednesdayUpgrade {
 class UpgradeMovementCost: WednesdayUpgrade {
     override var metalCost: Int {
         return [
+            Int.max, //there is no level -1
             Int.max, //there is no level 0
             100, //level 2 to level 1
             50, //level 3 to level 2
@@ -402,6 +405,7 @@ class UpgradeGunRange: FridayUpgrade {
 class UpgradeGunCost: FridayUpgrade {
     override var metalCost: Int {
         return [
+            Int.max, //there is no level -1
             Int.max, //there is no level 0
             100, //level 2 to level 1
             50, //level 3 to level 2
@@ -441,7 +445,7 @@ class UpgradeGunDamage: FridayUpgrade {
             100, //level 40 to level 45
             110, //level 45 to level 50
             Int.max //there is no level 55
-        ][tank.gunDamage]
+        ][tank.gunDamage / 5]
     }
     
     override var icon: String { "chart.bar.xaxis" }
@@ -510,7 +514,7 @@ class BuildReinforcedWall: ConstructionAction {
     override var icon: String { "lock.fill" }
 }
 
-class BuildGift: ConstructionAction {
+class BuildGift: ConstructionAction, ArbitraryFuelAndMetalAmountAction {
     var fuelAmount: Int
     var metalAmount: Int
     

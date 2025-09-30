@@ -72,20 +72,20 @@ enum Direction: Codable {
     func fromPerspectiveOf(_ perspective: Direction) -> RelativeDirection {
         switch (self, perspective) {
         case (.north, .north): return .up
-        case (.north, .east): return .right
+        case (.north, .east): return .left
         case (.north, .south): return .down
-        case (.north, .west): return .left
-        case (.east, .north): return .left
+        case (.north, .west): return .right
+        case (.east, .north): return .right
         case (.east, .east): return .up
-        case (.east, .south): return .right
+        case (.east, .south): return .left
         case (.east, .west): return .down
         case (.south, .north): return .down
-        case (.south, .east): return .left
+        case (.south, .east): return .right
         case (.south, .south): return .up
-        case (.south, .west): return .right
-        case (.west, .north): return .right
+        case (.south, .west): return .left
+        case (.west, .north): return .left
         case (.west, .east): return .down
-        case (.west, .south): return .left
+        case (.west, .south): return .right
         case (.west, .west): return .up
         }
     }

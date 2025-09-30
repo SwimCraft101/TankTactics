@@ -79,8 +79,6 @@ struct DeadStatusCardFront: View {
 }
 
 struct DeadStatusCardBack: View {
-    
-    
     let tank: DeadTank
     var body: some View {
         ZStack {
@@ -91,7 +89,7 @@ struct DeadStatusCardBack: View {
                         Spacer()
                     }
                     .frame(width: inch(1), height: inch(4), alignment: .center)
-                    SquareViewport(coordinates: Game.shared.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
+                    SquareViewport(coordinates: Game.shared.board.objects[tank.killedByIndex].coordinates!, viewRenderSize: max(tank.energy, 3), highDetailSightRange: tank.energy - 2, lowDetailSightRange: tank.energy - 1, radarRange: tank.energy, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault) //MARK: Might crash if killed by dead person. Make coordinates reference dynamically.
                         
                         .frame(width: inch(4), height: inch(4), alignment: .center)
                 }

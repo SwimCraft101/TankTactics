@@ -232,7 +232,6 @@ class Tank: BoardObject, Player {
         self.gunRange = try container.decode(Int.self, forKey: .gunRange)
         self.gunDamage = try container.decode(Int.self, forKey: .gunDamage)
         self.gunCost = try container.decode(Int.self, forKey: .gunCost)
-        /*
         var modulesArray = try container.nestedUnkeyedContainer(forKey: .modules)
         var modules: [Module] = []
         
@@ -243,7 +242,6 @@ class Tank: BoardObject, Player {
         }
         
         self.modules = modules.filter({ $0 is ConduitModule }) + modules.filter({ !($0 is ConduitModule) }) //sorts modules with conduits first to avoid nesting Conduits.
-         */ self.modules = []
         try super.init(from: decoder)
         
         for module in self.modules {
@@ -284,6 +282,9 @@ class Tank: BoardObject, Player {
                     if tile is Gift {
                         metal += tile.metalDropped
                         fuel += tile.fuelDropped
+                        if (tile as! Gift).containedModule != nil {
+                            modules.append((tile as! Gift).containedModule!)
+                        }
                         Game.shared.board.objects.removeAll(where: { $0.uuid == tile.uuid })
                     } else if tile.isSolid {
                         coordinates?.moveBy(step.opposite)
@@ -326,27 +327,27 @@ class Tank: BoardObject, Player {
     }
     
     func statusCardBack() -> AnyView {
-        return AnyView(StatusCardBack(tank: self, showBorderWarning: false)) //MARK: reference real state of ShowBorderWarning
+        return AnyView(StatusCardBack(tank: self))
     }
     func statusCardFront() -> AnyView {
-        return AnyView(StatusCardFront(tank: self, showBorderWarning: false)) //MARK: reference real state of ShowBorderWarning
+        return AnyView(StatusCardFront(tank: self))
     }
     func statusCardConduitBack() -> AnyView? {
-        if tank.hasTooManyModules {
+        if hasTooManyModules {
             return nil
         }
-        if tank.displayedModules.count < 4 { return nil }
-        return AnyView(ModuleView(module: tank.displayedModules[3]))
+        if displayedModules.count < 4 { return nil }
+        return AnyView(ModuleView(module: displayedModules[3]))
     }
     func statusCardConduitFront() -> AnyView? {
-        if tank.hasTooManyModules {
+        if hasTooManyModules {
             return nil
         }
-        if tank.displayedModules.count < 3 { return nil }
-        return AnyView(ModuleView(module: tank.displayedModules[2]))
+        if displayedModules.count < 3 { return nil }
+        return AnyView(ModuleView(module: displayedModules[2]))
     }
     func virtualStatusCard() -> AnyView {
-        return AnyView(VirtualStatusCard(tank: self, showBorderWarning: false))//MARK: reference real state of ShowBorderWarning
+        return AnyView(VirtualStatusCard(tank: self))
     }
 }
 
@@ -487,13 +488,13 @@ class DeadTank: BoardObject, Player {
 }
 
 
-class DeadAction {
+class DeadAction { //MARK: revamp DeadActions
     var tank: DeadTank
     
     enum ActionType {
         case placeWall([Direction])
         case placeGift([Direction])
-        case harmTank([Direction]) //MARK: Switch to Tank uuids for this action
+        case harmTank([Direction])
         case burnEssence
         case channelEnergy
     }

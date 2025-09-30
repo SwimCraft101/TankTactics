@@ -9,10 +9,10 @@ import Foundation
 import SwiftUI
 
 struct Inspector: View {
-    @State var object: BoardObject
-    init(_ object: BoardObject) {
-        self.object = object
-    }
+    @Binding var object: BoardObject
+    
+    @State private var messageText: String = ""
+    @State private var messageRecipient: BoardObject? = nil
     
     @Bindable private var game = Game.shared
     
@@ -21,10 +21,12 @@ struct Inspector: View {
             VStack {
                 HStack {
                     BasicTileView(appearance: object.appearance, accessibilitySettings: AccessibilitySettings())
+                        .frame(width: 50, height: 50)
                     if object is Player {
                         Text("\((object as! Player).playerInfo.fullName)")
+                            .font(.title)
                     } else {
-                        Text("\(object.type)")
+                        Text(object.type.name)
                             .font(.title)
                     }
                 }
@@ -34,12 +36,41 @@ struct Inspector: View {
                     }
                 }
                 HStack { // General Information
+                    Text("Health")
                     TextField("Health", value: $object.health, format: .number)
                         .disabled(!(object is Player))
-                    Spacer()
+                    Text("Defense")
                     TextField("Defense", value: $object.defense, format: .number)
                         .disabled(!(object is Player))
                     Spacer()
+                }
+                HStack {
+                    Text("Coordinates")
+                    Grid {
+                        GridRow {
+                            Text("")
+                            Button("􀄨") {
+                                object.coordinates!.moveBy(.north)
+                            }
+                            Text("")
+                        }
+                        GridRow {
+                            Button("􀄪") {
+                                object.coordinates!.moveBy(.west)
+                            }
+                            Text("")
+                            Button("􀄫") {
+                                object.coordinates!.moveBy(.east)
+                            }
+                        }
+                        GridRow {
+                            Text("")
+                            Button("􀄩") {
+                                object.coordinates!.moveBy(.south)
+                            }
+                            Text("")
+                        }
+                    }
                     TextField("X", value: Binding<Int>(
                         get: { object.coordinates?.x ?? 0 },
                         set: { newValue in
@@ -70,9 +101,11 @@ struct Inspector: View {
                             }
                         }
                     ), format: .number)
+                    Spacer()
                 }
                 if let gift = object as? Gift {
                     HStack {
+                        Text("Fuel")
                         TextField(
                             "Fuel",
                             value: Binding(
@@ -81,6 +114,7 @@ struct Inspector: View {
                             ),
                             format: .number
                         )
+                        Text("Metal")
                         TextField(
                             "Metal",
                             value: Binding(
@@ -89,35 +123,92 @@ struct Inspector: View {
                             ),
                             format: .number
                         )
+                        Spacer()
+                        if gift.containedModule != nil {
+                            Text("Gift contains a \(gift.containedModule!.type.name()) Module")
+                        } else {
+                            Text("Gift contains no Module")
+                        }
                     }
                 }
-                HStack { // Information about Appearances
-                    ColorPicker("Fill", selection: Binding<Color>(
-                        get: { object.appearance!.fillColor },
-                        set: { object.appearance!.fillColor($0) }
-                    ))
-                    ColorPicker("Stroke", selection: Binding<Color>(
-                        get: { object.appearance!.strokeColor ?? object.appearance!.fillColor },
-                        set: { object.appearance!.strokeColor($0) }
-                    ))
-                    ColorPicker("Symbol", selection: Binding<Color>(
-                        get: { object.appearance!.strokeColor ?? object.appearance!.fillColor },
-                        set: { object.appearance!.strokeColor($0) }
-                    ))
-                    .disabled(object.appearance!.symbolColor != nil)
-                    Toggle("Use Multicolor Symbol", isOn: Binding<Bool>(
-                        get: { object.appearance!.symbolColor == nil },
-                        set: { useMulticolorSymbol in
-                            if useMulticolorSymbol {
-                                object.appearance!.symbolColor(nil)
-                            } else {
-                                object.appearance!.symbolColor(.black)
-                            }
-                        }
-                    ))
+                if let tank = object as? Tank {
+                    HStack {
+                        Text("Fuel")
+                        TextField(
+                            "Fuel",
+                            value: Binding(
+                                get: { tank.fuel },
+                                set: { tank.fuel = $0 }
+                            ),
+                            format: .number
+                        )
+                        Text("Metal")
+                        TextField(
+                            "Metal",
+                            value: Binding(
+                                get: { tank.metal },
+                                set: { tank.metal = $0 }
+                            ),
+                            format: .number
+                        )
+                        Spacer()
+                    }
                 }
-                .disabled(!(object is Player))
+                if object.appearance != nil {
+                    HStack { // Information about Appearances
+                        ColorPicker("Fill", selection: Binding<Color>(
+                            get: { object.appearance!.fillColor },
+                            set: { object.appearance!.fillColor($0) }
+                        ))
+                        ColorPicker("Stroke", selection: Binding<Color>(
+                            get: { object.appearance!.strokeColor ?? object.appearance!.fillColor },
+                            set: { object.appearance!.strokeColor($0) }
+                        ))
+                        if object.appearance!.symbolColor != nil {
+                            ColorPicker("Symbol", selection: Binding<Color>(
+                                get: { object.appearance!.symbolColor ?? object.appearance!.strokeColor ?? object.appearance!.fillColor },
+                                set: { object.appearance!.symbolColor($0) }
+                            ))
+                        }
+                        TextField("Symbol", text: Binding<String>(
+                            get: { object.appearance!.symbol },
+                            set: { newValue in
+                                object.appearance!.symbol(newValue)
+                            }
+                        ))
+                        Toggle("Use Multicolor Symbol", isOn: Binding<Bool>(
+                            get: { object.appearance!.symbolColor == nil },
+                            set: { useMulticolorSymbol in
+                                if useMulticolorSymbol {
+                                    object.appearance!.symbolColor(nil)
+                                } else {
+                                    object.appearance!.symbolColor(object.appearance!.strokeColor ?? object.appearance!.fillColor)
+                                }
+                            }
+                        ))
+                    }
+                    .disabled(!(object is Player))
+                }
                 if let player = object as? Player {
+                    VStack { //Message Sending
+                        HStack {
+                            Text("Send Message")
+                            TextField("Message", text: $messageText)
+                            Picker("Recipient", selection: $messageRecipient) {
+                                ForEach(game.board.objects.filter{ $0 is Player }) { (recipient: BoardObject) in
+                                    HStack {
+                                        BasicTileView(appearance: recipient.appearance, accessibilitySettings: AccessibilitySettings())
+                                        Text((recipient as! Player).playerInfo.fullName)
+                                    }
+                                    .tag(recipient)
+                                }
+                            }
+                            Button("Queue") {
+                                game.messages.append(Message(text: messageText, sender: player.uuid, recipient: messageRecipient!.uuid))
+                            }
+                            .disabled(messageRecipient == nil)
+                        }
+                    }
                     VStack { // Tank/Player information
                         if let tank = player as? Tank {
                             Text("Modules")
@@ -131,46 +222,55 @@ struct Inspector: View {
                                 }
                             }
                         }
-                        TextField("First Name", text: Binding(get: {
-                            player.playerInfo.firstName
-                        }, set: {
-                            player.playerInfo.firstName($0)
-                        }))
-                        TextField("Last Name", text: Binding(get: {
-                            player.playerInfo.lastName
-                        }, set: {
-                            player.playerInfo.lastName($0)
-                        }))
-                        TextField("Delivery Building", text: Binding(get: {
-                            player.playerInfo.deliveryBuilding
-                        }, set: {
-                            player.playerInfo.deliveryBuilding($0)
-                        }))
-                        TextField("Delivery Type", text: Binding(get: {
-                            player.playerInfo.deliveryType
-                        }, set: {
-                            player.playerInfo.deliveryType($0)
-                        }))
-                        TextField("Delivery Number", text: Binding(get: {
-                            player.playerInfo.deliveryNumber
-                        }, set: {
-                            player.playerInfo.deliveryNumber($0)
-                        }))
-                        TextField("Email Address", text: Binding(
-                            get: { player.playerInfo.virtualDelivery ?? "" },
-                            set: { newValue in
-                                if newValue == "" {
-                                    player.playerInfo.virtualDelivery(nil)
-                                    return
+                        HStack {
+                            Text("Name")
+                            TextField("First Name", text: Binding(get: {
+                                player.playerInfo.firstName
+                            }, set: {
+                                player.playerInfo.firstName($0)
+                            }))
+                            TextField("Last Name", text: Binding(get: {
+                                player.playerInfo.lastName
+                            }, set: {
+                                player.playerInfo.lastName($0)
+                            }))
+                        }
+                        HStack {
+                            Text("Delivery Location")
+                            TextField("Delivery Building", text: Binding(get: {
+                                player.playerInfo.deliveryBuilding
+                            }, set: {
+                                player.playerInfo.deliveryBuilding($0)
+                            }))
+                            TextField("Delivery Type", text: Binding(get: {
+                                player.playerInfo.deliveryType
+                            }, set: {
+                                player.playerInfo.deliveryType($0)
+                            }))
+                            TextField("Delivery Number", text: Binding(get: {
+                                player.playerInfo.deliveryNumber
+                            }, set: {
+                                player.playerInfo.deliveryNumber($0)
+                            }))
+                        }
+                        HStack {
+                            Text("Email")
+                            TextField("Email Address", text: Binding(
+                                get: { player.playerInfo.virtualDelivery ?? "" },
+                                set: { newValue in
+                                    if newValue == "" {
+                                        player.playerInfo.virtualDelivery(nil)
+                                        return
+                                    }
+                                    player.playerInfo.virtualDelivery(newValue)
                                 }
-                                player.playerInfo.virtualDelivery(newValue)
-                            }
-                        ))
-                        Toggle("Deliver by email", isOn: Binding(get: {
-                            player.playerInfo.doVirtualDelivery
-                        }, set: {
-                            player.playerInfo.doVirtualDelivery($0)
-                        }))
+                            ))
+                            Toggle("Deliver by email", isOn: Binding(get: {
+                                player.playerInfo.doVirtualDelivery
+                            }, set: {
+                                player.playerInfo.doVirtualDelivery($0)
+                            }))
+                        }
                         EmptyView().padding(.top, 10)
                         Toggle("High Contrast", isOn: Binding(
                             get: {

@@ -127,7 +127,7 @@ enum GameDay: Codable {
 }
 
 @Observable
-class Game: Codable {
+final class Game: Codable {
     static var shared: Game = Game(board: Board(objects: [
         tank,
         Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, symbolColor: .yellow, symbol: "hare"), coordinates: Coordinates(x: 3, y: 3, level: 0), playerInfo: PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centreee", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)),
@@ -147,7 +147,7 @@ class Game: Codable {
         Tank(appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), playerInfo: playerInfo),
         Tank(appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), playerInfo: playerInfo),
         Drone(coordinates: Coordinates(x: 4, y: -3), uuid: UUID())
-    ]), gameDay: .monday)
+    ], border: 7), gameDay: .monday)
     
     var board: Board
     var gameDay: GameDay
@@ -161,6 +161,10 @@ class Game: Codable {
     }
     
     var messages: [Message] = []
+    
+    var eventCardsToPrint: [EventCard] = []
+    
+    var notes: [String] = []
     
     var moduleOffered: Module? {
         if gameDay == .monday {
@@ -198,34 +202,100 @@ class Game: Codable {
         return nil
     }
     
-    var eventCardBidders: [(UUID, Int)] = []
+    var eventCardBidders: [(UUID, Int, Int)] = []
     
     func executeTurn() {
         Tank.bindModules()
-        saveTurnToPDF(players: board.objects.filter({ $0 is Player }) as! [Player], messages: messages, doAlignmentCompensation: true)
         actions.shuffle()
         actions.sort(by: { $0.precedence > $1.precedence })
+        
+        for object in Game.shared.board.objects {
+            if let tank = object as? Tank {
+                tank.constrainToMaximumValues()
+            }
+        }
+        
         for action in actions {
             let _ = action.execute()
+            for object in board.objects {
+                if object.health <= 0 {
+                    if object is Tank { fatalError("A Tank has died!! pleas implement this") }
+                    board.objects.removeAll(where: { $0 == object })
+                }
+            }
         }
+        Tank.bindModules();
+        {
+            if eventCardBidders.count >= 3 {
+                eventCardBidders.sort(by: { $0.1 + $0.2 > $1.1 + $1.2 })
+                if gameDay == .tuesday {
+                    if eventCardBidders[0].1 + eventCardBidders[0].2 == eventCardBidders[2].1 + eventCardBidders[2].2 { //if there is a 3-way tie or worse
+                        return
+                    }
+                    let card = EventCard()
+                    eventCardsToPrint.append(card)
+                    (Game.shared.board.objects.first { $0.uuid == eventCardBidders[1].0 } as! Tank).fuel -= eventCardBidders[1].1
+                    (Game.shared.board.objects.first { $0.uuid == eventCardBidders[1].0 } as! Tank).metal -= eventCardBidders[1].2
+                    Game.shared.notes.append("Give \((Game.shared.board.objects.first { $0.uuid == eventCardBidders[1].0 } as! Player).playerInfo.fullName) the \(card.name) Event Card.")
+                } else {
+                    if eventCardBidders[0].1 + eventCardBidders[0].2 == eventCardBidders[1].1 + eventCardBidders[1].2 { //if there is a tie or worse
+                        return
+                    }
+                }
+                let card = EventCard()
+                eventCardsToPrint.append(card)
+                (Game.shared.board.objects.first { $0.uuid == eventCardBidders[0].0 } as! Tank).fuel -= eventCardBidders[0].1
+                (Game.shared.board.objects.first { $0.uuid == eventCardBidders[0].0 } as! Tank).metal -= eventCardBidders[0].2
+                Game.shared.notes.append("Give \((Game.shared.board.objects.first { $0.uuid == eventCardBidders[0].0 } as! Player).playerInfo.fullName) the \(card.name) Event Card.")
+            }
+        }()
+        Tank.bindModules()
+        var fuelPerTank = 0
+        while fuelPerTank < 25 {
+            var totalTankFuel: Int = 0
+            for tank in board.objects.filter({ $0 is Tank }) as! [Tank] {
+                tank.constrainToMaximumValues()
+                totalTankFuel += tank.fuel
+            }
+            let numberOfTanks: Int = board.objects.filter({ $0 is Tank }).count
+            fuelPerTank = totalTankFuel / numberOfTanks
+            
+            board.objects.append(Gift(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10))))
+            board.objects.append(Gift(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10))))
+            board.objects.append(Gift(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10))))
+            
+            for tank in board.objects.filter({ $0 is Tank }) as! [Tank] {
+                tank.fuel += 1
+                tank.constrainToMaximumValues()
+            }
+        }
+        gameDay.next()
+        saveTurnToPDF(players: (board.objects.filter({ $0 is Player }) as! [Player]).filter({ !$0.playerInfo.doVirtualDelivery }), messages: messages, eventCards: eventCardsToPrint, notes: notes, doAlignmentCompensation: true)
+        notes.removeAll()
+        eventCardsToPrint.removeAll()
+        actions.removeAll()
+        messages.removeAll()
+        randomSeed = Int.random(in: Int.min...Int.max)
     }
     
     enum CodingKeys: String, CodingKey {
         case board
         case gameDay
+        case randomSeed
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.board = try container.decode(Board.self, forKey: .board)
         self.gameDay = try container.decode(GameDay.self, forKey: .gameDay)
-        self.randomSeed = Int.random(in: Int.min...Int.max)
+        self.randomSeed = (try? container.decode(Int.self, forKey: .randomSeed)) ?? Int.random(in: Int.min...Int.max)
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(board, forKey: .board)
         try container.encode(gameDay, forKey: .gameDay)
+        try container.encode(randomSeed, forKey: .randomSeed)
     }
     
     init(board: Board, gameDay: GameDay) {
