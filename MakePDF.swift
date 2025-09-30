@@ -27,7 +27,7 @@ func imageFromView(_ view: AnyView, size: CGSize) -> NSImage {
     return image
 }
 
-func createAndSavePDF(from views: [AnyView], fileName: String) {
+func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize = CGSize(width: inch(11), height: inch(8.5))) {
     // Define page size for portrait orientation
     let pageSize = CGSize(width: inch(11), height: inch(8.5))
     
@@ -36,7 +36,7 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
     
     // Add each view as a separate page in the PDF document
     for view in views {
-        let image = imageFromView(view, size: pageSize)
+        let image = imageFromView(AnyView(view.environment(Game.shared)), size: pageSize)
         let pdfPage = PDFPage(image: image)
         
         if let page = pdfPage {
@@ -60,7 +60,7 @@ func createAndSavePDF(from views: [AnyView], fileName: String) {
     }
 }
 
-func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmentCompensation: Bool) {
+func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards eventCardsIn: [EventCard], notes notesIn: [String], doAlignmentCompensation: Bool) {
     var pages: [AnyView] = []
     var playersToPrintInConduitMode: [Player] = players.filter({ $0.statusCardConduitBack() != nil })
     playersToPrintInConduitMode.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
@@ -68,6 +68,8 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
     playersToPrintNormally.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
     var playersToPrintWithLargeText: [Player] = players.filter({ $0.playerInfo.accessibilitySettings.largeText })
     var messages = messagesIn
+    var eventCards = eventCardsIn
+    var notes = notesIn
     
     while playersToPrintWithLargeText.count > 0 {
         let player = playersToPrintWithLargeText.removeFirst()
@@ -137,10 +139,18 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                     .frame(height: inch(0.005))
                 if !messages.isEmpty {
                     MessageView(message: messages.first!)
+                        .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .bottomTrailing)
+                        .frame(width: inch(5), height: inch(4), alignment: .bottomTrailing)
+                } else if !eventCards.isEmpty {
+                    eventCards.removeFirst()
                         .frame(width: inch(5), height: inch(4))
-                } else { //MARK: only print one Turn Report
-                    //TurnReport()//MARK: implement Turn Reports
-                    //.frame(width: inch(5), height: inch(4), alignment: .center)
+                } else {
+                    VStack {
+                        ForEach(notes, id: \.self) { note in
+                            Text(note)
+                                .font(.system(size: inch(0.1)))
+                        }
+                    }
                 }
             }
             .frame(width: inch(5), height: inch(8), alignment: .top)
@@ -164,7 +174,8 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
                     .frame(height: inch(0.005))
                 if !messages.isEmpty {
                     MessageBackView(message: messages.removeFirst())
-                        .frame(width: inch(5), height: inch(4), alignment: .top)
+                        .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .bottomLeading)
+                        .frame(width: inch(5), height: inch(4), alignment: .bottomLeading)
                 }
             }
             .frame(width: inch(5), height: inch(8), alignment: .top)
@@ -185,17 +196,17 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
         let player1 = playersToPrintNormally.removeFirst()
         let player2 = playersToPrintNormally.removeFirst()
         
-        pages.append(AnyView(HStack(spacing:0) {
+        pages.append(AnyView(HStack(spacing: 0) {
             player1.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
             player2.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
         }
             .frame(width: inch(10), height: inch(8))
-            .border(.black, width: inch(0.05))
+            .border(.black, width: inch(0.005))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)))
-        pages.append(AnyView(HStack(spacing:0) {
+        pages.append(AnyView(HStack(spacing: 0) {
             player2.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
             player1.statusCardBack()
@@ -213,16 +224,17 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
     
     if playersToPrintNormally.count > 0 {
         let player = playersToPrintNormally.removeFirst()
-        pages.append(AnyView(HStack(spacing:0) {
+        pages.append(AnyView(HStack(spacing: 0) {
             player.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
             EmptyView()
                 .frame(width: inch(5), height: inch(8))
-        }.frame(width: inch(10), height: inch(8))
-            .border(.black, width: inch(0.05))
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.005))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)))
-        pages.append(AnyView(HStack(spacing:0) {
+        pages.append(AnyView(HStack(spacing: 0) {
             EmptyView()
             player.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
@@ -236,108 +248,83 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], doAlignmen
             .environment(Game.shared)
         ))
     }
+    
+    while !messages.isEmpty {
+        pages.append(AnyView(HStack(spacing: 0) {
+            Grid(alignment: .topLeading, horizontalSpacing: 0, verticalSpacing: 0) {
+                GridRow {
+                    MessageView(message: messages[safe: 0])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                    MessageView(message: messages[safe: 1])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                }
+                GridRow {
+                    MessageView(message: messages[safe: 2])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                    MessageView(message: messages[safe: 3])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                }
+            }
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.005))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)))
+        pages.append(AnyView(HStack(spacing: 0) {
+            Grid(alignment: .topTrailing, horizontalSpacing: 0, verticalSpacing: 0) {
+                GridRow {
+                    MessageBackView(message: messages[safe: 1])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
+                    MessageBackView(message: messages[safe: 0])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
+                }
+                GridRow {
+                    MessageBackView(message: messages[safe: 3])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
+                    MessageBackView(message: messages[safe: 2])
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
+                }
+            }
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.005))
+            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
+            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
+            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)
+        ))
+        if messages.count <= 4 {
+            messages.removeAll()
+        } else {
+            messages.removeFirst(4)
+        }
+    }
+    
+    while !eventCards.isEmpty {
+        pages.append(AnyView(HStack(spacing: 0) {
+            Grid(horizontalSpacing: 0, verticalSpacing: 0) {
+                GridRow {
+                    eventCards[safe: 0]
+                    eventCards[safe: 1]
+                }
+                GridRow {
+                    eventCards[safe: 2]
+                    eventCards[safe: 3]
+                }
+            }
+        }
+            .frame(width: inch(10), height: inch(8))
+            .border(.black, width: inch(0.005))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)
+            .environment(Game.shared)))
+        pages.append(AnyView(EmptyView()))
+        if eventCards.count <= 4 {
+            eventCards.removeAll()
+        } else {
+            eventCards.removeFirst(4)
+        }
+    }
+    
     createAndSavePDF(from: pages, fileName: "Turn")
 }
-
-func saveDeadStatusCardsToPDF(_ tanks: [DeadTank], doAlignmentCompensation: Bool) { //MARK: merge with living player function. allow Conduit fold-out flaps to be added as such. fetch status card info with the method of Tank and not directly.
-    var workingTanks = tanks.filter({ !($0.playerInfo.doVirtualDelivery) })
-    var pages: [AnyView] = []
-    var tanksTwoByTwo: [[DeadTank?]] = []
-    while workingTanks.count > 0 {
-        if workingTanks.count > 1 {
-            tanksTwoByTwo.append([workingTanks.removeFirst(), workingTanks.removeFirst()])
-        } else if workingTanks.count == 1 {
-            tanksTwoByTwo.append([workingTanks.removeFirst(), nil])
-        }
-    }
-    for tankPair in tanksTwoByTwo {
-        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
-            DeadStatusCardFront(tank: tankPair[0]!)
-                .frame(width: inch(5), height: inch(8))
-                .border(.black, width: 1)
-            if tankPair[1] != nil {
-                DeadStatusCardFront(tank: tankPair[1]!)
-                    .frame(width: inch(5), height: inch(8))
-                    .border(.black, width: 1)
-            } else {
-                Rectangle()
-                    .frame(width: inch(5), height: inch(8))
-                    .foregroundColor(.white)
-                    .border(.black, width: 1)
-            }
-        }))
-        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
-            if tankPair[1] != nil {
-                DeadStatusCardBack(tank: tankPair[1]!)
-                    .frame(width: inch(5), height: inch(8))
-                    .border(.black, width: 1)
-            } else {
-                Rectangle()
-                    .frame(width: inch(5), height: inch(8))
-                    .foregroundColor(.white)
-                    .border(.black, width: 1)
-            }
-            DeadStatusCardBack(tank: tankPair[0]!)
-                .frame(width: inch(5), height: inch(8))
-                .border(.black, width: 1)
-        }
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))))
-        
-    }
-    createAndSavePDF(from: pages, fileName: "Dead Status Cards")
-}
-
-func saveStatusCardsToPDF(_ tanks: [Tank], doAlignmentCompensation: Bool, showBorderWarning: Bool) {
-    var workingTanks = tanks.filter({ !($0.playerInfo.doVirtualDelivery) })
-    var pages: [AnyView] = []
-    var tanksTwoByTwo: [[Tank?]] = []
-    while true {
-        if workingTanks.count > 1 {
-            tanksTwoByTwo.append([workingTanks.removeFirst(), workingTanks.removeFirst()])
-        } else if workingTanks.count == 1 {
-            tanksTwoByTwo.append([workingTanks.removeFirst(), nil])
-        } else {
-            break
-        }
-    }
-    for tankPair in tanksTwoByTwo {
-        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
-            StatusCardFront(tank: tankPair[0]!, showBorderWarning: showBorderWarning)
-                .frame(width: inch(5), height: inch(8))
-                .border(.black, width: 1)
-            if tankPair[1] != nil {
-                StatusCardFront(tank: tankPair[1]!, showBorderWarning: showBorderWarning)
-                    .frame(width: inch(5), height: inch(8))
-                    .border(.black, width: 1)
-            } else {
-                Rectangle()
-                    .frame(width: inch(5), height: inch(8))
-                    .foregroundColor(.white)
-                    .border(.black, width: 1)
-            }
-        }))
-        pages.append(AnyView(HStack(alignment: .center, spacing: 0) {
-            if tankPair[1] != nil {
-                tankPair[1]!.statusCardBack()
-                    .frame(width: inch(5), height: inch(8))
-                    .border(.black, width: 1)
-            } else {
-                Rectangle()
-                    .frame(width: inch(5), height: inch(8))
-                    .foregroundColor(.white)
-                    .border(.black, width: 1)
-            }
-            tankPair[0]!.statusCardFront()
-                .frame(width: inch(5), height: inch(8))
-                .border(.black, width: 1)
-        }
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))))
-        
-    }
-    createAndSavePDF(from: pages, fileName: "Status Cards")
-}
-

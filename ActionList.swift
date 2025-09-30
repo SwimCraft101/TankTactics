@@ -35,13 +35,6 @@ struct ActionList: View {
                                     .scaledToFit()
                                     .frame(width: 30, height: 30)
                             }
-                            if let move = action as? Move {
-                                Image(systemName: move.rotation.fromPerspectiveOf(.north).arrowIcon)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 30, height: 30)
-                            }
                             if let multiDirectionAction = action as? MultiDirectionAction {
                                 ForEach(multiDirectionAction.vector, id: \.self) { step in
                                     Image(systemName: step.fromPerspectiveOf(.north).arrowIcon)
@@ -49,6 +42,19 @@ struct ActionList: View {
                                         .scaledToFit()
                                         .frame(width: 30, height: 30)
                                 }
+                            }
+                            if let move = action as? Move {
+                                Image(systemName: move.rotation.fromPerspectiveOf(.north).arrowIcon)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 30, height: 30)
+                            }
+                            if let arbitraryFuelAndMetalAmountAction = action as? ArbitraryFuelAndMetalAmountAction {
+                                Text("\(arbitraryFuelAndMetalAmountAction.fuelAmount)􀵞")
+                                    .font(.system(size: 20))
+                                Text("\(arbitraryFuelAndMetalAmountAction.metalAmount)􀇷")
+                                    .font(.system(size: 20))
                             }
                         }
                         .contextMenu {

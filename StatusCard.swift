@@ -102,6 +102,33 @@ struct RightTriangle: Shape {
     }
 }
 
+struct TankTacticsHexagon: Shape {
+    func path(in rect: CGRect) -> Path {
+        let rectangle: CGRect = CGRect(x: rect.minX, y: rect.minY, width: inch(3.535534), height: inch(2.715679))
+        
+        var path = Path()
+
+        // Start at the top-left corner
+        path.move(to: CGPoint(x: rectangle.minX, y: rectangle.minY))
+
+        // Draw a line to the bottom-left corner, offset a little to make the corner cut.
+        path.addLine(to: CGPoint(x: rectangle.minX, y: rectangle.maxY - inch(0.5)))
+        path.addLine(to: CGPoint(x: rectangle.minX + inch(0.5), y: rectangle.maxY))
+        
+        // Draw a line to the bottom-right corner
+        path.addLine(to: CGPoint(x: rectangle.maxX, y: rectangle.maxY))
+        
+        // Draw a line to the top-right corner, offset a little to make the corner cut.
+        path.addLine(to: CGPoint(x: rectangle.maxX, y: rectangle.minY + inch(0.5)))
+        path.addLine(to: CGPoint(x: rectangle.maxX - inch(0.5), y: rectangle.minY))
+
+        // Close the path back to the starting point
+        path.closeSubpath()
+
+        return path
+    }
+}
+
 struct PanelToCutOff: View {
     var body: some View {
         RightTriangle()
@@ -112,7 +139,6 @@ struct PanelToCutOff: View {
 
 struct StatusCardFront: View {
     let tank: Tank
-    let showBorderWarning: Bool
     var topModule: Module? {
         return tank.displayedModules[safe: 0]
     }
@@ -122,7 +148,7 @@ struct StatusCardFront: View {
     var body: some View {
         ZStack {
             if tank.hasTooManyModules || topModule != nil {
-                TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: reference real showBorderWarning value
+                TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                     
                     .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
                     .rotationEffect(Angle(degrees: -90))
@@ -204,7 +230,7 @@ struct StatusCardFront: View {
             Text("") //renders on back of card
                 .font(.system(size: inch(0.15)))
                 .italic()
-                .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .center)
+                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .center)
                 .rotationEffect(Angle(degrees: -45))
             
         }
@@ -219,7 +245,6 @@ struct StatusCardBack: View {
     var bottomModule: Module? {
         return tank.displayedModules[safe: 1]
     }
-    let showBorderWarning: Bool
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -230,8 +255,7 @@ struct StatusCardBack: View {
                     } else {
                         if topModule == nil {
                             ZStack {
-                                TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: reference real value of ShowBorderWarning
-                                    
+                                TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                                 PanelToCutOff()
                                     .rotationEffect(Angle(degrees: 180))
                             }
@@ -289,7 +313,7 @@ struct ControlPanelView: View {
                 VStack(spacing: 0) {
                     switch game.gameDay {
                     case .monday:
-                        Text("\(game.moduleOffered!.type.name()) Module \(game.moduleOfferPrice!)􀇷")
+                        Text("Purchase \(game.moduleOffered!.type.name()) Module: \(game.moduleOfferPrice!)􀇷")
                             .font(.system(size: inch(0.2)))
                     case .tuesday:
                         Text("Moving and Firing are 50% cheaper today.\nTwo Event Cards are availible.")
@@ -300,11 +324,11 @@ struct ControlPanelView: View {
                                 Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
                                     .font(.system(size: inch(0.2)))
                                 Text("Movement Range")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
                                     .lineLimit(1)
                                 Text("\(UpgradeMovementRange(tankId: tank.uuid).metalCost)􀇷")
                                     .font(.system(size: inch(0.15)))
-                                Text("\(tank.movementRange)􀂒 􀄫 \(tank.movementRange + 1)􀂒")
+                                Text("\(tank.movementRange)􀂒\n\(tank.movementRange + 1)􀂒")
                                     .font(.system(size: inch(0.15)))
                             }
                             
@@ -325,73 +349,82 @@ struct ControlPanelView: View {
                                 }())
                                     .font(.system(size: inch(0.2)))
                                 Text("Movement Efficiency")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
                                     .lineLimit(1)
                                 Text("\(UpgradeMovementCost(tankId: tank.uuid).metalCost)􀇷")
                                     .font(.system(size: inch(0.15)))
-                                Text("\(tank.movementCost)􀵞 􀄫 \(tank.movementCost - 1)􀵞")
+                                Text("\(tank.movementCost)􀵞\n\(tank.movementCost - 1)􀵞")
                                     .font(.system(size: inch(0.15)))
                             }
                         }
                     case .thursday:
                         Text("Sell any of the following to gain Metal:")
-                            .font(.system(size: inch(0.1)))
+                            .font(.system(size: inch(0.2)))
+                            .italic()
                         if tank.modules.count >= 1 {
                             let module = tank.modules.randomElement()!
                             ThriftOption(name: module.type.name(), metalOffered: SellModule(module: module.type, tankId: tank.uuid).metalCost)
                         }
-                        switch Int.random(in: 0...4) {
-                        case 0:
-                            ThriftOption(name: "Movement Range", metalOffered: SellUpgrade(upgrade: UpgradeMovementRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
-                        case 1:
-                            ThriftOption(name: "Movement Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeMovementCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
-                        case 2:
-                            ThriftOption(name: "Weapon Range", metalOffered: SellUpgrade(upgrade: UpgradeGunRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
-                        case 3:
-                            ThriftOption(name: "Weapon Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeGunCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
-                        case 4:
-                            ThriftOption(name: "Weapon Damage", metalOffered: SellUpgrade(upgrade: UpgradeGunDamage(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2)
-                        default:
-                            fatalError()
-                        }
+                        ({
+                            var upgradeSellOptions: [ThriftOption] = []
+                            if tank.movementRange > 1 {
+                                upgradeSellOptions.append(ThriftOption(name: "Movement Range", metalOffered: SellUpgrade(upgrade: UpgradeMovementRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
+                            }
+                            if tank.movementCost < 10 {
+                                upgradeSellOptions.append(ThriftOption(name: "Movement Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeMovementCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
+                            }
+                            if tank.gunRange > 1 {
+                                upgradeSellOptions.append(ThriftOption(name: "Weapon Range", metalOffered: SellUpgrade(upgrade: UpgradeGunRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
+                            }
+                            if tank.gunCost < 10 {
+                                upgradeSellOptions.append(ThriftOption(name: "Weapon Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeGunCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
+                            }
+                            if tank.gunDamage > 5 {
+                                upgradeSellOptions.append(ThriftOption(name: "Weapon Damage", metalOffered: SellUpgrade(upgrade: UpgradeGunDamage(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
+                            }
+                            return AnyView(upgradeSellOptions.randomElement())
+                        } as! () -> AnyView)()
                     case .friday:
-                        Grid(alignment: .center, horizontalSpacing: inch(0.1), verticalSpacing: 0) {
+                        Grid(horizontalSpacing: inch(0.05), verticalSpacing: 0) {
                             GridRow {
                                 Image(systemName: "dot.scope")
                                     .font(.system(size: inch(0.2)))
                                 Text("Weapon Range")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
                                 Text("\(UpgradeGunRange(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(tank.gunRange)􀂒 􀄫 \(tank.gunRange + 1)􀂒")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.gunRange)􀂒\n\(tank.gunRange + 1)􀂒")
+                                    .font(.system(size: inch(0.15)))
+                                Spacer()
                             }
                             
                             GridRow {
                                 Image(systemName: "bandage")
                                     .font(.system(size: inch(0.2)))
                                 Text("Weapon Damage")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
                                 Text("\(UpgradeGunDamage(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(tank.gunDamage)􀲗 􀄫 \(tank.gunDamage + 5)􀲗")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.gunDamage)􀲗\n\(tank.gunDamage + 5)􀲗")
+                                    .font(.system(size: inch(0.15)))
+                                Spacer()
                             }
                             
                             GridRow {
                                 Image(systemName: "chart.bar.xaxis")
                                     .font(.system(size: inch(0.2)))
                                 Text("Weapon Efficiency")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
                                 Text("\(UpgradeGunCost(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.2)))
-                                Text("\(tank.gunCost)􀵞 􀄫 \(tank.gunCost - 1)􀵞")
-                                    .font(.system(size: inch(0.2)))
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.gunCost)􀵞\n\(tank.gunCost - 1)􀵞")
+                                    .font(.system(size: inch(0.15)))
+                                Spacer()
                             }
                         }
                     }
                 }
-                .frame(width: inch(3.5), height: inch(2.5), alignment: .topLeading)
+                .frame(width: inch(2.5), height: inch(1.5), alignment: .topLeading)
                 Image(systemName: {
                     switch game.gameDay {
                     case .monday:
@@ -410,9 +443,32 @@ struct ControlPanelView: View {
                 .scaledToFit()
                 .frame(width: inch(0.25), height: inch(0.25))
                 .frame(width: inch(0.5), height: inch(0.5), alignment: .topLeading)
-                .frame(width: inch(0.5), height: inch(2.5), alignment: .topTrailing)
+                .frame(width: inch(1.5), height: inch(2 ), alignment: .topTrailing)
             }
-            .frame(width: inch(4), height: inch(2.5))
+            .frame(width: inch(4), height: inch(2), alignment: .topLeading)
+            
+            Grid {
+                GridRow {
+                    Text("􀅾: ")
+                        .font(.system(size: inch(0.2)))
+                    Text("\(Int(ceil(Double(tank.gunCost) / (game.gameDay == .tuesday ? 2.0 : 1.0))))􀵞 ")
+                        .font(.system(size: inch(0.2)))
+                    Text("\(tank.gunRange)􀂒 ")
+                        .font(.system(size: inch(0.2)))
+                    Text("\(tank.gunCost)􀲗 ")
+                        .font(.system(size: inch(0.2)))
+                }
+                GridRow {
+                    Text("􁹫: ")
+                        .font(.system(size: inch(0.2)))
+                    Text("\(Int(ceil(Double(tank.movementCost) / (game.gameDay == .tuesday ? 2.0 : 1.0))))􀵞 ")
+                        .font(.system(size: inch(0.2)))
+                    Text("\(tank.movementRange)􀂒")
+                        .font(.system(size: inch(0.2)))
+                }
+            }
+            .frame(width: inch(4), height: inch(0.6), alignment: .topLeading)
+            
             Grid {
                 GridRow {
                     Text("")
@@ -444,8 +500,17 @@ struct ControlPanelView: View {
                     Text("")
                         .font(.system(size: inch(0.2)))
                 }
+                GridRow {
+                    Text("􀍕")
+                        .font(.system(size: inch(0.1)))
+                        .foregroundStyle(.black.opacity(0))
+                }
+                GridRow {
+                    Text("􀍕")
+                        .font(.system(size: inch(0.2)))
+                }
             } //precedence, physical token, and Event Card spending
-            .frame(width: inch(4), height: inch(1.5), alignment: .topLeading)
+            .frame(width: inch(4), height: inch(1.65), alignment: .topLeading)
         }
         .frame(width: inch(4), height: inch(4))
         .foregroundColor(.black)
@@ -461,6 +526,7 @@ struct ThriftOption: View {
             Text(name)
                 .font(.system(size: inch(0.2)))
             Text("(\(metalOffered)􀇷)")
+                .font(.system(size: inch(0.2)))
         }
     }
 }
@@ -597,46 +663,39 @@ struct RotatedDirectionOptions: View {
     }
 }
 
-struct VirtualStatusCard: View { //MARK: rework to match standard Status Card
+struct VirtualStatusCard: View {
     let tank: Tank
-    let showBorderWarning: Bool
     var body: some View {
         Grid(horizontalSpacing: 0, verticalSpacing: 0) {
             GridRow {
+                HStack(spacing: 0) {
+                    fuelMeter(tank)
+                    metalMeter(tank)
+                    healthMeter(tank)
+                    defenseMeter(tank)
+                }
                 ZStack {
                     ControlPanelView(tank: tank)
-                    TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: reference real value of ShowBorderWarning
+                    TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                 }
-                ModuleView(module: tank.displayedModules[0])
-                
-                ModuleView(module: tank.displayedModules[2])
+                .frame(width: inch(4), height: inch(4))
+                if tank.hasTooManyModules {
+                    TooManyModules(tank: tank)
+                } else {
+                    ModuleView(module: tank.displayedModules[safe: 2])
+                }
             }
-            
+            if !tank.hasTooManyModules {
                 GridRow {
-                    HStack(spacing: 0) {
-                        fuelMeter(tank)
-                        metalMeter(tank)
-                        healthMeter(tank)
-                        defenseMeter(tank)
-                    }
-                    ModuleView(module: tank.displayedModules[1])
-                    
-                    ModuleView(module: tank.displayedModules[3])
+                    ModuleView(module: tank.displayedModules[safe: 0])
+                    ModuleView(module: tank.displayedModules[safe: 1])
+                    ModuleView(module: tank.displayedModules[safe: 3])
                 }
+            }
         }
     }
 }
 
 #Preview {
-    VStack(spacing: 0) {
-        HStack(spacing: 0) {
-            tank.statusCardConduitBack()
-            tank.statusCardConduitFront()
-        }
-        HStack(spacing: 0) {
-            tank.statusCardBack()
-            tank.statusCardFront()
-        }
-    }
-    .background(.white)
+    VirtualStatusCard(tank: tank)
 }

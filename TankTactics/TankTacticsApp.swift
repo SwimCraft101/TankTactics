@@ -9,11 +9,41 @@ import SwiftUI
 import AppKit
 import Foundation
 
+@Observable
+final class AppState {
+    static var shared: AppState = .init()
+    
+    var fileIsOpen: Bool = false
+    
+    required init() {
+        self.fileIsOpen = false
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        if let loadedGame = promptForDecodedFile(ofType: Game.self) {
+            Game.shared = loadedGame
+            AppState.shared.fileIsOpen = true
+        } else {
+            fatalError("File could not decode")
+        }
+    }
+}
+
 @main struct TankTacticsApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    @Bindable var appState: AppState = AppState.shared
+    
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-            .environment(Game.shared)
+        Window("Tank Tactics IV", id: "Tank Tactics IV") {
+            if appState.fileIsOpen {
+                ContentView()
+                    .environment(Game.shared)
+            } else {
+                EmptyView()
+            }
         }
     }
 }
@@ -22,6 +52,8 @@ struct ContentView: View {
     @State var levelDisplayed: Int = 0
     @State var showBorderWarning: Bool = false
     @State var uiBannerMessage: String = ""
+    
+    @State var selectedObject: BoardObject = Game.shared.board.objects.first!
     
     @Bindable var game = Game.shared
     
@@ -35,20 +67,14 @@ struct ContentView: View {
                     let level = levelDisplayed
                     ZStack {
                         Color.white
-                        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning, accessibilitySettings: AccessibilitySettings())
+                        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level, rotation: .north), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, accessibilitySettings: AccessibilitySettings(), selectedObject: $selectedObject)
                             .frame(width: max(min(geometry.size.height, geometry.size.width), 300), height: max(min(geometry.size.height, geometry.size.width), 300), alignment: .center)
                     }
                     VStack {
                         HStack {
                             VStack {
-                                Button("Execute Queued Actions") {
-                                    while !game.actions.isEmpty {
-                                        let _ = game.actions.removeFirst().execute()
-                                    }
-                                }
-                                Button("Print Turn") {
-                                    Tank.bindModules()
-                                    saveTurnToPDF(players: Game.shared.board.objects.filter{ $0 is Tank } as! [Tank], messages: [], doAlignmentCompensation: true)
+                                Button("Enact Turn") {
+                                    game.executeTurn()
                                     for virtualTank in game.board.objects.filter({
                                         if $0 is Tank {
                                             if ($0 as! Tank).playerInfo.doVirtualDelivery {
@@ -57,37 +83,60 @@ struct ContentView: View {
                                         }
                                         return false
                                     }) {
-                                        NSWorkspace.shared.open(URL(string: "mailto:\((virtualTank as! Tank).playerInfo.virtualDelivery ?? " NO EMAIL ADDRESS WAS FOUND ")?subject=Tank Tactics: \(Date.now.addingTimeInterval(57600).formatted(date: .complete, time: .omitted))&body=no body text here (:")!) //MARK: rework this?
-                                        createAndSavePDF(from: [AnyView(VirtualStatusCard(tank: virtualTank as! Tank, showBorderWarning: showBorderWarning))], fileName: "Virtual Status Card for \((virtualTank as! Tank).playerInfo.firstName) \((virtualTank as! Tank).playerInfo.lastName)")
+                                        NSWorkspace.shared.open(URL(string: "mailto:\((virtualTank as! Tank).playerInfo.virtualDelivery ?? " NO EMAIL ADDRESS WAS FOUND ")?subject=Tank Tactics: \(Date.now.addingTimeInterval(57600).formatted(date: .complete, time: .omitted))")!) //MARK: rework this?
+                                        createAndSavePDF(from: [AnyView(VirtualStatusCard(tank: virtualTank as! Tank))], fileName: "Virtual Status Card for \((virtualTank as! Tank).playerInfo.fullName)", pageSize: CGSize(width: inch(12), height: inch(8)))
                                     }
                                 }
                                 Button("Print Full Board") {
-                                    createAndSavePDF(from: [AnyView(SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, showBorderWarning: showBorderWarning, accessibilitySettings: AccessibilitySettings()).frame(width: inch(8), height: inch(8)))], fileName: "board")
-                                }
-                                Button("Open Game File") {
-                                    uiBannerMessage = "Opening saved game file..."
-                                        if let loadedGame = promptForDecodedFile(ofType: Game.self) {
-                                            Game.shared = loadedGame
-                                            game.randomSeed = Int.random(in: Int.min...Int.max) 
-                                        } else {
-                                            fatalError("File could not decode")
-                                        }
-                                    uiBannerMessage = "Done"
-                                    uiBannerMessage = ""
+                                    createAndSavePDF(from: [AnyView(SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level, rotation: .north), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, accessibilitySettings: AccessibilitySettings(), selectedObject: $selectedObject).frame(width: inch(8), height: inch(8)))], fileName: "board")
                                 }
                                 Button("Save Game File") {
                                     uiBannerMessage = "Saving game file..."
-                                    promptToSaveEncodedFile(game, fileName: "game.tanktactics")
+                                    promptToSaveEncodedFile(game, fileName: "game")
                                     uiBannerMessage = ""
                                 }
+                                HStack {
+                                    Button("Give all players Tutorial Modules") {
+                                        for tank in game.board.objects.filter({ $0 is Tank }) {
+                                            (tank as! Tank).modules.insert(TutorialModule(isWeekTwo: false), at: 0)
+                                        }
+                                        Tank.bindModules()
+                                    }
+                                    Button("Set tutorial Modules to week 2") {
+                                        for object in game.board.objects {
+                                            if let tank = object as? Tank {
+                                                for module in tank.modules {
+                                                    if let tutorial = module as? TutorialModule {
+                                                        tutorial.isWeekTwo = true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Button("Remove Tutorial Modules") {
+                                        for tank in game.board.objects.filter({ $0 is Tank }) {
+                                            (tank as! Tank).modules.removeAll { $0 is TutorialModule }
+                                        }
+                                    }
+                                }
                                 Stepper("Level Displayed", value: $levelDisplayed)
-                                Toggle("Show Border Warning", isOn: $showBorderWarning)
+                                HStack {
+                                    Stepper("Border", value: $game.board.border)
+                                    Toggle("Show Border Warning", isOn: $game.board.showBorderWarning)
+                                }
+                                Picker("Game Day", selection: $game.gameDay) {
+                                    Text("Module Monday").tag(GameDay.monday)
+                                    Text("Treacherous Tuesday").tag(GameDay.tuesday)
+                                    Text("Wheel Wednesday").tag(GameDay.wednesday)
+                                    Text("Thrifty Thursday").tag(GameDay.thursday)
+                                    Text("Firearm Friday").tag(GameDay.friday)
+                                }
                                 Spacer()
-                                    
+                                
                             }
                             ActionList()
                         }
-                        Inspector(game.board.objects.first!)
+                        Inspector(object: $selectedObject)
                     }
                 }
             }

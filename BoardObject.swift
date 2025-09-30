@@ -7,7 +7,7 @@
 import Foundation
 import SwiftUI
 
-struct Coordinates: Equatable, Codable { //MARK: Add rotation support
+struct Coordinates: Equatable, Codable {
     let x: Int
     let y: Int
     let level: Int
@@ -68,11 +68,7 @@ struct Coordinates: Equatable, Codable { //MARK: Add rotation support
         return false
     }
     
-    func savedText() -> String {
-        return "c(\(x),\(y),\(level))"
-    }
-    
-    init(x: Int, y: Int, level: Int = 0, rotation: Direction = .north) {
+    init(x: Int, y: Int, level: Int = 0, rotation: Direction = .all.randomElement()!) {
         self.x = x
         self.y = y
         self.level = level
@@ -111,18 +107,39 @@ struct Appearance: Equatable, Codable {
 }
 
 enum BoardObjectType: String, Codable {
-    case boardObject = "Board Object"
-    case wall = "Wall"
-    case reinforcedWall = "Reinforced Wall"
-    case gift = "Gift"
-    case placeholder = "Tank Placeholder"
-    case drone = "Drone"
-    case tank = "Tank"
-    case deadTank = "Dead Tank"
+    case boardObject
+    case wall
+    case reinforcedWall
+    case gift
+    case placeholder
+    case drone
+    case tank
+    case deadTank
+    
+    var name: String {
+        switch self {
+        case .boardObject: 
+            return "Board Object"
+        case .wall:
+            return "Wall"
+        case .reinforcedWall:
+            return "Reinforced Wall"
+        case .gift:
+            return "Gift"
+        case .placeholder:
+            return "Tank Placeholder"
+        case .drone:
+            return "Drone"
+        case .tank:
+            return "Tank"
+        case .deadTank:
+            return "Dead Tank"
+        }
+    }
 }
 
 @Observable
-class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType { .boardObject }
+class BoardObject: Identifiable, Equatable, Codable, Hashable { var type: BoardObjectType { .boardObject }
     static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
         if lhs.coordinates != rhs.coordinates {
             return false
@@ -145,6 +162,10 @@ class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType 
         return true
     }
     
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(uuid)
+    }
+    
     var isSolid: Bool { false }
     var isRigid: Bool { false }
     
@@ -158,8 +179,6 @@ class BoardObject: Identifiable, Equatable, Codable { var type: BoardObjectType 
     
     var health: Int
     var defense: Int
-    
-    //MARK: add solid/rigid collision system
     
     enum CodingKeys: String, CodingKey {
         case type
@@ -376,11 +395,12 @@ class Gift: BoardObject {
     }
     
     init(coordinates: Coordinates) {
-        let doModuleMode: Bool = Int.random(in: 1...10) == 10
+        let doModuleMode: Bool = Int.random(in: 1...5) == 5
         self.containedModule = doModuleMode ? Module.random() : nil
-        let rewardMax = doModuleMode ? 0 : 30
-        let fuelReward = Int.random(in: 0...rewardMax)
-        let metalReward = rewardMax - fuelReward
+        let rewardMax = doModuleMode ? 0 : 6
+        let rewardMultiplier = 5
+        let fuelReward = Int.random(in: 0...rewardMax) * rewardMultiplier
+        let metalReward = (rewardMax * rewardMultiplier) - fuelReward
         
         super.init(
             fuelDropped: fuelReward,
@@ -415,11 +435,19 @@ class Gift: BoardObject {
     
     required convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        var module: Module?
+        if let moduleDecoder = try? container.superDecoder(forKey: .containedModule) {
+            module = try? Module.decode(from: moduleDecoder)
+        } else {
+            module = nil
+        }
+        
         self.init(
             coordinates: try container.decode(Coordinates.self, forKey: .coordinates),
             fuelReward: try container.decode(Int.self, forKey: .fuelDropped),
             metalReward: try container.decode(Int.self, forKey: .metalDropped),
-            containedModule: try container.decode(Module.self, forKey: .containedModule),
+            containedModule: module,
             uuid: try container.decode(UUID.self, forKey: .uuid)
         )
     }

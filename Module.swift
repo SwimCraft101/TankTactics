@@ -9,10 +9,12 @@ import Foundation
 import SwiftUI
 
 struct ModuleView: View {
-    let module: Module
+    let module: Module?
     var body: some View {
-        AnyView(module.view)
-            .frame(width: inch(4), height: inch(4))
+        if module != nil {
+            AnyView(module!.view)
+                .frame(width: inch(4), height: inch(4))
+        }
     }
 }
 
@@ -109,14 +111,19 @@ class Module: Codable, Hashable, Identifiable { var type: ModuleType { .module }
         tankId = nil
     }
     
-    static func random() -> Module { //MARK: rework module rarity for random modules
-        switch Int.random(in: 1...2) {
-        case 1:
-            return RadarModule(tankId: nil)
-        case 2:
-            return RadarModule(tankId: nil)
-        default:
-            return RadarModule(tankId: nil)
+    static func random() -> Module {
+        switch Int.random(in: 0...22) {
+        case 0..<4: return RadarModule(tankId: nil)
+        case 0..<8: return ConstructionModule(tankId: nil)
+        case 0..<12: return FactoryModule(tankId: nil)
+        case 0..<16: return StorageModule(tankId: nil)
+        case 0..<19: return SpyModule(tankId: nil)
+        case 0..<21:
+            let droneId = UUID()
+            Game.shared.board.objects.append(Drone(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10)), uuid: droneId))
+            return DroneModule(droneId: droneId, tankId: nil)
+        case 0..<23: return ConduitModule(tankId: nil)
+        default: fatalError("you done messed up")
         }
     }
 }
@@ -168,7 +175,7 @@ extension Module {
 }
 
 class TutorialModule: Module { override var type: ModuleType { .tutorial } //MARK: Fact check all info for changed details, add icon references
-    let isWeekTwo: Bool
+    var isWeekTwo: Bool
     override var view: any View {
         if !isWeekTwo {
             switch Game.shared.gameDay {
@@ -176,7 +183,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 Text("""
                     Welcome to Tank Tactics!
                     This is the Tutorial Module, a system designed to teach you how to play Tank Tactics during your first two weeks of gameplay. You will be guided through all the important information to playing Tank Tactics. Note that some information will be intentionally vauge, as some elements of the game are not publicly documented in detail to preserve the strategy of wielding knowledge tactfully.
-                    The upper triangle flap is the Viewport (􀎹). The Viewport (􀎹) shows the perspective of your Tank in the direction that it is facing. Note that you cannot see the orientations of other Tanks. The Viewport always shows tiles on the board exactly as they appear. Information about what these tiles are, and how to understand the Viewport (􀎹), will be given later.
+                    The upper triangle flap is the Viewport (􀎹). The Viewport shows the perspective of your Tank in the direction that it is facing. Note that you cannot see the orientations of other Tanks. The Viewport always shows tiles on the board exactly as they appear. Information about what these tiles are, and how to understand the Viewport, will be given later.
                     
                             Accessibility Options:
                     􀂒 􀀂 Enable High Contrast Mode
@@ -185,7 +192,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.tuesday:
                 Text("""
-                    There are two main currencies in Tank Tactics: Fuel (􀵞), and Metal (􀇷). Fuel is used to take direct actions on the board, whereas Metal is used for upgrading your Tank. You may withdraw Fuel and Metal in their physical form (􀐚) to trade freely with other people, however Tank Tactics does not take responsibility for the result of thefts and will not replace stolen Fuel and Metal Tokens (􀐚). Fuel and Metal Tokens may also be found around campus. You can use Fuel and Metal Tokens (􀐚) by folding them into your Status Card before submitting it, however the total of Fuel and Metal inside your tank, including tokens submitted that turn, must not exceed 50 each.
+                    There are two main currencies in Tank Tactics: Fuel (􀵞), and Metal (􀇷). Fuel is used to take direct actions on the board, whereas Metal is used for upgrading your Tank. You may withdraw Fuel and Metal in their physical form (􀐚) to trade freely with other people, however Tank Tactics does not take responsibility for the result of thefts and will not replace stolen Fuel and Metal Tokens (􀐚). Fuel and Metal Tokens may also be found around campus. You can use Fuel and Metal Tokens by folding them into your Status Card before submitting it, however the total of Fuel and Metal inside your tank, including tokens submitted that turn, must not exceed 50 each.
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.wednesday:
                 Text("""
@@ -216,17 +223,17 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 .frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.friday:
                 Text("""
-                            Each day of the week is given a special name and purpose in Tank Tactics. A description of each follows, with more detail being given next week. The actions for each day are taken on the lower triangle flap.:
+                            Each day of the week is given a special name and purpose in Tank Tactics. A description of each follows, with more detail being given next week. The actions for each day are taken on the lower triangle flap, which is called the Control Panel.:
                         􀯇 Module Monday 􀯇
-                            Purchase new Modules for your Tank
+                            Purchase new Modules for your Tank.
                         􀇾 Treacherous Tuesday 􀇾
                             All actions become 50% cheaper.
                         􂥰 Wheel Wednesday 􂥰
                             Purchase Drivetrain Upgrades for your Tank.
                         􁽇 Thrifty Thursday 􁽇
-                            Trade and sell Modules and Upgrades
+                            Sell Modules and Upgrades to regain Metal.
                         􀾲 Firearm Friday 􀾲
-                            Purchase Weapon Upgrades for your Tank
+                            Purchase Weapon Upgrades for your Tank.
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             }
         } else {
@@ -273,6 +280,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
     
     override func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
         try container.encode(isWeekTwo, forKey: .isWeekTwo)
     }
     
@@ -291,7 +299,7 @@ class WebsitePlugModule: Module { override var type: ModuleType { .websitePlug }
 
 class RadarModule: Module { override var type: ModuleType { .radar } // note that this subclass needs no special encoder and decoder logic as it stores no extra data.
     override var view: any View {
-        SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings)
+        SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 4, highDetailSightRange: 0, lowDetailSightRange: 0, radarRange: 50000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
     }
 }
 
@@ -304,7 +312,7 @@ class DroneModule: Module { override var type: ModuleType { .drone }
     
     override var view: any View {
         VStack {
-            SquareViewport(coordinates: Game.shared.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 3, lowDetailSightRange: 3, radarRange: 3, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: reference real state of value showBorderWarning
+            SquareViewport(coordinates: Game.shared.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 300, lowDetailSightRange: 300, radarRange: 300, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                 .frame(width: inch(3), height: inch(3))
             Text("Drone is at X: \(drone!.coordinates!.x) Y: \(drone!.coordinates!.y).")
                 .font(.system(size: inch(0.2)))
@@ -325,6 +333,7 @@ class DroneModule: Module { override var type: ModuleType { .drone }
     
     override func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
         try container.encode(droneId, forKey: .droneId)
     }
     
@@ -480,7 +489,7 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
                 .foregroundStyle(.black)
                 .frame(width: inch(2), height: inch(3), alignment: .top)
                 ZStack {
-                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, showBorderWarning: false, accessibilitySettings: tank.playerInfo.accessibilitySettings) //MARK: Reference real state of ShowBorderWarning.
+                    SquareViewport(coordinates: tank.coordinates!, viewRenderSize: 1, highDetailSightRange: 1, lowDetailSightRange: 1, radarRange: 1, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                         .frame(width: inch(2), height: inch(3), alignment: .top)
                     Grid(alignment: .top, horizontalSpacing: 0, verticalSpacing: 0) {
                         GridRow {
