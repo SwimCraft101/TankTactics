@@ -11,9 +11,6 @@ import SwiftUI
 struct Inspector: View {
     @Binding var object: BoardObject
     
-    @State private var messageText: String = ""
-    @State private var messageRecipient: BoardObject? = nil
-    
     @Bindable private var game = Game.shared
     
     var body: some View {
@@ -190,25 +187,6 @@ struct Inspector: View {
                     .disabled(!(object is Player))
                 }
                 if let player = object as? Player {
-                    VStack { //Message Sending
-                        HStack {
-                            Text("Send Message")
-                            TextField("Message", text: $messageText)
-                            Picker("Recipient", selection: $messageRecipient) {
-                                ForEach(game.board.objects.filter{ $0 is Player }) { (recipient: BoardObject) in
-                                    HStack {
-                                        BasicTileView(appearance: recipient.appearance, accessibilitySettings: AccessibilitySettings())
-                                        Text((recipient as! Player).playerInfo.fullName)
-                                    }
-                                    .tag(recipient)
-                                }
-                            }
-                            Button("Queue") {
-                                game.messages.append(Message(text: messageText, sender: player.uuid, recipient: messageRecipient!.uuid))
-                            }
-                            .disabled(messageRecipient == nil)
-                        }
-                    }
                     VStack { // Tank/Player information
                         if let tank = player as? Tank {
                             Text("Modules")
@@ -218,6 +196,11 @@ struct Inspector: View {
                                         .onTapGesture {
                                             tank.modules.removeAll { $0 === module }
                                             tank.modules.append(module)
+                                        }
+                                        .contextMenu {
+                                            Button("Delete") {
+                                                tank.modules.removeAll { $0 === module }
+                                            }
                                         }
                                 }
                             }

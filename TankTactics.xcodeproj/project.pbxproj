@@ -16,6 +16,7 @@
 		594D86F92CAF2F2B00916C89 /* MakePDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594D86F82CAF2F2B00916C89 /* MakePDF.swift */; };
 		595A2D092C6655A10086A452 /* StatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595A2D082C6655A10086A452 /* StatusCard.swift */; };
 		596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596376A42CFB5BB000059FCA /* DeadStatusCard.swift */; };
+		59AECC6D2E8DDECE00082FC0 /* TurnNotesList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59AECC6C2E8DDEC800082FC0 /* TurnNotesList.swift */; };
 		59B7E55A2E428E3800105725 /* Module.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E5592E428E3800105725 /* Module.swift */; };
 		59B7E55C2E451C5600105725 /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E55B2E451C5600105725 /* Viewport.swift */; };
 		59C8CD552E6F857400151076 /* Inspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59C8CD542E6F857400151076 /* Inspector.swift */; };
@@ -36,6 +37,7 @@
 		594D86F82CAF2F2B00916C89 /* MakePDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakePDF.swift; sourceTree = "<group>"; };
 		595A2D082C6655A10086A452 /* StatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusCard.swift; sourceTree = "<group>"; };
 		596376A42CFB5BB000059FCA /* DeadStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadStatusCard.swift; sourceTree = "<group>"; };
+		59AECC6C2E8DDEC800082FC0 /* TurnNotesList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnNotesList.swift; sourceTree = "<group>"; };
 		59B7E5592E428E3800105725 /* Module.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
 		59B7E55B2E451C5600105725 /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
 		59C8CD542E6F857400151076 /* Inspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Inspector.swift; sourceTree = "<group>"; };
@@ -72,6 +74,7 @@
 				5910A74C2E05F4A000B217BB /* Game.swift */,
 				59E01EB62E7E0C2E002544A2 /* EventCard.swift */,
 				5910A74E2E05F4DD00B217BB /* Message.swift */,
+				59AECC6C2E8DDEC800082FC0 /* TurnNotesList.swift */,
 				595A2D082C6655A10086A452 /* StatusCard.swift */,
 				596376A42CFB5BB000059FCA /* DeadStatusCard.swift */,
 				594D86F82CAF2F2B00916C89 /* MakePDF.swift */,
@@ -184,6 +187,7 @@
 				59C8CD552E6F857400151076 /* Inspector.swift in Sources */,
 				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
+				59AECC6D2E8DDECE00082FC0 /* TurnNotesList.swift in Sources */,
 				59B7E55C2E451C5600105725 /* Viewport.swift in Sources */,
 				59E01EB32E7CBEDC002544A2 /* ActionList.swift in Sources */,
 				59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */,
@@ -337,7 +341,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hiltonsherrard.TankTactics;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -368,7 +372,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hiltonsherrard.TankTactics;
 				PRODUCT_NAME = "$(TARGET_NAME)";

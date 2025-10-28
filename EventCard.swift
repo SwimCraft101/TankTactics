@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 enum EventCardRarity {
-    case common, uncommon, rare, legendary
+    case common, uncommon, rare, legendary, special
     
     var name: String {
         switch self {
@@ -17,6 +17,7 @@ enum EventCardRarity {
         case .uncommon: return "Uncommon"
         case .rare: return "Rare"
         case .legendary: return "Legendary"
+        case .special: return "Special"
         }
     }
     
@@ -25,7 +26,8 @@ enum EventCardRarity {
         case .common: return .black
         case .uncommon: return .green
         case .rare: return .blue
-        case .legendary: return .orange
+        case .legendary: return Color(hue: 12.22, saturation: 1, brightness: 1) //gold
+        case .special: return .red
         }
     }
 }
@@ -36,7 +38,7 @@ enum EventCardRarity {
 enum EventCard: View {
     // COMMON CARDS
     case fuelTank, meteorite, boost, turtle
-    case radarModule, storageModule, constructionModule, challenger
+    case radarModule, storageModule, constructionModule
     
     // UNCOMMON CARDS
     case tankCaffiene, tankSteroids, sunnyDay, meteorShower, storm, moonDeerStew
@@ -49,16 +51,29 @@ enum EventCard: View {
     // LEGENDARY CARDS
     case disruptor
     
+    //SPECIAL CARDS
+    case challenger
+    
+    static let all: [Self] = [
+        .fuelTank, .meteorite, .boost, .turtle, .radarModule, .storageModule, .constructionModule,
+        .tankCaffiene, .tankSteroids, .sunnyDay, .meteorShower, .storm, .moonDeerStew, .spyModule, .droneModule, .factoryModule,
+        .forceField, .smite, .conduitModule,
+        .disruptor,
+        .challenger,
+        
+    ]
+    
     var rarity: EventCardRarity {
         switch self {
-        case .fuelTank, .meteorite, .boost, .turtle, .radarModule, .storageModule, .constructionModule, .challenger: .common
+        case .fuelTank, .meteorite, .boost, .turtle, .radarModule, .storageModule, .constructionModule: .common
         case .tankCaffiene, .tankSteroids, .sunnyDay, .meteorShower, .storm, .moonDeerStew, .spyModule, .droneModule, .factoryModule: .uncommon
         case .forceField, .smite, .conduitModule: .rare
         case .disruptor: .legendary
+        case .challenger: .special
         }
     }
     
-    init() { //picks a random Event card according to rarity. Common cards have a 6x chance, uncommon a 3x chance, rare a 2x chance, and legendary a 1x chance.
+    init() { //picks a random Event card according to rarity. Common cards have a 6x chance, uncommon a 3x chance, rare a 2x chance, and legendary a 1x chance. Challenger has an 8x chance.
         switch Int.random(in: 0...69) {
         case 0..<4: self = .fuelTank
         case 0..<8: self = .meteorite
@@ -173,7 +188,7 @@ enum EventCard: View {
         case .factoryModule: return "Grants you a Factory Module."
         case .conduitModule: return "Grants you a Conduit Module."
         case .challenger: return "You may issue a Challenge to another player. A Challenge is a competition of your choice adjudicated directly by the Game Operator. Examples include a chess match, a basketball 1v1, or a game of rock-paper-scissors. They may decline or accept the Challenge. You should clear up the terms with your challengee in advance as if they decline, you lose this card. Make sure to write the Challenge on the back of this card. The winner of the Challenge gains 20 Fuel and 20 Metal."
-        case .moonDeerStew: return "Using this card feeds Moon Deer Stew to your entire crew. Once used, you have a 20% chance of receiving a random event card. Otherwise, you do not recieve a status card on the next turn."
+        case .moonDeerStew: return "Using this card feeds Moon Deer Stew to your entire crew. Once used, you have a 25% chance of receiving three random event cards. Otherwise, you do not recieve a status card on the next turn."
         }
     }
     
@@ -184,7 +199,7 @@ enum EventCard: View {
         }
     }
     
-    func preExecute(by tank: inout Tank, target: BoardObject? = nil) { // Runs before turn.
+    func preExecute(by tank: Tank, target: BoardObject? = nil) { // Runs before turn.
         switch self {
         case .fuelTank:
             tank.fuel += 10
@@ -259,17 +274,19 @@ enum EventCard: View {
             return
         case .challenger: return
         case .moonDeerStew:
-            if Int.random(in: 0...4) == 0 {
-                let card = Self.init()
-                Game.shared.eventCardsToPrint.append(card)
-                Game.shared.notes.append("Give \(tank.playerInfo.fullName) the \(card.name) Event Card.")
+            if Int.random(in: 0...3) == 0 {
+                for _ in 1...3 {
+                    let card = Self.init()
+                    Game.shared.eventCardsToPrint.append(card)
+                    Game.shared.notes.append("Give \(tank.playerInfo.fullName) the \(card.name) Event Card.")
+                }
             } else {
                 Game.shared.notes.append("Do not deliver a Status Card to \((target! as! Player).playerInfo.fullName)! They ate Moon Deer Stew!")
             }
         }
     }
     
-    func postExecute(by tank: inout Tank) { // Runs after turn. Allows for temporary boosts in stats like MovementRange.
+    func postExecute(by tank: Tank) { // Runs after turn. Allows for temporary boosts in stats like MovementRange.
         switch self {
         case .fuelTank: return
         case .meteorite: return

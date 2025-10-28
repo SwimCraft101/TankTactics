@@ -71,7 +71,7 @@ struct ContentView: View {
                             .frame(width: max(min(geometry.size.height, geometry.size.width), 300), height: max(min(geometry.size.height, geometry.size.width), 300), alignment: .center)
                     }
                     VStack {
-                        HStack {
+                        TabView {
                             VStack {
                                 Button("Enact Turn") {
                                     game.executeTurn()
@@ -83,12 +83,58 @@ struct ContentView: View {
                                         }
                                         return false
                                     }) {
-                                        NSWorkspace.shared.open(URL(string: "mailto:\((virtualTank as! Tank).playerInfo.virtualDelivery ?? " NO EMAIL ADDRESS WAS FOUND ")?subject=Tank Tactics: \(Date.now.addingTimeInterval(57600).formatted(date: .complete, time: .omitted))")!) //MARK: rework this?
+                                        var receivedMessages: [Message] = []
+                                        for message in game.messages {
+                                            if message.recipient == virtualTank.uuid {
+                                                receivedMessages.append(message)
+                                            }
+                                        }
+                                        var date = Date.now.addingTimeInterval(57600)
+                                        if date.formatted(
+                                            Date.FormatStyle()
+                                                .year(.omitted)
+                                                .month(.omitted)
+                                                .day(.omitted)
+                                                .hour(.omitted)
+                                                .minute(.omitted)
+                                                .timeZone(.omitted)
+                                                .era(.omitted)
+                                                .dayOfYear(.omitted)
+                                                .weekday(.wide)
+                                                .week(.omitted)
+                                        ) == "Saturday" {
+                                            date.addTimeInterval(86400)
+                                        }
+                                        if date.formatted(
+                                            Date.FormatStyle()
+                                                .year(.omitted)
+                                                .month(.omitted)
+                                                .day(.omitted)
+                                                .hour(.omitted)
+                                                .minute(.omitted)
+                                                .timeZone(.omitted)
+                                                .era(.omitted)
+                                                .dayOfYear(.omitted)
+                                                .weekday(.wide)
+                                                .week(.omitted)
+                                        ) == "Sunday" {
+                                            date.addTimeInterval(86400)
+                                        }
+                                        NSWorkspace.shared.open(URL(string: """
+                                        mailto:\((virtualTank as! Tank).playerInfo.virtualDelivery ?? " NO EMAIL ADDRESS WAS FOUND ")?\
+                                        subject=Tank Tactics: \(date.formatted(date: .complete, time: .omitted))&\
+                                        body=
+                                        """)!)
                                         createAndSavePDF(from: [AnyView(VirtualStatusCard(tank: virtualTank as! Tank))], fileName: "Virtual Status Card for \((virtualTank as! Tank).playerInfo.fullName)", pageSize: CGSize(width: inch(12), height: inch(8)))
                                     }
+                                    promptToSaveEncodedFile(game, fileName: "game")
                                 }
                                 Button("Print Full Board") {
-                                    createAndSavePDF(from: [AnyView(SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level, rotation: .north), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, accessibilitySettings: AccessibilitySettings(), selectedObject: $selectedObject).frame(width: inch(8), height: inch(8)))], fileName: "board")
+                                    createAndSavePDF(from: [
+                                        AnyView(
+                                            SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: level, rotation: .north), viewRenderSize: game.board.border + 1, highDetailSightRange: 1000000, lowDetailSightRange: 1000000, radarRange: 1000000, accessibilitySettings: AccessibilitySettings(), selectedObject: $selectedObject).frame(width: inch(8), height: inch(8))
+                                        )
+                                    ], fileName: "board")
                                 }
                                 Button("Save Game File") {
                                     uiBannerMessage = "Saving game file..."
@@ -134,9 +180,26 @@ struct ContentView: View {
                                 Spacer()
                                 
                             }
+                            .tabItem {
+                                Label("Game", systemImage: "globe")
+                            }
+                            Inspector(object: $selectedObject)
+                                .tabItem {
+                                    Label("Inspector", systemImage: "info")
+                                }
                             ActionList()
+                                .tabItem {
+                                    Label("Actions", systemImage: "righttriangle")
+                                }
+                            MessageList()
+                                .tabItem {
+                                    Label("Messages", systemImage: "message")
+                                }
+                            TurnNotesList()
+                                .tabItem {
+                                    Label("Notes", systemImage: "pencil.and.list.clipboard")
+                                }
                         }
-                        Inspector(object: $selectedObject)
                     }
                 }
             }
