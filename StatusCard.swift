@@ -149,7 +149,6 @@ struct StatusCardFront: View {
         ZStack {
             if tank.hasTooManyModules || topModule != nil {
                 TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
-                    
                     .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
                     .rotationEffect(Angle(degrees: -90))
                     .frame(width: inch(5), height: inch(8), alignment: .topTrailing)
@@ -161,7 +160,6 @@ struct StatusCardFront: View {
             }
             if !tank.hasTooManyModules && bottomModule != nil {
                 ControlPanelView(tank: tank)
-                    
                     .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
                     .rotationEffect(Angle(degrees: -90))
                     .frame(width: inch(5), height: inch(8), alignment: .bottomLeading)
@@ -196,13 +194,13 @@ struct StatusCardFront: View {
             .frame(width: inch(5), height: inch(8), alignment: .bottom)
             
             VStack(spacing: 0) {
-                Text(tank.playerInfo.lastName)
-                    .foregroundColor(.black)
-                    .fontWeight(.bold)
-                    .font(.system(size: inch(0.35)))
                 Text(tank.playerInfo.firstName)
                     .foregroundColor(.black)
                     .fontWeight(.ultraLight)
+                    .font(.system(size: inch(0.35)))
+                Text(tank.playerInfo.lastName)
+                    .foregroundColor(.black)
+                    .fontWeight(.bold)
                     .font(.system(size: inch(0.35)))
             }
             .frame(width: inch(2.5), height: inch(1), alignment: .center)
@@ -249,7 +247,6 @@ struct StatusCardBack: View {
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    
                     if tank.hasTooManyModules {
                         TooManyModules(tank: tank)
                     } else {
@@ -363,7 +360,7 @@ struct ControlPanelView: View {
                             .italic()
                         if tank.modules.count >= 1 {
                             let module = tank.modules.randomElement()!
-                            ThriftOption(name: module.type.name(), metalOffered: SellModule(module: module.type, tankId: tank.uuid).metalCost)
+                            ThriftOption(name: module.type.name(), metalOffered: -SellModule(module: module.type, tankId: tank.uuid).metalCost)
                         }
                         ({
                             var upgradeSellOptions: [ThriftOption] = []
@@ -443,9 +440,9 @@ struct ControlPanelView: View {
                 .scaledToFit()
                 .frame(width: inch(0.25), height: inch(0.25))
                 .frame(width: inch(0.5), height: inch(0.5), alignment: .topLeading)
-                .frame(width: inch(1.5), height: inch(2 ), alignment: .topTrailing)
+                .frame(width: inch(1.5), height: inch(1.75), alignment: .topTrailing)
             }
-            .frame(width: inch(4), height: inch(2), alignment: .topLeading)
+            .frame(width: inch(4), height: inch(1.75), alignment: .topLeading)
             
             Grid {
                 GridRow {
@@ -455,7 +452,7 @@ struct ControlPanelView: View {
                         .font(.system(size: inch(0.2)))
                     Text("\(tank.gunRange)􀂒 ")
                         .font(.system(size: inch(0.2)))
-                    Text("\(tank.gunCost)􀲗 ")
+                    Text("\(tank.gunDamage)􀲗 ")
                         .font(.system(size: inch(0.2)))
                 }
                 GridRow {
@@ -665,6 +662,11 @@ struct RotatedDirectionOptions: View {
 
 struct VirtualStatusCard: View {
     let tank: Tank
+    
+    private var messagesReceived: [Message] {
+        return Game.shared.messages.filter { $0.recipient == tank.uuid }
+    }
+    
     var body: some View {
         Grid(horizontalSpacing: 0, verticalSpacing: 0) {
             GridRow {
@@ -684,6 +686,10 @@ struct VirtualStatusCard: View {
                 } else {
                     ModuleView(module: tank.displayedModules[safe: 2])
                 }
+                VStack(spacing: 0) {
+                    MessageView(message: messagesReceived[safe: 0])
+                    MessageView(message: messagesReceived[safe: 1])
+                }
             }
             if !tank.hasTooManyModules {
                 GridRow {
@@ -691,6 +697,18 @@ struct VirtualStatusCard: View {
                     ModuleView(module: tank.displayedModules[safe: 1])
                     ModuleView(module: tank.displayedModules[safe: 3])
                 }
+            }
+            HStack(spacing: 0) {
+                MessageView(message: messagesReceived[safe: 2])
+                MessageView(message: messagesReceived[safe: 3])
+                MessageView(message: messagesReceived[safe: 4])
+                MessageView(message: messagesReceived[safe: 5])
+            }
+            HStack(spacing: 0) {
+                MessageView(message: messagesReceived[safe: 6])
+                MessageView(message: messagesReceived[safe: 7])
+                MessageView(message: messagesReceived[safe: 8])
+                MessageView(message: messagesReceived[safe: 9]) //surely ten is enough...
             }
         }
     }

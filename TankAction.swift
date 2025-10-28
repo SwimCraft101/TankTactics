@@ -301,6 +301,23 @@ class Thrift: TankAction {
 class SellUpgrade: Thrift {
     var upgrade: Upgrade
     
+    override var metalCost: Int {
+        switch upgrade {
+        case is UpgradeMovementCost:
+            return (Int(Double(-UpgradeMovementCost(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+        case is UpgradeMovementRange:
+            return (Int(Double(-UpgradeMovementRange(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+        case is UpgradeGunCost:
+            return (Int(Double(-UpgradeGunCost(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+        case is UpgradeGunRange:
+            return (Int(Double(-UpgradeGunRange(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+        case is UpgradeGunDamage:
+            return (Int(Double(-UpgradeGunDamage(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+        default:
+            fatalError("An invalid upgrade was passed to metalCost on SellUpgrade: \(upgrade)")
+        }
+    }
+    
     init(upgrade: Upgrade, tankId: UUID) {
         self.upgrade = upgrade
         super.init(tankId: tankId)
@@ -313,16 +330,16 @@ class SellUpgrade: Thrift {
                 tank.movementCost += 1
                 return true
             case is UpgradeMovementRange:
-                tank.movementRange += 1
+                tank.movementRange -= 1
                 return true
             case is UpgradeGunCost:
                 tank.gunCost += 1
                 return true
             case is UpgradeGunRange:
-                tank.gunRange += 1
+                tank.gunRange -= 1
                 return true
             case is UpgradeGunDamage:
-                tank.gunDamage += 1
+                tank.gunDamage -= 5
                 return true
             default:
                 fatalError("An invalid upgrade was passed to SellUpgrade: \(upgrade)")
@@ -420,7 +437,7 @@ class UpgradeGunCost: FridayUpgrade {
         ][tank.gunCost]
     }
     
-    override var icon: String { "bandage" }
+    override var icon: String { "chart.bar.xaxis" }
     
     override func execute() -> Bool {
         if super.execute() {
@@ -448,7 +465,7 @@ class UpgradeGunDamage: FridayUpgrade {
         ][tank.gunDamage / 5]
     }
     
-    override var icon: String { "chart.bar.xaxis" }
+    override var icon: String { "bandage" }
     
     override func execute() -> Bool {
         if super.execute() {
@@ -566,5 +583,26 @@ class MoveDrone: TankAction, SingleDirectionAction {
     init(_ direction: Direction, tankId: UUID) {
         self.direction = direction
         super.init(tankId: tankId, precedence: 0)
+    }
+}
+
+class PlayEventCard: TankAction {
+    override var fuelCost: Int { 1 }
+    
+    var card: EventCard
+    
+    override var icon: String { "text.document" }
+    
+    override func execute() -> Bool {
+        //runs after all other actions
+        card.postExecute(by: tank)
+        return true
+    }
+    
+    init(tankId: UUID, card: EventCard) {
+        self.card = card
+        super.init(tankId: tankId, precedence: -1)
+        // when action is queued, run "before turn" code
+        card.preExecute(by: tank)
     }
 }

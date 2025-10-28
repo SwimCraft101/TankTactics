@@ -106,6 +106,13 @@ class Tank: BoardObject, Player {
         for tank in Game.shared.board.objects.filter({ $0 is Tank} ) as! [Tank] {
             for module in tank.modules {
                 module.tankId = tank.uuid
+                if let droneModule = module as? DroneModule {
+                    if droneModule.droneId == nil {
+                        let uuid = UUID()
+                        Game.shared.board.objects.append(Drone(coordinates: Coordinates.init(x: Int.random(in: -10...10), y: Int.random(in: -10...10)), uuid: uuid))
+                        droneModule.droneId = uuid
+                    }
+                }
             }
         }
     }

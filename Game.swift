@@ -24,8 +24,7 @@ let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, sy
 
 func promptForDecodedFile<T: Decodable>(ofType type: T.Type) -> T? {
     let panel = NSOpenPanel()
-    panel.title = "Choose a Game.shared File"
-    panel.showsResizeIndicator = true
+    panel.title = "Choose a game File"
     panel.showsHiddenFiles = false
     panel.canChooseDirectories = false
     panel.canCreateDirectories = false
@@ -39,7 +38,7 @@ func promptForDecodedFile<T: Decodable>(ofType type: T.Type) -> T? {
         do {
             let data = try? Data(contentsOf: url)
             if data == nil {
-                print("data couuld not be gathered")
+                print("data could not be gathered")
             }
             let decoder = JSONDecoder()
             return try decoder.decode(T.self, from: data!)
@@ -270,12 +269,13 @@ final class Game: Codable {
             }
         }
         gameDay.next()
-        saveTurnToPDF(players: (board.objects.filter({ $0 is Player }) as! [Player]).filter({ !$0.playerInfo.doVirtualDelivery }), messages: messages, eventCards: eventCardsToPrint, notes: notes, doAlignmentCompensation: true)
+        randomSeed = Int.random(in: Int.min...Int.max) 
+        saveTurnToPDF(players: (board.objects.filter({ $0 is Player }) as! [Player]).filter({ !$0.playerInfo.doVirtualDelivery }), messages: messages.filter({ message in
+            !(board.objects.first { $0.uuid == message.recipient } as! Player).playerInfo.doVirtualDelivery }), eventCards: eventCardsToPrint, notes: notes, doAlignmentCompensation: true)
         notes.removeAll()
         eventCardsToPrint.removeAll()
         actions.removeAll()
         messages.removeAll()
-        randomSeed = Int.random(in: Int.min...Int.max)
     }
     
     enum CodingKeys: String, CodingKey {

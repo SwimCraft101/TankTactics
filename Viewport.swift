@@ -292,7 +292,7 @@ struct TileView: View {
                             }
                             Menu("􀎡 Build Reinforced Wall") {
                                 DirectionOptions(depth: 1, vector: [], action: { direction in
-                                    game.queueAction(BuildWall(direction: direction.first!, tankId: tank.uuid, precedence: precedenceApplied))
+                                    game.queueAction(BuildReinforcedWall(direction: direction.first!, tankId: tank.uuid, precedence: precedenceApplied))
                                 }, rotation: tank.coordinates!.rotation)
                             }
                             Menu("􀑉 Build Gift") {
@@ -307,6 +307,15 @@ struct TileView: View {
                                 DirectionOptions(depth: 1, vector: [], action: { direction in
                                     game.queueAction(MoveDrone(direction.first!, tankId: tank.uuid))
                                 }, rotation: .north)
+                            }
+                        }
+                        Menu("􀈿 Play Event Card") {
+                            ForEach(EventCard.all, id: \.self) { card in
+                                Menu("\(card.name)") {
+                                    Button("Confirm") {
+                                        game.queueAction(PlayEventCard(tankId: tank.uuid, card: card))
+                                    }
+                                }
                             }
                         }
                     }

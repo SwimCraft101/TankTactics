@@ -71,6 +71,26 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
     var eventCards = eventCardsIn
     var notes = notesIn
     
+    var extraCards: [(AnyView, AnyView)] = []
+    
+    while !messages.isEmpty {
+        extraCards.append(
+            (
+                AnyView(MessageView(message: messages.first)),
+                AnyView(MessageBackView(message: messages.removeFirst()))
+            )
+        )
+    }
+    
+    while !eventCards.isEmpty {
+        extraCards.append(
+            (
+                AnyView(eventCards.removeFirst()),
+                AnyView(Rectangle().fill(.white).frame(width: inch(3.535534), height: inch(2.715679)))
+            )
+        )
+    }
+    
     while playersToPrintWithLargeText.count > 0 {
         let player = playersToPrintWithLargeText.removeFirst()
         pages.append(AnyView(HStack(spacing:0) {
@@ -122,43 +142,37 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
     
     while playersToPrintInConduitMode.count > 0 {
         let player = playersToPrintInConduitMode.removeFirst()
-        pages.append(AnyView(HStack(spacing:0) {
-            player.statusCardFront()
-                .frame(width: inch(5), height: inch(8))
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    player.statusCardConduitFront()!
-                        .frame(width: inch(4), height: inch(4), alignment: .leading)
-                    Rectangle()
-                        .fill(Color.black)
-                        .frame(width: inch(0.005))
-                        .frame(width: inch(1), height: inch(4), alignment: .leading)
-                }
-                Rectangle()
-                    .fill(Color.black)
-                    .frame(height: inch(0.005))
-                if !messages.isEmpty {
-                    MessageView(message: messages.first!)
-                        .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .bottomTrailing)
-                        .frame(width: inch(5), height: inch(4), alignment: .bottomTrailing)
-                } else if !eventCards.isEmpty {
-                    eventCards.removeFirst()
-                        .frame(width: inch(5), height: inch(4))
-                } else {
-                    VStack {
-                        ForEach(notes, id: \.self) { note in
-                            Text(note)
-                                .font(.system(size: inch(0.1)))
+        pages.append(
+            AnyView(
+                HStack(spacing:0) {
+                    player.statusCardFront()
+                        .frame(width: inch(5), height: inch(8))
+                    VStack(spacing: 0) {
+                        HStack(spacing: 0) {
+                            player.statusCardConduitFront()!
+                                .frame(width: inch(4), height: inch(4), alignment: .leading)
+                            Rectangle()
+                                .fill(Color.black)
+                                .frame(width: inch(0.005))
+                                .frame(width: inch(1), height: inch(4), alignment: .leading)
+                        }
+                        Rectangle()
+                            .fill(Color.black)
+                            .frame(height: inch(0.005))
+                        if !extraCards.isEmpty {
+                            extraCards.first!.0
+                                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .bottomTrailing)
+                                .frame(width: inch(5), height: inch(4), alignment: .bottomTrailing)
                         }
                     }
+                    .frame(width: inch(5), height: inch(8), alignment: .top)
                 }
-            }
-            .frame(width: inch(5), height: inch(8), alignment: .top)
-        }
             .border(.black, width: inch(0.005))
             .frame(width: inch(10), height: inch(8))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)))
+            .environment(Game.shared)
+            )
+        )
         pages.append(AnyView(HStack(spacing:0) {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
@@ -172,9 +186,9 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
                 Rectangle()
                     .fill(Color.black)
                     .frame(height: inch(0.005))
-                if !messages.isEmpty {
-                    MessageBackView(message: messages.removeFirst())
-                        .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .bottomLeading)
+                if !extraCards.isEmpty {
+                    extraCards.removeFirst().1
+                        .frame(width: inch(3.535534), height: inch(2.715679), alignment: .bottomLeading)
                         .frame(width: inch(5), height: inch(4), alignment: .bottomLeading)
                 }
             }
@@ -227,7 +241,11 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         pages.append(AnyView(HStack(spacing: 0) {
             player.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
-            EmptyView()
+            VStack(spacing: 0) {
+                extraCards[safe: 0]?.0 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 1]?.0 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 2]?.0 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+            }
                 .frame(width: inch(5), height: inch(8))
         }
             .frame(width: inch(10), height: inch(8))
@@ -235,7 +253,11 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)))
         pages.append(AnyView(HStack(spacing: 0) {
-            EmptyView()
+            VStack(spacing: 0) {
+                extraCards[safe: 0]?.1 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 1]?.1 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 2]?.1 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+            }
             player.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
         }
@@ -249,20 +271,28 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         ))
     }
     
-    while !messages.isEmpty {
+    while !extraCards.isEmpty {
         pages.append(AnyView(HStack(spacing: 0) {
             Grid(alignment: .topLeading, horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
-                    MessageView(message: messages[safe: 0])
+                    AnyView(
+                        (extraCards[safe: 0]?.0 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
-                    MessageView(message: messages[safe: 1])
+                        )
+                    AnyView(
+                        (extraCards[safe: 1]?.0 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                        )
                 }
                 GridRow {
-                    MessageView(message: messages[safe: 2])
+                    AnyView(
+                        (extraCards[safe: 2]?.0 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
-                    MessageView(message: messages[safe: 3])
+                        )
+                    AnyView(
+                        (extraCards[safe: 3]?.0 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                        )
                 }
             }
         }
@@ -273,16 +303,24 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         pages.append(AnyView(HStack(spacing: 0) {
             Grid(alignment: .topTrailing, horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
-                    MessageBackView(message: messages[safe: 1])
+                    AnyView(
+                        (extraCards[safe: 1]?.1 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
-                    MessageBackView(message: messages[safe: 0])
+                        )
+                    AnyView(
+                        (extraCards[safe: 0]?.1 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
+                        )
                 }
                 GridRow {
-                    MessageBackView(message: messages[safe: 3])
+                    AnyView(
+                        (extraCards[safe: 3]?.1 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
-                    MessageBackView(message: messages[safe: 2])
+                        )
+                    AnyView(
+                        (extraCards[safe: 2]?.1 ?? AnyView(EmptyView()))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
+                        )
                 }
             }
         }
@@ -294,37 +332,20 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)
         ))
-        if messages.count <= 4 {
-            messages.removeAll()
+        if extraCards.count <= 4 {
+            extraCards.removeAll()
         } else {
-            messages.removeFirst(4)
+            extraCards.removeFirst(4)
         }
     }
-    
-    while !eventCards.isEmpty {
-        pages.append(AnyView(HStack(spacing: 0) {
-            Grid(horizontalSpacing: 0, verticalSpacing: 0) {
-                GridRow {
-                    eventCards[safe: 0]
-                    eventCards[safe: 1]
-                }
-                GridRow {
-                    eventCards[safe: 2]
-                    eventCards[safe: 3]
-                }
-            }
-        }
-            .frame(width: inch(10), height: inch(8))
-            .border(.black, width: inch(0.005))
-            .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)))
-        pages.append(AnyView(EmptyView()))
-        if eventCards.count <= 4 {
-            eventCards.removeAll()
-        } else {
-            eventCards.removeFirst(4)
-        }
+    var noteText: String = ""
+    while !notes.isEmpty {
+        noteText.append(notes.removeFirst() + "\n")
     }
+    pages.append(AnyView(
+        Text(noteText)
+            .font(.system(size: inch(0.1)))
+    ))
     
     createAndSavePDF(from: pages, fileName: "Turn")
 }

@@ -72,7 +72,7 @@ struct DeadStatusCardFront: View {
             Text("") //empty for now (:
                 .font(.system(size: inch(0.15)))
                 .italic()
-                .frame(width: inch(3.1819805153), height: inch(2.4748737342), alignment: .center)
+                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .center)
                 .rotationEffect(Angle(degrees: 45))
         }
     }

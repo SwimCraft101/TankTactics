@@ -174,7 +174,7 @@ extension Module {
     }
 }
 
-class TutorialModule: Module { override var type: ModuleType { .tutorial } //MARK: Fact check all info for changed details, add icon references
+class TutorialModule: Module { override var type: ModuleType { .tutorial }
     var isWeekTwo: Bool
     override var view: any View {
         if !isWeekTwo {
@@ -250,7 +250,7 @@ class TutorialModule: Module { override var type: ModuleType { .tutorial } //MAR
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
             case.wednesday:
                 Text("""
-                        Wheel Wednesday (􂥰) is the day when you can purchase upgrades for your Tank's drivetrain. There are two different upgrades you can make. Movement Efficiency, and Movement Speed. Movement Efficiency reduces the cost in fuel it takes to move. Movement Speed increases the distance you can move per turn.
+                        Wheel Wednesday (􂥰) is the day when you can purchase upgrades for your Tank's drivetrain. There are two different upgrades you can make. Movement Efficiency, and Movement Range. Movement Efficiency reduces the cost in fuel it takes to move. Movement Range increases the distance you can move per turn.
                 
                         Event Cards (􀈿) are a system of special actions in Tank Tactics. Similar to Precedence, whoever bids the most fuel or metal on a day will recieve an Event Card, however, only the highest bidder will actually pay for the card. Event Cards are not publicly documented in detail, but the card descriptions are clear and should not cause confusion. If you have any questions about a specific event card or Tank Tactics as a whole, talk to the game Operator.
                 """).font(.system(size: inch(0.15))).frame(width: inch(3.8), height: inch(3.8), alignment: .center)
@@ -312,7 +312,7 @@ class DroneModule: Module { override var type: ModuleType { .drone }
     
     override var view: any View {
         VStack {
-            SquareViewport(coordinates: Game.shared.board.objects.filter({ $0.uuid == droneId }).first!.coordinates!, viewRenderSize: 3, highDetailSightRange: 300, lowDetailSightRange: 300, radarRange: 300, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
+            SquareViewport(coordinates: drone!.coordinates!, viewRenderSize: 3, highDetailSightRange: 300, lowDetailSightRange: 300, radarRange: 300, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                 .frame(width: inch(3), height: inch(3))
             Text("Drone is at X: \(drone!.coordinates!.x) Y: \(drone!.coordinates!.y).")
                 .font(.system(size: inch(0.2)))
@@ -346,83 +346,164 @@ class DroneModule: Module { override var type: ModuleType { .drone }
 
 class SpyModule: Module { override var type: ModuleType { .spy } // note that this subclass needs no special encoder and decoder logic as it stores no extra data.
     override var view: any View {
-        VStack(spacing: inch(0.1)) {
-            Text("All other tanks within 5 tiles are listed.")
-                .font(.system(size: inch(0.2)))
-                .italic()
-            VStack(spacing: 0) {
-                ForEach(Game.shared.board.objects.filter({
-                    if $0 is Tank {
-                        if $0.uuid != self.tankId && self.tankId != nil {
-                            if $0.coordinates != nil {
-                                if $0.coordinates!.distanceTo(Game.shared.board.objects.filter({ $0.uuid == self.tankId }).first!.coordinates!) <= 5 {
-                                    return true
+        ViewThatFits {
+            VStack(spacing: inch(0.1)) {
+                Text("All other tanks within 5 tiles are listed.")
+                    .font(.system(size: inch(0.2)))
+                    .italic()
+                VStack(spacing: 0) {
+                    ForEach(Game.shared.board.objects.filter({
+                        if $0 is Tank {
+                            if $0.uuid != self.tankId && self.tankId != nil {
+                                if $0.coordinates != nil {
+                                    if $0.coordinates!.distanceTo(Game.shared.board.objects.filter({ $0.uuid == self.tankId }).first!.coordinates!) <= 5 {
+                                        return true
+                                    }
                                 }
                             }
                         }
-                    }
-                    return false
-                }) as! [Tank]) { tank in
-                    HStack(spacing: inch(0.1)) {
-                        BasicTileView(appearance: tank.appearance, accessibilitySettings: super.tank.playerInfo.accessibilitySettings)
-                            .frame(maxWidth: inch(0.5), maxHeight: inch(0.5))
-                        Text("\(tank.health)􀞽")
-                            .font(.system(size: inch(0.2)))
-                        VStack {
-                            Text("\(tank.fuel)􀵞")
-                                .font(.system(size: inch(0.15)))
-                            Text("\(tank.metal)􀇷")
-                                .font(.system(size: inch(0.15)))
-                        }
-                        VStack {
-                            Text("\(tank.movementCost)􀍾")
-                                .font(.system(size: inch(0.15)))
-                            Text("\(tank.movementRange)􂊼")
-                                .font(.system(size: inch(0.15)))
-                        }
-                        VStack {
-                            Text("\(tank.gunCost)􀣉")
-                                .font(.system(size: inch(0.15)))
-                            Text("\(tank.gunRange)􂇏")
-                                .font(.system(size: inch(0.15)))
-                        }
-                        VStack {
-                            Text("\(tank.gunDamage)􀎓")
-                                .font(.system(size: inch(0.15)))
-                            Text("\(tank.defense)􀙨")
-                                .font(.system(size: inch(0.15)))
-                        }
-                        HStack(spacing: 0) {
+                        return false
+                    }) as! [Tank]) { tank in
+                        HStack(spacing: inch(0.1)) {
+                            BasicTileView(appearance: tank.appearance, accessibilitySettings: super.tank.playerInfo.accessibilitySettings)
+                                .frame(maxWidth: inch(0.5), maxHeight: inch(0.5))
+                            Text("\(tank.health)􀞽")
+                                .font(.system(size: inch(0.2)))
                             VStack {
-                                if tank.modules.count > 0 {
-                                    Text("\(tank.modules[0].type.name())")
-                                        .font(.system(size: inch(0.15)))
-                                        .lineLimit(1)
-                                } else {
-                                    Text("Empty")
-                                        .font(.system(size: inch(0.15)))
-                                        .italic()
-                                        .fontWeight(.thin)
-                                        .lineLimit(1)
+                                Text("\(tank.fuel)􀵞")
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.metal)􀇷")
+                                    .font(.system(size: inch(0.15)))
+                            }
+                            VStack {
+                                Text("\(tank.movementCost)􀍾")
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.movementRange)􂊼")
+                                    .font(.system(size: inch(0.15)))
+                            }
+                            VStack {
+                                Text("\(tank.gunCost)􀣉")
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.gunRange)􂇏")
+                                    .font(.system(size: inch(0.15)))
+                            }
+                            VStack {
+                                Text("\(tank.gunDamage)􀎓")
+                                    .font(.system(size: inch(0.15)))
+                                Text("\(tank.defense)􀙨")
+                                    .font(.system(size: inch(0.15)))
+                            }
+                            HStack(spacing: 0) {
+                                VStack {
+                                    if tank.modules.count > 0 {
+                                        Text("\(tank.modules[0].type.name())")
+                                            .font(.system(size: inch(0.15)))
+                                            .lineLimit(1)
+                                    } else {
+                                        Text("Empty")
+                                            .font(.system(size: inch(0.15)))
+                                            .italic()
+                                            .fontWeight(.thin)
+                                            .lineLimit(1)
+                                    }
+                                    if tank.modules.count > 1 {
+                                        Text("\(tank.modules[1].type.name())")
+                                            .font(.system(size: inch(0.15)))
+                                            .lineLimit(1)
+                                    } else {
+                                        Text("Empty")
+                                            .font(.system(size: inch(0.15)))
+                                            .italic()
+                                            .fontWeight(.thin)
+                                            .lineLimit(1)
+                                    }
                                 }
-                                if tank.modules.count > 1 {
-                                    Text("\(tank.modules[1].type.name())")
-                                        .font(.system(size: inch(0.15)))
-                                        .lineLimit(1)
-                                } else {
-                                    Text("Empty")
-                                        .font(.system(size: inch(0.15)))
-                                        .italic()
-                                        .fontWeight(.thin)
-                                        .lineLimit(1)
+                            }
+                            
+                        }
+                        .frame(width: inch(4), alignment: .leading)
+                    }
+                    Spacer()
+                }
+            }
+            VStack(spacing: inch(0.1)) {
+                Text("All other tanks within 5 tiles are listed.")
+                    .font(.system(size: inch(0.1)))
+                    .italic()
+                VStack(spacing: 0) {
+                    ForEach(Game.shared.board.objects.filter({
+                        if $0 is Tank {
+                            if $0.uuid != self.tankId && self.tankId != nil {
+                                if $0.coordinates != nil {
+                                    if $0.coordinates!.distanceTo(tank.coordinates!) <= 5 {
+                                        return true
+                                    }
                                 }
                             }
                         }
-                        
+                        return false
+                    }) as! [Tank]) { tank in
+                        HStack(spacing: inch(0.1)) {
+                            BasicTileView(appearance: tank.appearance, accessibilitySettings: super.tank.playerInfo.accessibilitySettings)
+                                .frame(maxWidth: inch(0.3), maxHeight: inch(0.3))
+                            Text("\(tank.health)􀞽")
+                                .font(.system(size: inch(0.125)))
+                            VStack {
+                                Text("\(tank.fuel)􀵞")
+                                    .font(.system(size: inch(0.1)))
+                                Text("\(tank.metal)􀇷")
+                                    .font(.system(size: inch(0.1)))
+                            }
+                            VStack {
+                                Text("\(tank.movementCost)􀍾")
+                                    .font(.system(size: inch(0.1)))
+                                Text("\(tank.movementRange)􂊼")
+                                    .font(.system(size: inch(0.1)))
+                            }
+                            VStack {
+                                Text("\(tank.gunCost)􀣉")
+                                    .font(.system(size: inch(0.1)))
+                                Text("\(tank.gunRange)􂇏")
+                                    .font(.system(size: inch(0.1)))
+                            }
+                            VStack {
+                                Text("\(tank.gunDamage)􀎓")
+                                    .font(.system(size: inch(0.1)))
+                                Text("\(tank.defense)􀙨")
+                                    .font(.system(size: inch(0.1)))
+                            }
+                            HStack(spacing: 0) {
+                                VStack {
+                                    if tank.modules.count > 0 {
+                                        Text("\(tank.modules[0].type.name())")
+                                            .font(.system(size: inch(0.1)))
+                                            .lineLimit(1)
+                                    } else {
+                                        Text("Empty")
+                                            .font(.system(size: inch(0.1)))
+                                            .italic()
+                                            .fontWeight(.thin)
+                                            .lineLimit(1)
+                                    }
+                                    if tank.modules.count > 1 {
+                                        Text("\(tank.modules[1].type.name())")
+                                            .font(.system(size: inch(0.1)))
+                                            .lineLimit(1)
+                                    } else {
+                                        Text("Empty")
+                                            .font(.system(size: inch(0.1)))
+                                            .italic()
+                                            .fontWeight(.thin)
+                                            .lineLimit(1)
+                                    }
+                                }
+                            }
+                            
+                        }
+                        .frame(width: inch(4), alignment: .leading)
                     }
-                    .frame(width: inch(4), alignment: .leading)
+                    Spacer()
                 }
-                Spacer()
             }
         }
     }
@@ -537,7 +618,79 @@ class ConstructionModule: Module { override var type: ModuleType { .construction
 
 class FactoryModule: Module { override var type: ModuleType { .factory }
     override var view: any View {
-            fatalError("please implement FactoryModule")
+        Grid(alignment: .center, horizontalSpacing: inch(0.05), verticalSpacing: 0) {
+            Spacer()
+            GridRow {
+                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
+                    .font(.system(size: inch(0.2)))
+                Text("Movement Range")
+                    .font(.system(size: inch(0.15)))
+                    .lineLimit(1)
+                Text("\(UpgradeMovementRange(tankId: tank.uuid).metalCost)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.movementRange)􀂒\n\(tank.movementRange + 1)􀂒")
+                    .font(.system(size: inch(0.15)))
+            }
+            
+            GridRow {
+                Image(systemName: {
+                    switch tank.movementCost {
+                    case 10, 9:
+                        return "gauge.with.dots.needle.0percent"
+                    case 8, 7:
+                        return "gauge.with.dots.needle.33percent"
+                    case 6, 5:
+                        return "gauge.with.dots.needle.50percent"
+                    case 4, 3:
+                        return "gauge.with.dots.needle.67percent"
+                    default: ///`case 2, 1:
+                        return "gauge.with.dots.needle.100percent"
+                    }
+                }())
+                    .font(.system(size: inch(0.2)))
+                Text("Movement Efficiency")
+                    .font(.system(size: inch(0.15)))
+                    .lineLimit(1)
+                Text("\(UpgradeMovementCost(tankId: tank.uuid).metalCost)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.movementCost)􀵞\n\(tank.movementCost - 1)􀵞")
+                    .font(.system(size: inch(0.15)))
+            }
+            
+            GridRow {
+                Image(systemName: "dot.scope")
+                    .font(.system(size: inch(0.2)))
+                Text("Weapon Range")
+                    .font(.system(size: inch(0.15)))
+                Text("\(UpgradeGunRange(tankId: tank.uuid).metalCost)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.gunRange)􀂒\n\(tank.gunRange + 1)􀂒")
+                    .font(.system(size: inch(0.15)))
+            }
+            
+            GridRow {
+                Image(systemName: "bandage")
+                    .font(.system(size: inch(0.2)))
+                Text("Weapon Damage")
+                    .font(.system(size: inch(0.15)))
+                Text("\(UpgradeGunDamage(tankId: tank.uuid).metalCost)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.gunDamage)􀲗\n\(tank.gunDamage + 5)􀲗")
+                    .font(.system(size: inch(0.15)))
+            }
+            
+            GridRow {
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.system(size: inch(0.2)))
+                Text("Weapon Efficiency")
+                    .font(.system(size: inch(0.15)))
+                Text("\(UpgradeGunCost(tankId: tank.uuid).metalCost)􀇷")
+                    .font(.system(size: inch(0.15)))
+                Text("\(tank.gunCost)􀵞\n\(tank.gunCost - 1)􀵞")
+                    .font(.system(size: inch(0.15)))
+            }
+            Spacer()
+        }
     }
     
 }

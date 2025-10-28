@@ -22,7 +22,7 @@ struct ActionList: View {
                                 .scaledToFit()
                                 .frame(width: 30, height: 30)
                                 .font(.system(size: 15))
-                                .foregroundStyle((action.precedence > 0) ? .secondary : .primary)
+                                .foregroundStyle((action.precedence == 0) ? .secondary : .primary)
                             BasicTileView(appearance: action.tank.appearance!, accessibilitySettings: AccessibilitySettings())
                                 .frame(width: 30, height: 30)
                             Image(systemName: action.icon)
