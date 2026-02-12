@@ -8,7 +8,8 @@
 import Foundation
 import AppKit
 import UniformTypeIdentifiers
-import SwiftUICore
+import SwiftUI
+
 #if DEBUG
 let playerInfo = PlayerInfo(firstName: "Example", lastName: "Tank", deliveryBuilding: "Newberrry Centre", deliveryType: "Carrier Pigion", deliveryNumber: "Hawkey", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)
 let uuid = UUID()
@@ -17,7 +18,7 @@ let tank = Tank(appearance: Appearance(fillColor: .red, strokeColor: .yellow, sy
         ConduitModule(tankId: uuid),
         StorageModule(tankId: uuid),
         SpyModule(tankId: uuid),
-        TutorialModule(isWeekTwo: false),
+        TutorialModule(tankId: uuid),
         RadarModule(tankId: uuid),
 ], uuid: uuid)
 #endif
@@ -73,54 +74,63 @@ func promptToSaveEncodedFile<T: Encodable>(_ object: T, fileName: String) {
 }
 
 enum GameDay: Codable {
-    case monday
-    case tuesday
-    case wednesday
-    case thursday
-    case friday
+    case mondayNormal
+    case tuesdayNormal
+    case wednesdayNormal
+    case thursdayNormal
+    case fridayNormal
+    case deadMonday
+    case deadTuesday
+    case deadWednesday
+    case deadThursday
+    case deadFriday
     
-    mutating func next() {
+    func next() -> Self {
         switch self {
-        case .monday:
-            self = .tuesday
-        case .tuesday:
-            self = .wednesday
-        case .wednesday:
-            self = .thursday
-        case .thursday:
-            self = .friday
-        case .friday:
-            self = .monday
+        case .mondayNormal:
+            return .deadTuesday
+        case .tuesdayNormal:
+            return .deadWednesday
+        case .wednesdayNormal:
+            return .deadThursday
+        case .thursdayNormal:
+            return .deadFriday
+        case .fridayNormal:
+            return .deadMonday
+        case .deadMonday:
+            return .tuesdayNormal
+        case .deadTuesday:
+            return .wednesdayNormal
+        case .deadWednesday:
+            return .thursdayNormal
+        case .deadThursday:
+            return .fridayNormal
+        case .deadFriday:
+            return .mondayNormal
         }
     }
     
     var name: String {
         switch self {
-        case .monday:
+        case .mondayNormal, .deadMonday:
             return "Module Monday"
-        case .tuesday:
+        case .tuesdayNormal, .deadTuesday:
             return "Treacherous Tuesday"
-        case .wednesday:
+        case .wednesdayNormal, .deadWednesday:
             return "Wheel Wednesday"
-        case .thursday:
+        case .thursdayNormal, .deadThursday:
             return "Thrifty Thursday"
-        case .friday:
+        case .fridayNormal, .deadFriday:
             return "Firearm Friday"
         }
     }
     
-    var description: String {
+    var isDeadDay: Bool {
         switch self {
-        case .monday:
-            return "Purchase Modules"
-        case .tuesday:
-            return "All action prices become 50% cheaper."
-        case .wednesday:
-            return "Purchase Drivetrain Upgrades"
-        case .thursday:
-            return "Trade and sell Uodules and Upgrades"
-        case .friday:
-            return "Purchase Weapon Upgrades"
+        case .deadMonday, .deadTuesday, .deadWednesday, .deadThursday, .deadFriday:
+            return true
+        default:
+            return false
         }
     }
 }
@@ -146,10 +156,11 @@ final class Game: Codable {
         Tank(appearance: Appearance(fillColor: .gray, symbol: "pills.fill"), coordinates: Coordinates(x: 4, y: -3, level: 0), playerInfo: playerInfo),
         Tank(appearance: Appearance(fillColor: .green, strokeColor: .gray, symbol: "ladybug.fill"), coordinates: Coordinates(x: -7, y: 2, level: 0), playerInfo: playerInfo),
         Drone(coordinates: Coordinates(x: 4, y: -3), uuid: UUID())
-    ], border: 7), gameDay: .monday)
+    ], border: 7), gameDay: .mondayNormal)
     
     var board: Board
     var gameDay: GameDay
+    var nextGameDay: GameDay
     var randomSeed: Int
     
     var actions: [TankAction] = []
@@ -166,7 +177,7 @@ final class Game: Codable {
     var notes: [String] = []
     
     var moduleOffered: Module? {
-        if gameDay == .monday {
+        if gameDay == .mondayNormal || gameDay == .deadMonday {
             switch randomSeed &* 287230 % 10 {
             case 0: return RadarModule(tankId: nil)
             case 1: return RadarModule(tankId: nil)
@@ -184,7 +195,7 @@ final class Game: Codable {
     }
     
     var moduleOfferPrice: Int? {
-        if gameDay == .monday {
+        if gameDay == .mondayNormal || gameDay == .deadMonday {
             switch randomSeed &* 287230 % 10 {
             case 0: return 15 + randomSeed &* 3545789 % 10
             case 1: return 20 + randomSeed &* 3545789 % 10
@@ -218,8 +229,11 @@ final class Game: Codable {
             let _ = action.execute()
             for object in board.objects {
                 if object.health <= 0 {
-                    if object is Tank { fatalError("A Tank has died!! pleas implement this") }
-                    board.objects.removeAll(where: { $0 == object })
+                    if let tank = object as? Tank {
+                        board.objects.append(DeadTank(tank, nil))
+                    } else {
+                        board.objects.removeAll(where: { $0 == object })
+                    }
                 }
             }
         }
@@ -227,7 +241,7 @@ final class Game: Codable {
         {
             if eventCardBidders.count >= 3 {
                 eventCardBidders.sort(by: { $0.1 + $0.2 > $1.1 + $1.2 })
-                if gameDay == .tuesday {
+                if gameDay == .tuesdayNormal || gameDay == .deadTuesday {
                     if eventCardBidders[0].1 + eventCardBidders[0].2 == eventCardBidders[2].1 + eventCardBidders[2].2 { //if there is a 3-way tie or worse
                         return
                     }
@@ -249,6 +263,19 @@ final class Game: Codable {
             }
         }()
         Tank.bindModules()
+        
+        for deadTank in board.objects.filter({ $0 is DeadTank }) {
+            if 1...2 ~= Int.random(in: 0...(board.objects.filter({ $0 is DeadTank }).count)) {
+                let card = EventCard()
+                eventCardsToPrint.append(card)
+                Game.shared.notes.append("Give \((deadTank as! Player).playerInfo.fullName) the \(card.name) Event Card.")
+            }
+        }
+        
+        let card = EventCard()
+        eventCardsToPrint.append(card)
+        Game.shared.notes.append("The \(card.name) Event Card was printed to be hidden at campus.")
+        
         var fuelPerTank = 0
         while fuelPerTank < 25 {
             var totalTankFuel: Int = 0
@@ -261,46 +288,51 @@ final class Game: Codable {
             
             board.objects.append(Gift(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10))))
             board.objects.append(Gift(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10))))
-            board.objects.append(Gift(coordinates: Coordinates(x: Int.random(in: -10...10), y: Int.random(in: -10...10))))
             
             for tank in board.objects.filter({ $0 is Tank }) as! [Tank] {
                 tank.fuel += 1
                 tank.constrainToMaximumValues()
             }
         }
-        gameDay.next()
-        randomSeed = Int.random(in: Int.min...Int.max) 
-        saveTurnToPDF(players: (board.objects.filter({ $0 is Player }) as! [Player]).filter({ !$0.playerInfo.doVirtualDelivery }), messages: messages.filter({ message in
-            !(board.objects.first { $0.uuid == message.recipient } as! Player).playerInfo.doVirtualDelivery }), eventCards: eventCardsToPrint, notes: notes, doAlignmentCompensation: true)
-        notes.removeAll()
-        eventCardsToPrint.removeAll()
-        actions.removeAll()
-        messages.removeAll()
+        for tank in board.objects.filter({ $0 is Tank }) as! [Tank] {
+            if tank.displayedModules.contains(where: { $0 is StorageModule }) {
+                tank.fuel -= (tank.fuel / 5)
+            } else {
+                tank.fuel -= (tank.fuel / 10)
+            }
+            tank.constrainToMaximumValues()
+        }
+        gameDay = nextGameDay
+        nextGameDay = gameDay.next()
+        randomSeed = Int.random(in: Int.min...Int.max)
     }
     
     enum CodingKeys: String, CodingKey {
         case board
-        case gameDay
+        case newGameDay
         case randomSeed
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.board = try container.decode(Board.self, forKey: .board)
-        self.gameDay = try container.decode(GameDay.self, forKey: .gameDay)
+        self.gameDay = try container.decodeIfPresent(GameDay.self, forKey: .newGameDay) ?? .mondayNormal
+        self.nextGameDay = .mondayNormal //will be changed soon..
         self.randomSeed = (try? container.decode(Int.self, forKey: .randomSeed)) ?? Int.random(in: Int.min...Int.max)
+        self.nextGameDay = gameDay.next()
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(board, forKey: .board)
-        try container.encode(gameDay, forKey: .gameDay)
+        try container.encode(gameDay, forKey: .newGameDay)
         try container.encode(randomSeed, forKey: .randomSeed)
     }
     
     init(board: Board, gameDay: GameDay) {
         self.board = board
         self.gameDay = gameDay
+        self.nextGameDay = gameDay.next()
         self.randomSeed = Int.random(in: Int.min...Int.max)
     }
 }

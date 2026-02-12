@@ -10,7 +10,7 @@ import AppKit
 import Foundation
 
 func inch(_ inches: CGFloat) -> CGFloat {
-    return inches * 288
+    return inches * 576
 }
 
 extension Color {
@@ -132,6 +132,7 @@ struct TankTacticsHexagon: Shape {
 struct PanelToCutOff: View {
     var body: some View {
         RightTriangle()
+            .stroke(.black, lineWidth: inch(0.005))
             .fill(Color.red.opacity(0.05))
             .rotationEffect(Angle(degrees: -90))
     }
@@ -225,10 +226,11 @@ struct StatusCardFront: View {
                 .frame(width: inch(5), height: inch(4), alignment: .trailing)
                 
             }
-            Text("") //renders on back of card
+            Text("""
+                """) //renders on back of card
                 .font(.system(size: inch(0.15)))
                 .italic()
-                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .center)
+                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
                 .rotationEffect(Angle(degrees: -45))
             
         }
@@ -309,13 +311,13 @@ struct ControlPanelView: View {
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
                     switch game.gameDay {
-                    case .monday:
+                    case .mondayNormal, .deadMonday:
                         Text("Purchase \(game.moduleOffered!.type.name()) Module: \(game.moduleOfferPrice!)􀇷")
                             .font(.system(size: inch(0.2)))
-                    case .tuesday:
+                    case .tuesdayNormal, .deadTuesday:
                         Text("Moving and Firing are 50% cheaper today.\nTwo Event Cards are availible.")
                             .font(.system(size: inch(0.2)))
-                    case .wednesday:
+                    case .wednesdayNormal, .deadWednesday:
                         Grid(alignment: .center, horizontalSpacing: inch(0.05), verticalSpacing: 0) {
                             GridRow {
                                 Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
@@ -354,7 +356,7 @@ struct ControlPanelView: View {
                                     .font(.system(size: inch(0.15)))
                             }
                         }
-                    case .thursday:
+                    case .thursdayNormal, .deadThursday:
                         Text("Sell any of the following to gain Metal:")
                             .font(.system(size: inch(0.2)))
                             .italic()
@@ -381,7 +383,7 @@ struct ControlPanelView: View {
                             }
                             return AnyView(upgradeSellOptions.randomElement())
                         } as! () -> AnyView)()
-                    case .friday:
+                    case .fridayNormal, .deadFriday:
                         Grid(horizontalSpacing: inch(0.05), verticalSpacing: 0) {
                             GridRow {
                                 Image(systemName: "dot.scope")
@@ -424,15 +426,15 @@ struct ControlPanelView: View {
                 .frame(width: inch(2.5), height: inch(1.5), alignment: .topLeading)
                 Image(systemName: {
                     switch game.gameDay {
-                    case .monday:
+                    case .mondayNormal, .deadMonday:
                         return "square.on.square.dashed"
-                    case .tuesday:
+                    case .tuesdayNormal, .deadTuesday:
                         return "exclamationmark.triangle"
-                    case .wednesday:
+                    case .wednesdayNormal, .deadWednesday:
                         return "tire"
-                    case .thursday:
+                    case .thursdayNormal, .deadThursday:
                         return "storefront"
-                    case .friday:
+                    case .fridayNormal, .deadFriday:
                         return "headlight.high.beam"
                     }
                 }()) // image representing the gameDay
@@ -448,7 +450,7 @@ struct ControlPanelView: View {
                 GridRow {
                     Text("􀅾: ")
                         .font(.system(size: inch(0.2)))
-                    Text("\(Int(ceil(Double(tank.gunCost) / (game.gameDay == .tuesday ? 2.0 : 1.0))))􀵞 ")
+                    Text("\(Int(ceil(Double(tank.gunCost) / ((game.gameDay == .tuesdayNormal || game.gameDay == .deadTuesday) ? 2.0 : 1.0))))􀵞 ")
                         .font(.system(size: inch(0.2)))
                     Text("\(tank.gunRange)􀂒 ")
                         .font(.system(size: inch(0.2)))
@@ -458,7 +460,7 @@ struct ControlPanelView: View {
                 GridRow {
                     Text("􁹫: ")
                         .font(.system(size: inch(0.2)))
-                    Text("\(Int(ceil(Double(tank.movementCost) / (game.gameDay == .tuesday ? 2.0 : 1.0))))􀵞 ")
+                    Text("\(Int(ceil(Double(tank.movementCost) / ((game.gameDay == .tuesdayNormal || game.gameDay == .deadTuesday) ? 2.0 : 1.0))))􀵞 ")
                         .font(.system(size: inch(0.2)))
                     Text("\(tank.movementRange)􀂒")
                         .font(.system(size: inch(0.2)))
@@ -470,11 +472,11 @@ struct ControlPanelView: View {
                 GridRow {
                     Text("")
                         .font(.system(size: inch(0.2)))
-                    Text("􀐚")
-                        .font(.system(size: inch(0.2)))
                     Text("􀈿")
                         .font(.system(size: inch(0.2)))
                     Text("􁘿")
+                        .font(.system(size: inch(0.2)))
+                    Text("")
                         .font(.system(size: inch(0.2)))
                 }
                 GridRow {
@@ -484,29 +486,33 @@ struct ControlPanelView: View {
                         .font(.system(size: inch(0.2)))
                     Text("__")
                         .font(.system(size: inch(0.2)))
-                    Text("__")
-                        .font(.system(size: inch(0.2)))
+                    VStack {
+                        Text("􁹫")
+                        .font(.system(size: inch(0.1)))
+                        Text("􀅾")
+                        .font(.system(size: inch(0.1)))
+                    }
                 }
                 GridRow {
                     Text("􀇷")
-                        .font(.system(size: inch(0.2)))
+                        .font(.system(size: inch(0.2))) 
                     Text("__")
                         .font(.system(size: inch(0.2)))
-                    Text("__")
+                    Text("")
                         .font(.system(size: inch(0.2)))
                     Text("")
                         .font(.system(size: inch(0.2)))
                 }
                 GridRow {
                     Text("􀍕")
-                        .font(.system(size: inch(0.1)))
-                        .foregroundStyle(.black.opacity(0))
+                        .font(.system(size: inch(0.05)))
+                        .foregroundStyle(.clear)
                 }
                 GridRow {
                     Text("􀍕")
                         .font(.system(size: inch(0.2)))
                 }
-            } //precedence, physical token, and Event Card spending
+            } //precedence and Event Card spending
             .frame(width: inch(4), height: inch(1.65), alignment: .topLeading)
         }
         .frame(width: inch(4), height: inch(4))
