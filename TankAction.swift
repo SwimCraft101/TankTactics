@@ -38,7 +38,7 @@ class TankAction: Identifiable {
     }
     
     var isAllowed: Bool {
-        if tank.fuel < ((Game.shared.gameDay == .tuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost) + precedence { //halves and rounds up the fuel value on tuesdays
+        if tank.fuel < ((Game.shared.gameDay == .tuesdayNormal || Game.shared.gameDay == .deadTuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost) + precedence { //halves and rounds up the fuel value on tuesdays
             return false
         }
         if tank.metal < metalCost {
@@ -49,7 +49,7 @@ class TankAction: Identifiable {
     
     func execute() -> Bool {
         if isAllowed {
-            tank.fuel -= ((Game.shared.gameDay == .tuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost)
+            tank.fuel -= ((Game.shared.gameDay == .tuesdayNormal || Game.shared.gameDay == .deadTuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost)
             tank.metal -= metalCost
             tank.fuel -= precedence
             return true
@@ -125,7 +125,7 @@ class PurchaseModule: TankAction {
     override var icon: String { "square.on.square.dashed" }
     
     override var isAllowed: Bool {
-        if Game.shared.gameDay != .monday { return false }
+        if !(Game.shared.gameDay == .mondayNormal || Game.shared.gameDay == .deadMonday) { return false }
         if super.isAllowed {
             return true
         }
@@ -216,7 +216,7 @@ class Upgrade: TankAction {}
 
 class WednesdayUpgrade: Upgrade {
     override var isAllowed: Bool {
-        if Game.shared.gameDay != .wednesday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
+        if Game.shared.gameDay != .wednesdayNormal && Game.shared.gameDay != .deadWednesday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
         if super.isAllowed {
             return true
         }
@@ -287,7 +287,7 @@ class UpgradeMovementCost: WednesdayUpgrade {
 
 class Thrift: TankAction {
     override var isAllowed: Bool {
-        if Game.shared.gameDay != .thursday { return false }
+        if Game.shared.gameDay != .thursdayNormal && Game.shared.gameDay != .deadThursday { return false }
         return super.isAllowed
     }
     
@@ -304,15 +304,15 @@ class SellUpgrade: Thrift {
     override var metalCost: Int {
         switch upgrade {
         case is UpgradeMovementCost:
-            return (Int(Double(-UpgradeMovementCost(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+            return (Int(Double(-UpgradeMovementCost(tankId: tankId).metalCost) / 2.4) - (Game.shared.randomSeed &* 219857) % 5)
         case is UpgradeMovementRange:
-            return (Int(Double(-UpgradeMovementRange(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+            return (Int(Double(-UpgradeMovementRange(tankId: tankId).metalCost) / 2.4) - (Game.shared.randomSeed &* 219857) % 5)
         case is UpgradeGunCost:
-            return (Int(Double(-UpgradeGunCost(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+            return (Int(Double(-UpgradeGunCost(tankId: tankId).metalCost) / 2.4) - (Game.shared.randomSeed &* 219857) % 5)
         case is UpgradeGunRange:
-            return (Int(Double(-UpgradeGunRange(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+            return (Int(Double(-UpgradeGunRange(tankId: tankId).metalCost) / 2.4) - (Game.shared.randomSeed &* 219857) % 5)
         case is UpgradeGunDamage:
-            return (Int(Double(-UpgradeGunDamage(tankId: tankId).metalCost) / 2.4) - Game.shared.randomSeed &* 219857 % 5)
+            return (Int(Double(-UpgradeGunDamage(tankId: tankId).metalCost) / 2.4) - (Game.shared.randomSeed &* 219857) % 5)
         default:
             fatalError("An invalid upgrade was passed to metalCost on SellUpgrade: \(upgrade)")
         }
@@ -382,7 +382,7 @@ class SellModule: Thrift {
 
 class FridayUpgrade: Upgrade {
     override var isAllowed: Bool {
-        if Game.shared.gameDay != .friday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
+        if Game.shared.gameDay != .fridayNormal && Game.shared.gameDay != .deadFriday && !(tank.modules.contains(where: { $0 is FactoryModule })) { return false }
         return super.isAllowed
     }
     

@@ -157,13 +157,13 @@ struct TileView: View {
                             return tile.appearance!
                         } else {
                             //only in lidar and radar range
-                            if !(tile.appearance!.fillColor == .white) { //skips 'small' objects
+                            if !(tile.appearance!.strokeColor == .white) { //skips 'small' objects
                                 return Appearance(fillColor: tile.appearance!.fillColor, symbolColor: tile.appearance!.fillColor, symbol: "rectangle")
                             }
                         }
                     } else {
                         //only in radar range
-                        if !(tile.appearance!.fillColor == .white) { //skips 'small' objects
+                        if !(tile.appearance!.strokeColor == .white) { //skips 'small' objects
                             let mysteryObjectColor = Color(red: 0.4, green: 0.4, blue: 0.4) //color for an object only in Radar Range
                             return Appearance(fillColor: mysteryObjectColor, symbolColor: mysteryObjectColor, symbol: "rectangle")
                         }
@@ -235,13 +235,13 @@ struct TileView: View {
                                 game.queueAction(Fire(vector, tankId: tank.uuid, precedence: precedenceApplied))
                             }, rotation: tank.coordinates!.rotation)
                         }
-                        if game.gameDay == .monday {
+                        if game.gameDay == .mondayNormal || game.gameDay == .deadMonday {
                             Button("􀯇 Purchase \(game.moduleOffered!.type.name())") {
                                 game.queueAction(PurchaseModule(tankId: tank.uuid))
                             }
                             .disabled(!(PurchaseModule(tankId: tank.uuid).isAllowed))
                         }
-                        if game.gameDay == .wednesday || tank.modules.contains(where: { $0 is FactoryModule }) {
+                        if game.gameDay == .wednesdayNormal || game.gameDay == .deadWednesday || tank.modules.contains(where: { $0 is FactoryModule }) {
                             Button("􂊼 Upgrade Movement Range") {
                                 game.queueAction(UpgradeMovementRange(tankId: tank.uuid))
                             }
@@ -251,7 +251,7 @@ struct TileView: View {
                             }
                             .disabled(!(UpgradeMovementCost(tankId: tank.uuid).isAllowed))
                         }
-                        if game.gameDay == .friday || tank.modules.contains(where: { $0 is FactoryModule }) {
+                        if game.gameDay == .fridayNormal || game.gameDay == .deadFriday || tank.modules.contains(where: { $0 is FactoryModule }) {
                             Button("􂇏 Upgrade Weapon Range") {
                                 game.queueAction(UpgradeGunRange(tankId: tank.uuid))
                             }
@@ -265,7 +265,7 @@ struct TileView: View {
                             }
                             .disabled(!(UpgradeGunCost(tankId: tank.uuid).isAllowed))
                         }
-                        Menu("􀈿 Bid For Event Card\(game.gameDay == .tuesday ? " (2 Availible)" : "")") {
+                        Menu("􀈿 Bid For Event Card\((game.gameDay == .tuesdayNormal || game.gameDay == .deadTuesday) ? " (2 Availible)" : "")") {
                             fuelAndMetalAmountPicker()
                             Button("Confirm") {
                                 game.queueAction(BidForEventCard(fuelBid: fuelForAction, metalBid: metalForAction, tankId: tank.uuid))

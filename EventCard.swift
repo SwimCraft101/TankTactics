@@ -117,10 +117,20 @@ enum EventCard: View {
                         .frame(width: inch(3.535534 - 0.5), height: inch(0.5), alignment: .leading)
                 }
                 HStack(spacing: 0) {
-                    Text(description)
-                        .font(.system(size: inch(0.1)))
-                        .italic()
-                        .frame(width: inch(3.535534 - 0.5), alignment: .leading)
+                    ViewThatFits {
+                        Text(description)
+                            .font(.system(size: inch(0.2)))
+                            .italic()
+                            .frame(width: inch(3.535534 - 0.5), alignment: .leading)
+                        Text(description)
+                            .font(.system(size: inch(0.15)))
+                            .italic()
+                            .frame(width: inch(3.535534 - 0.5), alignment: .leading)
+                        Text(description)
+                            .font(.system(size: inch(0.1)))
+                            .italic()
+                            .frame(width: inch(3.535534 - 0.5), alignment: .leading)
+                    }
                 }
                 if needsTankTarget {
                     Spacer()
@@ -180,14 +190,14 @@ enum EventCard: View {
         case .forceField: return "Cancels all damage to you this turn."
         case .smite: return "Deals 10 damage to a player of your choice."
         case .disruptor: return "Revokes any player's Status Card next turn."
-        case .radarModule: return "Grants you a Radar Module."
-        case .storageModule: return "Grants you a Storage Module."
-        case .constructionModule: return "Grants you a Construction Module."
-        case .spyModule: return "Grants you a Spy Module."
-        case .droneModule: return "Grants you a Drone Module."
-        case .factoryModule: return "Grants you a Factory Module."
-        case .conduitModule: return "Grants you a Conduit Module."
-        case .challenger: return "You may issue a Challenge to another player. A Challenge is a competition of your choice adjudicated directly by the Game Operator. Examples include a chess match, a basketball 1v1, or a game of rock-paper-scissors. They may decline or accept the Challenge. You should clear up the terms with your challengee in advance as if they decline, you lose this card. Make sure to write the Challenge on the back of this card. The winner of the Challenge gains 20 Fuel and 20 Metal."
+        case .radarModule: return "Grants you a Radar Module. Radar Modules allow you to see farther and in all directions, but you can' tell the dfference between Walls and Tanks. The Radar Module cannot see Gifts."
+        case .storageModule: return "Grants you a Storage Module. Storage Modules allow you to hold as much Fuel and Metal as you want, removing the maximum of 50. Additionally, Storage Modules can keep another module in reserve until you have space to install it. Furthermore, each storage module reduces Fuel Leakage by 50%."
+        case .constructionModule: return "Grants you a Construction Module. Construction modules let you build Walls and Gifts."
+        case .spyModule: return "Grants you a Spy Module. Spy modules let you see information about tanks around you."
+        case .droneModule: return "Grants you a Drone Module. Drone modules let you control a surveilence drone"
+        case .factoryModule: return "Grants you a Factory Module. Factory Modules let you upgrade your Movement and Weapon at any time."
+        case .conduitModule: return "Grants you a Conduit Module. Conduit Modules allow you to equip an additional Module."
+        case .challenger: return "You may issue a Challenge to another player. A Challenge is a competition of your choice adjudicated directly by the Game Operator. Examples include a chess match, a basketball 1v1, or a game of rock-paper-scissors. They may decline or accept the Challenge. You should clear up the terms with your challengee in advance as if they decline, you lose this card. Make sure to write the Challenge on the back of this card. The winner of the Challenge gains 20 Fuel and 20 Metal. The loser of the challenge loses 10 Fuel and 10 Metal. You and your challengee do NOT need to have 10 Fuel or Metal ahead of time; losing would simply put you into debt."
         case .moonDeerStew: return "Using this card feeds Moon Deer Stew to your entire crew. Once used, you have a 25% chance of receiving three random event cards. Otherwise, you do not recieve a status card on the next turn."
         }
     }
@@ -242,11 +252,13 @@ enum EventCard: View {
                     targetTank.health -= 10
                 }
             }
+            DeadTank.attributeKills(to: tank)
             return
         case .forceField:
             tank.defense += 1000
         case .smite:
             target!.health -= 10
+            DeadTank.attributeKills(to: tank)
         case .disruptor:
             Game.shared.notes.append("Do not deliver a Status Card to \((target! as! Player).playerInfo.fullName)! They were Disrupted by \(tank.playerInfo.fullName).")
         case .radarModule:

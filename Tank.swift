@@ -194,7 +194,7 @@ class Tank: BoardObject, Player {
         self.gunRange = 1
         self.gunDamage = 5
         self.gunCost = 10
-        self.modules = [TutorialModule(isWeekTwo: false)]
+        self.modules = [TutorialModule(tankId: nil)]
         super.init(fuelDropped: 20, metalDropped: 20, appearance: appearance, coordinates: coordinates, health: 100, defense: 0, uuid: UUID())
     }
     
@@ -297,6 +297,7 @@ class Tank: BoardObject, Player {
                         coordinates?.moveBy(step.opposite)
                         health -= 10
                         tile.health -= 10
+                        DeadTank.attributeKills(to: self)
                         return
                     }
                 }
@@ -313,6 +314,7 @@ class Tank: BoardObject, Player {
                 if tile.coordinates == bulletPosition {
                     if tile.isRigid { //pass over nonrigid objects
                         tile.health -= (gunDamage - tile.defense)
+                        DeadTank.attributeKills(to: self)
                         return
                     }
                 }
@@ -364,18 +366,38 @@ class DeadTank: BoardObject, Player {
     static var isSolid: Bool { false }
     static var isRigid: Bool { false }
     
-    var killedByIndex: Int
+    static func attributeKills(to killer: Tank) {
+        for tank in Game.shared.board.objects.filter({ $0 is Tank }) as! [Tank] {
+            if tank.health <= 0 {
+                Game.shared.board.objects.append(DeadTank(tank, killer.uuid))
+                Game.shared.board.objects.removeAll(where: { $0.uuid == tank.uuid && $0 is Tank })
+                killer.playerInfo.kills(killer.playerInfo.kills + 1)
+                killer.defense += 2 + tank.defense
+                killer.health += 15
+                killer.health = min(killer.health, 100)
+                killer.modules += tank.modules
+                killer.fuel += tank.fuel + 10
+                killer.metal += 10 + tank.metal + tank.movementRange * 10 + tank.gunRange * 10 + tank.gunDamage + (10-tank.gunCost) * 10 + (10-tank.movementCost) * 10
+            }
+        }
+    }
+    
+    var killedById: UUID?
     var playerInfo: PlayerInfo
     var essence: Int
     var energy: Int
     
+    var killer: Player? {
+        Game.shared.board.objects.first(where: { $0.uuid == killedById }) as? Player
+    }
+    
     enum CodingKeys: String, CodingKey {
-        case killedByIndex, playerInfo, essence, energy
+        case killedById, playerInfo, essence, energy, tankSource
     }
     
     init(
         appearance: Appearance,
-        killedByIndex: Int,
+        killedById: UUID?,
         playerInfo: PlayerInfo,
         dailyMessage: String,
         essence: Int,
@@ -383,54 +405,75 @@ class DeadTank: BoardObject, Player {
         doVirtualDelivery: Bool?,
         uuid: UUID?
     ) {
-        self.killedByIndex = killedByIndex
+        self.killedById = killedById
         self.essence = essence
         self.energy = energy
         self.playerInfo = playerInfo
-        super.init(fuelDropped: 0, metalDropped: 0, appearance: appearance, coordinates: nil, health: 0, defense: 0, uuid: uuid ?? UUID())
+        super.init(fuelDropped: 0, metalDropped: 0, appearance: appearance, coordinates: nil, health: 100, defense: 1000, uuid: uuid ?? UUID())
     }
     
-    init(_ tank: Tank, _ killedByIndex: Int) {
+    init(_ tank: Tank, _ killedById: UUID?) {
         let essenceEarned = {
             var amount = 0
-            amount += Int(power(base: 1, exponent: tank.movementCost) * 1.5)
+            amount += Int(power(base: 1, exponent: 11 - tank.movementCost) * 1.5)
             amount += Int(power(base: 2, exponent: tank.movementRange))
             amount += Int(power(base: 2, exponent: tank.gunRange))
             amount += Int(power(base: 1, exponent: tank.gunDamage))
-            amount += Int(power(base: 1, exponent: tank.gunCost) * 1.5)
+            amount += Int(power(base: 1, exponent: 11 - tank.gunCost) * 1.5)
             amount += 20 * tank.playerInfo.kills
             amount += Int(tank.fuel / 3)
             amount += Int(tank.metal / 3)
             amount += Int(tank.defense)
-            return Int(amount / 12)
+            return Int(amount / 6)
         }
-        self.killedByIndex = killedByIndex
+        self.killedById = killedById
         self.playerInfo = tank.playerInfo
         self.essence = essenceEarned()
         self.energy = 1
-        super.init(fuelDropped: 0, metalDropped: 0, appearance: tank.appearance, coordinates: nil, health: 0, defense: 0, uuid: tank.uuid)
+        super.init(fuelDropped: 0, metalDropped: 0, appearance: tank.appearance, coordinates: nil, health: 100, defense: 1000, uuid: tank.uuid)
     }
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.killedByIndex = try container.decode(Int.self, forKey: .killedByIndex)
-        self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
-        self.essence = try container.decode(Int.self, forKey: .essence)
-        self.energy = try container.decode(Int.self, forKey: .energy)
-        try super.init(from: decoder)
+        guard let tank = try? container.decode(Tank.self, forKey: .tankSource) else {
+            self.killedById = try container.decode(UUID.self, forKey: .killedById)
+            self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
+            self.essence = try container.decode(Int.self, forKey: .essence)
+            self.energy = try container.decode(Int.self, forKey: .energy)
+            try super.init(from: decoder)
+            return
+        }
+        let essenceEarned = {
+            var amount = 0
+            amount += Int(power(base: 1, exponent: 11 - tank.movementCost) * 1.5)
+            amount += Int(power(base: 2, exponent: tank.movementRange))
+            amount += Int(power(base: 2, exponent: tank.gunRange))
+            amount += Int(power(base: 1, exponent: tank.gunDamage))
+            amount += Int(power(base: 1, exponent: 11 - tank.gunCost) * 1.5)
+            amount += 20 * tank.playerInfo.kills
+            amount += Int(tank.fuel / 3)
+            amount += Int(tank.metal / 3)
+            amount += Int(tank.defense)
+            return Int(amount / 6)
+        }
+        self.killedById = try container.decode(UUID.self, forKey: .killedById)
+        self.playerInfo = tank.playerInfo
+        self.essence = essenceEarned()
+        self.energy = 1
+        super.init(fuelDropped: 0, metalDropped: 0, appearance: tank.appearance, coordinates: nil, health: 100, defense: 1000, uuid: tank.uuid)
     }
     
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(killedByIndex, forKey: .killedByIndex)
+        try container.encode(killedById, forKey: .killedById)
         try container.encode(playerInfo, forKey: .playerInfo)
         try container.encode(essence, forKey: .essence)
         try container.encode(energy, forKey: .energy)
     }
     
     func placeWall(_ direction: [Direction]) {
-        var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
+        var coordinates = killer?.coordinates ?? Coordinates(x: 0, y: 0)
         if direction.count <= energy {
             for step in direction {
                 coordinates.moveBy(step)
@@ -441,7 +484,7 @@ class DeadTank: BoardObject, Player {
     }
     
     func placeGift(_ direction: [Direction]) {
-        var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
+        var coordinates = killer?.coordinates ?? Coordinates(x: 0, y: 0)
         if direction.count <= Int(energy / 2) {
             for step in direction {
                 coordinates.moveBy(step)
@@ -452,7 +495,7 @@ class DeadTank: BoardObject, Player {
     }
     
     func harmTank(_ direction: [Direction]) {
-        var coordinates = Game.shared.board.objects[killedByIndex].coordinates!
+        var coordinates = killer?.coordinates ?? Coordinates(x: 0, y: 0)
         if direction.count <= Int(energy - 2) {
             for step in direction {
                 coordinates.moveBy(step)
@@ -468,11 +511,12 @@ class DeadTank: BoardObject, Player {
     }
     
     func description() -> String {
-        if let killer = Game.shared.board.objects[killedByIndex] as? Tank {
-            return "killed by \(killer.playerInfo.firstName) \(killer.playerInfo.lastName), who currently has \(killer.fuel)􀵞, \(killer.metal)􀇷, \(killer.health)􀞽, and \(killer.defense)􀙨."
+        if let aliveKiller = killer as? Tank {
+            return "killed by \(aliveKiller.playerInfo.firstName) \(aliveKiller.playerInfo.lastName), who currently has \(aliveKiller.fuel)􀵞, \(aliveKiller.metal)􀇷, \(aliveKiller.health)􀞽, and \(aliveKiller.defense)􀙨."
         }
-        if let killer = Game.shared.board.objects[killedByIndex] as? DeadTank {
-            return "killed by \(killer.playerInfo.firstName) \(killer.playerInfo.lastName), who is dead, has \(killer.essence)􀆿, \(killer.energy)􀋥, and was \(killer.description())"
+        if let deadKiller = killer as? DeadTank {
+            if deadKiller.killer?.uuid ?? UUID() == uuid { return "killed by \(deadKiller.playerInfo.fullName), who is dead, has \(deadKiller.essence)􀆿, \(deadKiller.energy)􀋥, and was killed by \(deadKiller.playerInfo.fullName)." }
+            return "killed by \(deadKiller.playerInfo.firstName) \(deadKiller.playerInfo.lastName), who is dead, has \(deadKiller.essence)􀆿, \(deadKiller.energy)􀋥, and was \(deadKiller.description())"
         }
         return "killed by natural causes."
     }

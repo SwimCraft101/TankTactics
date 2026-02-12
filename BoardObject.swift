@@ -520,7 +520,7 @@ class Drone: BoardObject {
             health: 10000,
             defense: 10000,
             uuid: uuid ?? UUID()
-        )
+        ) 
     }
     
     enum CodingKeys: String, CodingKey {
@@ -532,6 +532,7 @@ class Drone: BoardObject {
     required convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(coordinates: try container.decode(Coordinates.self, forKey: .coordinates), uuid: try container.decode(UUID.self, forKey: .uuid))
+        self.coordinates?.rotation(.north)
     }
     
     override func encode(to encoder: Encoder) throws {

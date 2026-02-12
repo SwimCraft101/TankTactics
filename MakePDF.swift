@@ -27,6 +27,25 @@ func imageFromView(_ view: AnyView, size: CGSize) -> NSImage {
     return image
 }
 
+struct PrinterCalibration {
+    var verticalOffset: CGFloat //A value to offset in Inches
+    var horizontalOffset: CGFloat //A value to offset in Inches
+    var rotation: Angle
+    
+    static func defaultValue() -> Self {
+        return Self(verticalOffset: 0, horizontalOffset: 0, rotation: .zero)
+    }
+}
+
+extension View {
+    nonisolated func compensateForPrinterAlignment(_ printerCalibration: PrinterCalibration) -> some View {
+        return self
+            .padding(.trailing, inch(printerCalibration.horizontalOffset))
+            .padding(.bottom, inch(printerCalibration.verticalOffset))
+            .rotationEffect(printerCalibration.rotation)
+    }
+}
+
 func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize = CGSize(width: inch(11), height: inch(8.5))) {
     // Define page size for portrait orientation
     let pageSize = CGSize(width: inch(11), height: inch(8.5))
@@ -60,11 +79,11 @@ func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize 
     }
 }
 
-func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards eventCardsIn: [EventCard], notes notesIn: [String], doAlignmentCompensation: Bool) {
+func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards eventCardsIn: [EventCard], notes notesIn: [String], printerCalibration: PrinterCalibration) {
     var pages: [AnyView] = []
-    var playersToPrintInConduitMode: [Player] = players.filter({ $0.statusCardConduitBack() != nil })
+    var playersToPrintInConduitMode: [Player] = players.filter({ $0.statusCardConduitFront() != nil })
     playersToPrintInConduitMode.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
-    var playersToPrintNormally: [Player] = players.filter({ $0.statusCardConduitBack() == nil })
+    var playersToPrintNormally: [Player] = players.filter({ $0.statusCardConduitFront() == nil })
     playersToPrintNormally.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
     var playersToPrintWithLargeText: [Player] = players.filter({ $0.playerInfo.accessibilitySettings.largeText })
     var messages = messagesIn
@@ -91,6 +110,15 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         )
     }
     
+    while !notes.isEmpty {
+        extraCards.append(
+            (
+                AnyView(Text(notes.removeFirst()).font(.system(size: inch(0.15))).frame(width: inch(3.535534), height: inch(2.715679))),
+                AnyView(Rectangle().fill(.white).frame(width: inch(3.535534), height: inch(2.715679)))
+            )
+        )
+    }
+    
     while playersToPrintWithLargeText.count > 0 {
         let player = playersToPrintWithLargeText.removeFirst()
         pages.append(AnyView(HStack(spacing:0) {
@@ -109,14 +137,12 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         }
             .frame(width: inch(10.5), height: inch(105/16))
             .border(.black, width: inch(0.005))
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)
         ))
         
-        if player.statusCardConduitBack() != nil {
+        if player.statusCardConduitFront() != nil {
             pages.append(AnyView(HStack(spacing:0) {
                 player.statusCardConduitFront()
                     .scaleEffect(21/16)
@@ -131,9 +157,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             }
                 .frame(width: inch(21/4), height: inch(21/4))
                 .border(.black, width: inch(0.005))
-                .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-                .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-                .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+                .compensateForPrinterAlignment(printerCalibration)
                 .frame(width: inch(11), height: inch(8.5))
                 .environment(Game.shared)
             ))
@@ -180,7 +204,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
                         .fill(Color.black)
                         .frame(width: inch(0.005))
                         .frame(width: inch(1), height: inch(4), alignment: .trailing)
-                    player.statusCardConduitBack()!
+                    AnyView(player.statusCardConduitBack() ?? AnyView(Rectangle().foregroundStyle(.white)))
                         .frame(width: inch(4), height: inch(4), alignment: .trailing)
                 }
                 Rectangle()
@@ -198,9 +222,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         }
             .border(.black, width: inch(0.005))
             .frame(width: inch(10), height: inch(8))
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)
         ))
@@ -228,9 +250,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         }
             .frame(width: inch(10), height: inch(8))
             .border(.black, width: inch(0.005))
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)
         ))
@@ -242,9 +262,8 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             player.statusCardFront()
                 .frame(width: inch(5), height: inch(8))
             VStack(spacing: 0) {
-                extraCards[safe: 0]?.0 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
-                extraCards[safe: 1]?.0 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
-                extraCards[safe: 2]?.0 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 0]?.0 ?? AnyView(Rectangle().foregroundColor(.white).frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 1]?.0 ?? AnyView(Rectangle().foregroundColor(.white).frame(width: inch(3.535534), height: inch(2.715679)))
             }
                 .frame(width: inch(5), height: inch(8))
         }
@@ -254,21 +273,25 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             .environment(Game.shared)))
         pages.append(AnyView(HStack(spacing: 0) {
             VStack(spacing: 0) {
-                extraCards[safe: 0]?.1 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
-                extraCards[safe: 1]?.1 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
-                extraCards[safe: 2]?.1 ?? AnyView(EmptyView().frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 0]?.1 ?? AnyView(Rectangle().foregroundColor(.white).frame(width: inch(3.535534), height: inch(2.715679)))
+                extraCards[safe: 1]?.1 ?? AnyView(Rectangle().foregroundColor(.white).frame(width: inch(3.535534), height: inch(2.715679)))
             }
+            .frame(width: inch(5), height: inch(8))
             player.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
         }
             .frame(width: inch(10), height: inch(8))
             .border(.black, width: inch(0.005))
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)
         ))
+        
+        if extraCards.count <= 2 {
+            extraCards.removeAll()
+        } else {
+            extraCards.removeFirst(2)
+        }
     }
     
     while !extraCards.isEmpty {
@@ -276,21 +299,21 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             Grid(alignment: .topLeading, horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
                     AnyView(
-                        (extraCards[safe: 0]?.0 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 0]?.0 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
                         )
                     AnyView(
-                        (extraCards[safe: 1]?.0 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 1]?.0 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
                         )
                 }
                 GridRow {
                     AnyView(
-                        (extraCards[safe: 2]?.0 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 2]?.0 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
                         )
                     AnyView(
-                        (extraCards[safe: 3]?.0 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 3]?.0 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
                         )
                 }
@@ -304,21 +327,21 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             Grid(alignment: .topTrailing, horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
                     AnyView(
-                        (extraCards[safe: 1]?.1 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 1]?.1 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
                         )
                     AnyView(
-                        (extraCards[safe: 0]?.1 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 0]?.1 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
                         )
                 }
                 GridRow {
                     AnyView(
-                        (extraCards[safe: 3]?.1 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 3]?.1 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
                         )
                     AnyView(
-                        (extraCards[safe: 2]?.1 ?? AnyView(EmptyView()))
+                        (extraCards[safe: 2]?.1 ?? AnyView(Rectangle().foregroundColor(.white)))
                         .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topTrailing)
                         )
                 }
@@ -326,9 +349,7 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
         }
             .frame(width: inch(10), height: inch(8))
             .border(.black, width: inch(0.005))
-            .padding(.trailing, inch(doAlignmentCompensation ? 0.25 : 0))
-            .padding(.bottom, inch(doAlignmentCompensation ? 0.1 : 0))
-            .rotationEffect(Angle(degrees: doAlignmentCompensation ? -0.3 : 0))
+            .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
             .environment(Game.shared)
         ))
@@ -338,14 +359,6 @@ func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards
             extraCards.removeFirst(4)
         }
     }
-    var noteText: String = ""
-    while !notes.isEmpty {
-        noteText.append(notes.removeFirst() + "\n")
-    }
-    pages.append(AnyView(
-        Text(noteText)
-            .font(.system(size: inch(0.1)))
-    ))
     
     createAndSavePDF(from: pages, fileName: "Turn")
 }
