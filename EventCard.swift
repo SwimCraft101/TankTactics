@@ -284,7 +284,11 @@ enum EventCard: View {
         case .conduitModule:
             tank.modules.append(ConduitModule(tankId: nil))
             return
-        case .challenger: return
+        case .challenger:
+            tank.fuel += 20
+            tank.metal += 20
+            (target! as! Tank).fuel -= 10
+            (target! as! Tank).metal -= 10
         case .moonDeerStew:
             if Int.random(in: 0...3) == 0 {
                 for _ in 1...3 {
@@ -293,7 +297,7 @@ enum EventCard: View {
                     Game.shared.notes.append("Give \(tank.playerInfo.fullName) the \(card.name) Event Card.")
                 }
             } else {
-                Game.shared.notes.append("Do not deliver a Status Card to \((target! as! Player).playerInfo.fullName)! They ate Moon Deer Stew!")
+                Game.shared.notes.append("Do not deliver a Status Card to \(tank.playerInfo.fullName)! They ate Moon Deer Stew!")
             }
         }
     }

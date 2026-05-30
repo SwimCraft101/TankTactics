@@ -26,7 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Game.shared = loadedGame
             AppState.shared.fileIsOpen = true
         } else {
-            fatalError("File could not decode")
+            fatalError("File failed to decode")
         }
     }
 }

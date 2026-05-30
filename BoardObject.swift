@@ -215,7 +215,7 @@ class BoardObject: Identifiable, Equatable, Codable, Hashable { var type: BoardO
         self.health = try container.decode(Int.self, forKey: .health)
         self.defense = try container.decode(Int.self, forKey: .defense)
         self.appearance = try container.decode(Appearance?.self, forKey: .appearance)
-        self.coordinates = try container.decode(Coordinates.self, forKey: .coordinates)
+        self.coordinates = try container.decode(Coordinates?.self, forKey: .coordinates)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -516,7 +516,7 @@ class Drone: BoardObject {
             fuelDropped: 0,
             metalDropped: 0,
             appearance: nil,
-            coordinates: coordinates,
+            coordinates: Coordinates(x: coordinates.x, y: coordinates.y, level: coordinates.level, rotation: .north),
             health: 10000,
             defense: 10000,
             uuid: uuid ?? UUID()
@@ -539,6 +539,6 @@ class Drone: BoardObject {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(uuid, forKey: .uuid)
-        try container.encode(coordinates, forKey: .coordinates)
+        try container.encode(Coordinates(x: coordinates!.x, y: coordinates!.y, level: coordinates!.level, rotation: .north), forKey: .coordinates)
     }
 }

@@ -23,7 +23,7 @@ protocol ArbitraryFuelAndMetalAmountAction {
 class TankAction: Identifiable {
     let tankId: UUID // The UUID of the Tank performing the Action
     let precedence: Int // The amount of Fuel spent on Precedence for the action
-    var fuelCost: Int { 0 } /// __ _IMPORTANT:_ THE TANK FUEL COST DOES NOT INCLUDE THE VALUE OF PRECEDENCE, NOR THE VALUE SAVED ON TUESDAYS.__
+    var fuelCost: Int { 0 } /// __ ___IMPORTANT:___ THE TANK FUEL COST DOES NOT INCLUDE THE VALUE OF PRECEDENCE, NOR THE VALUE SAVED ON TUESDAYS.__
     var metalCost: Int { 0 }
     
     var icon: String { fatalError("Base-class TankActions should never be rendered in this way.") }
@@ -52,6 +52,14 @@ class TankAction: Identifiable {
             tank.fuel -= ((Game.shared.gameDay == .tuesdayNormal || Game.shared.gameDay == .deadTuesday) ? Int(ceil(Double(fuelCost) / 2)) : fuelCost)
             tank.metal -= metalCost
             tank.fuel -= precedence
+            for victim in Game.shared.board.objects.filter({ $0 is DeadTank }) {
+                if (victim as! DeadTank).killedById == tank.uuid {
+                    (victim as! DeadTank).energy += 1
+                    if (victim as! DeadTank).energy > 10 {
+                        (victim as! DeadTank).energy = 10
+                    }
+                }
+            }
             return true
         }
         print("The game attempted to execute an action not allowable! Tank: \(tank)")
@@ -574,7 +582,7 @@ class MoveDrone: TankAction, SingleDirectionAction {
     
     override func execute() -> Bool {
         if super.execute() {
-            drone.coordinates = Coordinates(x: drone.coordinates!.x + direction.changeInXValue, y: drone.coordinates!.y + direction.changeInYValue, level: drone.coordinates!.level)
+            drone.coordinates = Coordinates(x: drone.coordinates!.x + direction.changeInXValue, y: drone.coordinates!.y + direction.changeInYValue, level: drone.coordinates!.level, rotation: .north)
             return true
         }
         return false
@@ -590,6 +598,7 @@ class PlayEventCard: TankAction {
     override var fuelCost: Int { 1 }
     
     var card: EventCard
+    var target: Tank?
     
     override var icon: String { "text.document" }
     
@@ -599,10 +608,11 @@ class PlayEventCard: TankAction {
         return true
     }
     
-    init(tankId: UUID, card: EventCard) {
+    init(tankId: UUID, card: EventCard, target: Tank? = nil) {
         self.card = card
+        self.target = target
         super.init(tankId: tankId, precedence: -1)
         // when action is queued, run "before turn" code
-        card.preExecute(by: tank)
+        card.preExecute(by: tank, target: target)
     }
 }

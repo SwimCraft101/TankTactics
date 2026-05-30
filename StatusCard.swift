@@ -147,7 +147,7 @@ struct StatusCardFront: View {
         return tank.displayedModules[safe: 1]
     }
     var body: some View {
-        ZStack {
+        ZStack {/*
             if tank.hasTooManyModules || topModule != nil {
                 TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
                     .frame(width: inch(4), height: inch(4), alignment: .bottomLeading)
@@ -169,7 +169,7 @@ struct StatusCardFront: View {
                     .frame(width: inch(4), height: inch(4), alignment: .topTrailing)
                     .rotationEffect(Angle(degrees: 90))
                     .frame(width: inch(5), height: inch(8), alignment: .bottomLeading)
-            }
+            }*/
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     Text(tank.playerInfo.deliveryType)
@@ -212,7 +212,7 @@ struct StatusCardFront: View {
             .frame(width: inch(5), height: inch(8), alignment: .top)
             
             VStack(spacing: 0) {
-                HStack(spacing: 0) {
+                /*HStack(spacing: 0) {
                     if tank.fuel >= tank.metal {
                         fuelMeter(tank)
                     } else {
@@ -224,13 +224,15 @@ struct StatusCardFront: View {
                     healthMeter(tank)
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .trailing)
-                
+                */
             }
             Text("""
                 """) //renders on back of card
                 .font(.system(size: inch(0.15)))
                 .italic()
-                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .topLeading)
+                .multilineTextAlignment(.center)
+                .frame(width: inch(3.4), height: inch(2.5), alignment: .center)
+                .frame(width: inch(3.535534), height: inch(2.715679), alignment: .center)
                 .rotationEffect(Angle(degrees: -45))
             
         }
@@ -246,6 +248,13 @@ struct StatusCardBack: View {
         return tank.displayedModules[safe: 1]
     }
     var body: some View {
+        
+        Text("Tank Tactics:\nRapid Fire\nwill occur at 12:05 today in The Commons.")
+            .font(.system(size: inch(0.75)))
+            .multilineTextAlignment(.center)
+            .frame(width: inch(5), height: inch(8), alignment: .center)
+        
+        /*
         ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
@@ -297,7 +306,7 @@ struct StatusCardBack: View {
                 }
                 .frame(width: inch(5), height: inch(4), alignment: .bottom)
             }
-        }
+        }*/
     }
 }
 

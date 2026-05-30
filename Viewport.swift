@@ -312,8 +312,18 @@ struct TileView: View {
                         Menu("􀈿 Play Event Card") {
                             ForEach(EventCard.all, id: \.self) { card in
                                 Menu("\(card.name)") {
-                                    Button("Confirm") {
-                                        game.queueAction(PlayEventCard(tankId: tank.uuid, card: card))
+                                    if card.needsTankTarget {
+                                        ForEach(Game.shared.board.objects, id: \.self) { object in
+                                            if let target = object as? Tank {
+                                                Button(target.playerInfo.fullName) {
+                                                    game.queueAction(PlayEventCard(tankId: tank.uuid, card: card, target: target))
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Button("Confirm") {
+                                            game.queueAction(PlayEventCard(tankId: tank.uuid, card: card))
+                                        }
                                     }
                                 }
                             }

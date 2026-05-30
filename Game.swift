@@ -264,7 +264,7 @@ final class Game: Codable {
         }()
         Tank.bindModules()
         
-        for deadTank in board.objects.filter({ $0 is DeadTank }) {
+        for deadTank in board.objects.filter({ $0 is DeadTank && Game.shared.gameDay.isDeadDay }) {
             if 1...2 ~= Int.random(in: 0...(board.objects.filter({ $0 is DeadTank }).count)) {
                 let card = EventCard()
                 eventCardsToPrint.append(card)
@@ -272,9 +272,18 @@ final class Game: Codable {
             }
         }
         
-        let card = EventCard()
-        eventCardsToPrint.append(card)
-        Game.shared.notes.append("The \(card.name) Event Card was printed to be hidden at campus.")
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
+        eventCardsToPrint.append(EventCard())
         
         var fuelPerTank = 0
         while fuelPerTank < 25 {

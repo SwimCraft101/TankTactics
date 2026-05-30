@@ -399,10 +399,8 @@ class DeadTank: BoardObject, Player {
         appearance: Appearance,
         killedById: UUID?,
         playerInfo: PlayerInfo,
-        dailyMessage: String,
         essence: Int,
         energy: Int,
-        doVirtualDelivery: Bool?,
         uuid: UUID?
     ) {
         self.killedById = killedById
@@ -436,11 +434,15 @@ class DeadTank: BoardObject, Player {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         guard let tank = try? container.decode(Tank.self, forKey: .tankSource) else {
-            self.killedById = try container.decode(UUID.self, forKey: .killedById)
-            self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
-            self.essence = try container.decode(Int.self, forKey: .essence)
-            self.energy = try container.decode(Int.self, forKey: .energy)
-            try super.init(from: decoder)
+            do {
+                self.killedById = try container.decode(UUID.self, forKey: .killedById)
+                self.playerInfo = try container.decode(PlayerInfo.self, forKey: .playerInfo)
+                self.essence = try container.decode(Int.self, forKey: .essence)
+                self.energy = try container.decode(Int.self, forKey: .energy)
+                try super.init(from: decoder)
+            } catch {
+                fatalError(String(describing: error))
+            }
             return
         }
         let essenceEarned = {
