@@ -13,6 +13,7 @@
 		592B804A2C3A0A26008F41BF /* Tank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592B80492C3A0A22008F41BF /* Tank.swift */; };
 		592B80502C42ABAB008F41BF /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592B804F2C42AB9B008F41BF /* Direction.swift */; };
 		5937400E2E5F959500E6C733 /* TankAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5937400D2E5F959500E6C733 /* TankAction.swift */; };
+		5939DADB2FD07E4400AF2638 /* EncodingRegistries.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5939DADA2FD07E4400AF2638 /* EncodingRegistries.swift */; };
 		594D86F92CAF2F2B00916C89 /* MakePDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594D86F82CAF2F2B00916C89 /* MakePDF.swift */; };
 		595A2D092C6655A10086A452 /* StatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595A2D082C6655A10086A452 /* StatusCard.swift */; };
 		596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596376A42CFB5BB000059FCA /* DeadStatusCard.swift */; };
@@ -34,6 +35,7 @@
 		592B80492C3A0A22008F41BF /* Tank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tank.swift; sourceTree = "<group>"; };
 		592B804F2C42AB9B008F41BF /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
 		5937400D2E5F959500E6C733 /* TankAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankAction.swift; sourceTree = "<group>"; };
+		5939DADA2FD07E4400AF2638 /* EncodingRegistries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodingRegistries.swift; sourceTree = "<group>"; };
 		594D86F82CAF2F2B00916C89 /* MakePDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakePDF.swift; sourceTree = "<group>"; };
 		595A2D082C6655A10086A452 /* StatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusCard.swift; sourceTree = "<group>"; };
 		596376A42CFB5BB000059FCA /* DeadStatusCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadStatusCard.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 				59B7E5592E428E3800105725 /* Module.swift */,
 				59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */,
 				592B7F7F2C3863E2001EA317 /* BoardObject.swift */,
+				5939DADA2FD07E4400AF2638 /* EncodingRegistries.swift */,
 				592B80492C3A0A22008F41BF /* Tank.swift */,
 				5937400D2E5F959500E6C733 /* TankAction.swift */,
 				59C8CD542E6F857400151076 /* Inspector.swift */,
@@ -133,7 +136,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					59DF70B32BF553F7001E64B3 = {
 						CreatedOnToolsVersion = 15.4;
@@ -185,6 +188,7 @@
 				595A2D092C6655A10086A452 /* StatusCard.swift in Sources */,
 				59E01EB72E7E0C2E002544A2 /* EventCard.swift in Sources */,
 				59C8CD552E6F857400151076 /* Inspector.swift in Sources */,
+				5939DADB2FD07E4400AF2638 /* EncodingRegistries.swift in Sources */,
 				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
 				59AECC6D2E8DDECE00082FC0 /* TurnNotesList.swift in Sources */,
@@ -257,6 +261,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -315,6 +320,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
