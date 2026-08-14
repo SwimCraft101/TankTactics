@@ -16,7 +16,7 @@ struct SquareViewport: View {
     let radarRange: Int
     let accessibilitySettings: AccessibilitySettings
     
-    @Binding var selectedObject: BoardObject
+    @Binding var selectedObject: any BoardObject
     
     var body: some View {
         GeometryReader { geometry in
@@ -42,7 +42,7 @@ struct TriangleViewport: View {
     let radarRange: Int
     let accessibilitySettings: AccessibilitySettings
     
-    @Binding var selectedObject: BoardObject
+    @Binding var selectedObject: any BoardObject
     
     var body: some View {
         GeometryReader { geometry in
@@ -133,11 +133,10 @@ struct TileView: View {
     let radarRange: Int
     let coordinates: Coordinates
     let accessibilitySettings: AccessibilitySettings
-    @State private var precedenceApplied: Int = 0
-    @State private var fuelForAction: Int = 0
-    @State private var metalForAction: Int = 0
     
-    @Binding var selectedObject: BoardObject
+    var thisTile: (any BoardObject)? { game.board.objects.first(where: { $0.coordinates == coordinates }) }
+    
+    @Binding var selectedObject: any BoardObject
     
     @Bindable private var game = Game.shared
     
@@ -147,23 +146,20 @@ struct TileView: View {
                 if tile.coordinates != coordinates { //first and most important check: that this tile is in the correct location to be rendered.
                     continue //skips to next object in the loop
                 }
-                if tile.appearance == nil { //tile is invisible
-                    continue //skip rendering invisible tiles
-                }
-                if tile.coordinates!.distanceTo(centerCoordinates) <= radarRange {
-                    if tile.coordinates!.distanceTo(centerCoordinates) <= lowDetailSightRange {
-                        if tile.coordinates!.distanceTo(centerCoordinates) <= highDetailSightRange {
+                if tile.coordinates.distanceTo(centerCoordinates) <= radarRange {
+                    if tile.coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
+                        if tile.coordinates.distanceTo(centerCoordinates) <= highDetailSightRange {
                             //fully rendered
-                            return tile.appearance!
+                            return tile.appearance
                         } else {
                             //only in lidar and radar range
-                            if !(tile.appearance!.strokeColor == .white) { //skips 'small' objects
-                                return Appearance(fillColor: tile.appearance!.fillColor, symbolColor: tile.appearance!.fillColor, symbol: "rectangle")
+                            if !(tile.appearance.strokeColor == .white) { //skips 'small' objects
+                                return Appearance(fillColor: tile.appearance.fillColor, symbolColor: tile.appearance.fillColor, symbol: "rectangle")
                             }
                         }
                     } else {
                         //only in radar range
-                        if !(tile.appearance!.strokeColor == .white) { //skips 'small' objects
+                        if !(tile.appearance.strokeColor == .white) { //skips 'small' objects
                             let mysteryObjectColor = Color(red: 0.4, green: 0.4, blue: 0.4) //color for an object only in Radar Range
                             return Appearance(fillColor: mysteryObjectColor, symbolColor: mysteryObjectColor, symbol: "rectangle")
                         }
@@ -188,7 +184,7 @@ struct TileView: View {
             //renderer for out of bounds tiles
             if coordinates.distanceTo(centerCoordinates) <= radarRange {
                 if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
-                    return game.board.showBorderWarning ? Appearance(fillColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance!
+                    return game.board.showBorderWarning ? Appearance(fillColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance
                 }
                 let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
                 return Appearance(fillColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
@@ -198,146 +194,20 @@ struct TileView: View {
         }
     }
     
-    func fuelAndMetalAmountPicker() -> some View {
-        VStack {
-            Picker("Fuel: \(fuelForAction)", selection: $fuelForAction) {
-                ForEach(0..<50) { i in
-                    Text("\(i)").tag(i)
-                }
-            }
-            Picker("Metal: \(metalForAction)", selection: $metalForAction) {
-                ForEach(0..<50) { i in
-                    Text("\(i)").tag(i)
-                }
-            }
-        }
-    }
-    
     var body: some View {
-        let thisTile = game.board.objects.first(where: { $0.coordinates == coordinates && $0.appearance != nil })
         BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
             .contextMenu {
-                
                 if thisTile != nil {
-                    if let tank = thisTile as? Tank {
-                        Picker(precedenceApplied == 0 ? "􁘿 Apply Precedence" : "􁘿 \(precedenceApplied) Precedence", selection: $precedenceApplied) {
-                            ForEach(0..<50) { i in
-                                Text("\(i)").tag(i)
-                            }
-                        }
-                        Menu("􁹫 Move") {
-                            RotatedDirectionOptions(depth: tank.movementRange, vector: [], action: { vector, rotation in
-                                game.queueAction(Move(vector, rotation, tankId: tank.uuid, precedence: precedenceApplied))
-                            }, rotation: tank.coordinates!.rotation)
-                        }
-                        Menu("􀅾 Fire") {
-                            DirectionOptions(depth: tank.gunRange, vector: [], action: { vector in
-                                game.queueAction(Fire(vector, tankId: tank.uuid, precedence: precedenceApplied))
-                            }, rotation: tank.coordinates!.rotation)
-                        }
-                        if game.gameDay == .mondayNormal || game.gameDay == .deadMonday {
-                            Button("􀯇 Purchase \(game.moduleOffered!.type.name())") {
-                                game.queueAction(PurchaseModule(tankId: tank.uuid))
-                            }
-                            .disabled(!(PurchaseModule(tankId: tank.uuid).isAllowed))
-                        }
-                        if game.gameDay == .wednesdayNormal || game.gameDay == .deadWednesday || tank.modules.contains(where: { $0 is FactoryModule }) {
-                            Button("􂊼 Upgrade Movement Range") {
-                                game.queueAction(UpgradeMovementRange(tankId: tank.uuid))
-                            }
-                            .disabled(!(UpgradeMovementRange(tankId: tank.uuid).isAllowed))
-                            Button("􁐚 Upgrade Movement Efficiency") {
-                                game.queueAction(UpgradeMovementCost(tankId: tank.uuid))
-                            }
-                            .disabled(!(UpgradeMovementCost(tankId: tank.uuid).isAllowed))
-                        }
-                        if game.gameDay == .fridayNormal || game.gameDay == .deadFriday || tank.modules.contains(where: { $0 is FactoryModule }) {
-                            Button("􂇏 Upgrade Weapon Range") {
-                                game.queueAction(UpgradeGunRange(tankId: tank.uuid))
-                            }
-                            .disabled(!(UpgradeGunRange(tankId: tank.uuid).isAllowed))
-                            Button("􀎓 Upgrade Weapon Damage") {
-                                game.queueAction(UpgradeGunDamage(tankId: tank.uuid))
-                            }
-                            .disabled(!(UpgradeGunDamage(tankId: tank.uuid).isAllowed))
-                            Button("􀣉 Upgrade Weapon Efficiency") {
-                                game.queueAction(UpgradeGunCost(tankId: tank.uuid))
-                            }
-                            .disabled(!(UpgradeGunCost(tankId: tank.uuid).isAllowed))
-                        }
-                        Menu("􀈿 Bid For Event Card\((game.gameDay == .tuesdayNormal || game.gameDay == .deadTuesday) ? " (2 Availible)" : "")") {
-                            fuelAndMetalAmountPicker()
-                            Button("Confirm") {
-                                game.queueAction(BidForEventCard(fuelBid: fuelForAction, metalBid: metalForAction, tankId: tank.uuid))
-                            }
-                        }
-                        Menu("􀐚 Extract Physical Fuel and Metal") {
-                            fuelAndMetalAmountPicker()
-                            Button("Confirm") {
-                                game.queueAction(ExtractPhysicalFuelOrMetal(fuelToExtract: fuelForAction, metalToExtract: metalForAction, tankId: tank.uuid))
-                            }
-                        }
-                        Menu("􀐚 Redeem Physical Fuel and Metal") {
-                            fuelAndMetalAmountPicker()
-                            Button("Redeem") {
-                                tank.fuel += fuelForAction
-                                tank.metal += metalForAction
-                            }
-                        }
-                        if tank.modules.contains(where: { $0 is ConstructionModule }) {
-                            Menu("􀂒 Build Wall") {
-                                DirectionOptions(depth: 1, vector: [], action: { direction in
-                                    game.queueAction(BuildWall(direction: direction.first!, tankId: tank.uuid, precedence: precedenceApplied))
-                                }, rotation: tank.coordinates!.rotation)
-                            }
-                            Menu("􀎡 Build Reinforced Wall") {
-                                DirectionOptions(depth: 1, vector: [], action: { direction in
-                                    game.queueAction(BuildReinforcedWall(direction: direction.first!, tankId: tank.uuid, precedence: precedenceApplied))
-                                }, rotation: tank.coordinates!.rotation)
-                            }
-                            Menu("􀑉 Build Gift") {
-                                fuelAndMetalAmountPicker()
-                                DirectionOptions(depth: 1, vector: [], action: { direction in
-                                    game.queueAction(BuildGift(fuelAmount: fuelForAction, metalAmount: metalForAction, direction: direction.first!, tankId: tank.uuid,  precedence: precedenceApplied))
-                                }, rotation: tank.coordinates!.rotation)
-                            }
-                        }
-                        if tank.modules.contains(where: { $0 is DroneModule }) {
-                            Menu("􂖛 Move Drone") {
-                                DirectionOptions(depth: 1, vector: [], action: { direction in
-                                    game.queueAction(MoveDrone(direction.first!, tankId: tank.uuid))
-                                }, rotation: .north)
-                            }
-                        }
-                        Menu("􀈿 Play Event Card") {
-                            ForEach(EventCard.all, id: \.self) { card in
-                                Menu("\(card.name)") {
-                                    if card.needsTankTarget {
-                                        ForEach(Game.shared.board.objects, id: \.self) { object in
-                                            if let target = object as? Tank {
-                                                Button(target.playerInfo.fullName) {
-                                                    game.queueAction(PlayEventCard(tankId: tank.uuid, card: card, target: target))
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        Button("Confirm") {
-                                            game.queueAction(PlayEventCard(tankId: tank.uuid, card: card))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    Button("Context menu for \(coordinates.description)") {}
                 } else {
                     Button("􀂒 Add Wall") {
-                        game.board.objects.append(Wall(coordinates: coordinates))
+                        game.board.walls.append(Wall(coordinates: coordinates))
                     }
-                    Button("􀑉 Add Gift") {
-                        game.board.objects.append(Gift(coordinates: coordinates))
+                    Button("􁗝 Add Ore Deposit") {
+                        game.board.oreDeposits.append(OreDeposit(coordinates: coordinates))
                     }
                     Button("􀭉 Add New Tank") {
-                        game.board.objects.append(Tank(appearance: Placeholder(coordinates: coordinates, uuid: nil).appearance!, coordinates: coordinates, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)))
+                        game.board.tanks.append(Tank(uuid: UUID(), appearance: Appearance(fillColor: .gray, strokeColor: .black, symbolColor: .black, symbol: "questionmark.square.dashed"), coordinates: coordinates, health: 100, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false), metal: 50, modules: []))
                     }
                 }
             }
@@ -347,14 +217,13 @@ struct TileView: View {
                 }
             }
             .onTapGesture(count: 2) {
-                game.board.objects.removeAll(where: {
-                    $0 == thisTile})
-                game.board.objects.append(Wall(coordinates: coordinates))
+                game.board.oreDeposits.removeAll(where: { $0 === thisTile as? OreDeposit })
+                game.board.walls.append(Wall(coordinates: coordinates))
             }
     }
 }
 
-let selectedObjectBindingDefault = Binding<BoardObject>(get: { BoardObject(fuelDropped: 0, metalDropped: 0, appearance: nil, health: 0, defense: 0, uuid: UUID()) }, set: { _ in fatalError() })
+let selectedObjectBindingDefault = Binding<any BoardObject>(get: { Wall(coordinates: Coordinates(x: 0, y: 0)) }, set: { _ in fatalError() })
 
 #Preview {
     VStack {

@@ -9,9 +9,9 @@ import Foundation
 import SwiftUI
 
 struct Message: Codable, Hashable {
-    let text: String // The text of the message. May be changed to arbitrary SwiftUI at some point.
-    let sender: UUID // UUID of sender Tank
-    let recipient: UUID // UUID of recipient Tank
+    var text: String // The text of the message. May be changed to arbitrary SwiftUI at some point.
+    var sender: UUID // UUID of sender Tank
+    var recipient: UUID // UUID of recipient Tank
 }
 
 struct MessageView: View {
@@ -80,59 +80,53 @@ struct MessageBackView: View {
 struct MessageList: View {
     @Environment(Game.self) private var game
     
-    @State private var messageText: String = ""
-    @State private var messageSender: BoardObject? = nil
-    @State private var messageRecipient: BoardObject? = nil
+    @State private var message: Message = Message(text: "", sender: UUID(), recipient: UUID())
     
     var body: some View {
         VStack {
             Text("Queue Message")
-            TextField("Message", text: $messageText, axis: .vertical)
+            TextField("Message", text: $message.text, axis: .vertical)
             HStack {
-                Picker("Sender", selection: $messageSender) {
-                    ForEach(game.board.objects.filter{ $0 is Player }) { (sender: BoardObject) in
+                Picker("Sender", selection: $message.sender) {
+                    ForEach(game.board.tanks.compactMap({ $0.uuid })) { (senderId: UUID) in
                         HStack {
-                            BasicTileView(appearance: sender.appearance, accessibilitySettings: AccessibilitySettings())
-                            Text((sender as! Player).playerInfo.fullName)
+                            BasicTileView(appearance: game.board.tanks.first(where: { $0.uuid == senderId })!.appearance, accessibilitySettings: AccessibilitySettings())
+                            Text(game.board.tanks.first(where: { $0.uuid == senderId })!.playerInfo.fullName)
                         }
-                        .tag(sender)
+                        .tag(senderId)
                     }
                 }
-                Picker("Recipient", selection: $messageRecipient) {
-                    ForEach(game.board.objects.filter{ $0 is Player }) { (recipient: BoardObject) in
+                Picker("Recipient", selection: $message.recipient) {
+                    ForEach(game.board.tanks.compactMap({ $0.uuid })) { (recipientId: UUID) in
                         HStack {
-                            BasicTileView(appearance: recipient.appearance, accessibilitySettings: AccessibilitySettings())
-                            Text((recipient as! Player).playerInfo.fullName)
+                            BasicTileView(appearance: game.board.tanks.first(where: { $0.uuid == recipientId })!.appearance, accessibilitySettings: AccessibilitySettings())
+                            Text(game.board.tanks.first(where: { $0.uuid == recipientId })!.playerInfo.fullName)
                         }
-                        .tag(recipient)
+                        .tag(recipientId)
                     }
                 }
             }
             Button("Queue") {
-                game.messages.append(Message(text: messageText, sender: messageSender!.uuid, recipient: messageRecipient!.uuid))
-                messageText = ""
-                messageSender = nil
-                messageRecipient = nil
+                game.messages.append(message)
+                message = Message(text: "", sender: UUID(), recipient: UUID())
             }
-            .disabled(messageRecipient == nil || messageSender == nil)
             .contextMenu {
                 Button("Send to all players") {
-                    for player in game.board.objects.filter({ $0 is Player }) {
-                        game.messages.append(Message(text: messageText, sender: messageSender!.uuid, recipient: player.uuid))
+                    for player in game.board.tanks {
+                        game.messages.append(Message(text: message.text, sender: message.sender, recipient: player.uuid))
                     }
-                    messageText = ""
-                    messageSender = nil
+                    message.text = ""
+                    message.sender = UUID()
                 }
-                .disabled(messageSender == nil)
             }
             ScrollView(.vertical) {
                 VStack {
                     ForEach(game.messages, id: \.self) { message in
                         HStack {
-                            BasicTileView(appearance: game.board.objects.first(where: { $0.uuid == message.sender })!.appearance, accessibilitySettings: AccessibilitySettings())
+                            BasicTileView(appearance: game.board.tanks.first(where: { $0.uuid == message.sender })!.appearance, accessibilitySettings: AccessibilitySettings())
                                 .frame(width: 30, height: 30, alignment: .center)
                             Image(systemName: "arrow.right")
-                            BasicTileView(appearance: game.board.objects.first(where: { $0.uuid == message.recipient })!.appearance, accessibilitySettings: AccessibilitySettings())
+                            BasicTileView(appearance: game.board.tanks.first(where: { $0.uuid == message.recipient })!.appearance, accessibilitySettings: AccessibilitySettings())
                                 .frame(width: 30, height: 30, alignment: .center)
                             Text(message.text)
                                 .lineLimit(1)
@@ -147,8 +141,8 @@ struct MessageList: View {
 #Preview {
     @Previewable 
     
-    let sender = Game.shared.board.objects.first(where: {$0 is Tank})!.uuid
-    let recipient = Game.shared.board.objects.last(where: {$0 is Tank})!.uuid
+    let sender = Game.shared.board.tanks.first!.uuid
+    let recipient = Game.shared.board.tanks.last!.uuid
     let text = """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eleifend in nisl in varius. Proin vestibulum viverra mauris et faucibus. Vivamus egestas dapibus cursus. Mauris efficitur sollicitudin enim ornare euismod. Nulla viverra sit amet ipsum in euismod. Curabitur at euismod tortor. Nunc tincidunt condimentum enim quis porta. Nam blandit lorem ultrices tellus faucibus placerat. Proin sed pulvinar libero.
         """

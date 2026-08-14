@@ -10,7 +10,6 @@
 #include <memory>
 
 // Stockfish 18 Headers based on main.cpp
-#include "bitboard.h"
 #include "position.h"
 #include "ucioption.h"
 #include "tune.h"
@@ -138,12 +137,11 @@ public:
     int argc = 1;
 
     // 1. Initialize Stockfish 18 tables
-    Stockfish::Attacks::init();
+    Stockfish::Bitboards::init();     // note: Bitboards, not Attacks — see below
     Stockfish::Position::init();
 
-    // 2. Instantiate CommandLine and UCIEngine (matching main.cpp)
-    auto cli = Stockfish::CommandLine(argc, argv);
-    auto uci = std::make_unique<Stockfish::UCIEngine>(std::move(cli));
+    // 2. Instantiate UCIEngine directly (no CommandLine wrapper in this release)
+    auto uci = std::make_unique<Stockfish::UCIEngine>(argc, argv);
 
     // 3. Initialize Tuning options
     Stockfish::Tune::init(uci->engine_options());

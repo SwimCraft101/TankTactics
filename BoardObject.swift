@@ -74,6 +74,10 @@ struct Coordinates: Equatable, Codable {
         self.level = level
         self.rotation = rotation
     }
+    
+    var description: String {
+        return "X: \(x), Y: \(y)"
+    }
 }
 
 struct Appearance: Equatable, Codable {
@@ -106,439 +110,136 @@ struct Appearance: Equatable, Codable {
     }
 }
 
-enum BoardObjectType: String, Codable {
-    case boardObject
-    case wall
-    case reinforcedWall
-    case gift
-    case placeholder
-    case drone
-    case tank
-    case deadTank
+enum CollisionType: Codable {
+    case solid
+    case permeable
+    case incorporeal
+    case magic
     
-    var name: String {
+    var canBeDrivenThrough: Bool {
         switch self {
-        case .boardObject: 
-            return "Board Object"
-        case .wall:
-            return "Wall"
-        case .reinforcedWall:
-            return "Reinforced Wall"
-        case .gift:
-            return "Gift"
-        case .placeholder:
-            return "Tank Placeholder"
-        case .drone:
-            return "Drone"
-        case .tank:
-            return "Tank"
-        case .deadTank:
-            return "Dead Tank"
+        case .solid, .magic:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var canBeFiredThrough: Bool {
+        switch self {
+        case .solid, .permeable:
+            return true
+        default:
+            return false
         }
     }
 }
 
-@Observable
-class BoardObject: Identifiable, Equatable, Codable, Hashable { var type: BoardObjectType { .boardObject }
-    static func == (lhs: BoardObject, rhs: BoardObject) -> Bool {
-        if lhs.coordinates != rhs.coordinates {
-            return false
-        }
-        if lhs.appearance != rhs.appearance {
-            return false
-        }
-        if lhs.health != rhs.health {
-            return false
-        }
-        if lhs.defense != rhs.defense {
-            return false
-        }
-        if lhs.fuelDropped != rhs.fuelDropped {
-            return false
-        }
-        if lhs.metalDropped != rhs.metalDropped {
-            return false
-        }
-        return true
-    }
+enum DamageType: Codable {
+    case tankWeapon(tank: UUID); #warning("Once modules are finalized split this into different types")
+    case tankCollision(tank: UUID)
+    case wallCollision
+    case smite //intentionally anonymous
+    case outerWall
     
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(uuid)
-    }
-    
-    var isSolid: Bool { false }
-    var isRigid: Bool { false }
-    
-    let uuid: UUID
-    
-    var fuelDropped: Int
-    var metalDropped: Int
-    
-    var appearance: Appearance?
-    var coordinates: Coordinates?
-    
-    var health: Int
-    var defense: Int
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case uuid
-        case fuelDropped
-        case metalDropped
-        case appearance
-        case coordinates
-        case health
-        case defense
-    }
-    
-    static func decode(from decoder: Decoder) throws -> BoardObject {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let type = try container.decode(BoardObjectType.self, forKey: .type)
-
-        switch type {
-        case .wall: return try Wall(from: decoder)
-        case .reinforcedWall: return try ReinforcedWall(from: decoder)
-        case .gift: return try Gift(from: decoder)
-        case .placeholder: return try Placeholder(from: decoder)
-        case .drone: return try Drone(from: decoder)
-        case .tank: return try Tank(from: decoder)
-        case .deadTank: return try DeadTank(from: decoder)
-        case .boardObject: return try BoardObject(from: decoder)
+    func damageMessage(for damageAmount: Int) -> String {
+        switch self {
+            case .tankWeapon (let tank):
+                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
+                return "\(tankName) shot you, dealing \(damageAmount)􀲗."
+            case .tankCollision (let tank):
+                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
+                return "\(tank) crashed into you, dealing \(damageAmount)􀲗."
+            case .wallCollision:
+                return "You crashed into a wall, taking \(damageAmount)􀲗."
+            case .smite:
+                return "You were smitten for \(damageAmount)􀲗."
+            case .outerWall:
+                return "The Outer Wall hit you, dealing \(damageAmount)􀲗."
         }
     }
     
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.uuid = try container.decode(UUID.self, forKey: .uuid)
-        self.fuelDropped = try container.decode(Int.self, forKey: .fuelDropped)
-        self.metalDropped = try container.decode(Int.self, forKey: .metalDropped)
-        self.health = try container.decode(Int.self, forKey: .health)
-        self.defense = try container.decode(Int.self, forKey: .defense)
-        self.appearance = try container.decode(Appearance?.self, forKey: .appearance)
-        self.coordinates = try container.decode(Coordinates?.self, forKey: .coordinates)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(uuid, forKey: .uuid)
-        try container.encode(fuelDropped, forKey: .fuelDropped)
-        try container.encode(metalDropped, forKey: .metalDropped)
-        try container.encode(health, forKey: .health)
-        try container.encode(defense, forKey: .defense)
-        try container.encode(appearance, forKey: .appearance)
-        try container.encode(coordinates, forKey: .coordinates)
-    }
-    
-    init(fuelDropped: Int, metalDropped: Int, appearance: Appearance?, coordinates: Coordinates? = nil, health: Int, defense: Int, uuid: UUID) {
-        self.uuid = uuid
-        self.fuelDropped = fuelDropped
-        self.metalDropped = metalDropped
-        self.appearance = appearance
-        self.coordinates = coordinates
-        self.health = health
-        self.defense = defense
+    func deathMessage(for nameOfDeceased: String) -> String {
+        switch self {
+            case .tankWeapon (let tank):
+                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
+                return "\(nameOfDeceased) was killed by \(tankName)."
+            case .tankCollision (let tank):
+                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
+                return "\(nameOfDeceased) was killed in a crash with \(tankName)."
+            case .wallCollision:
+                return "\(nameOfDeceased) got into a fight against a Wall and lost."
+            case .smite:
+                return "\(nameOfDeceased) was smitten to death."
+            case .outerWall:
+                return "\(nameOfDeceased) should have escaped the Outer Wall."
+        }
     }
 }
 
-extension BoardObject {
-    static func encodeArray(_ objects: [BoardObject]) throws -> Data {
-        let encoder = JSONEncoder()
-        return try encoder.encode(objects)
-    }
+protocol BoardObject: Identifiable, Codable {
+    static var collisionType: CollisionType { get }
     
-    static func decodeArray(from data: Data) throws -> [BoardObject] {
-        let decoder = JSONDecoder()
-        let rawObjects = try decoder.decode([PolymorphicContainer].self, from: data)
-        return rawObjects.map { $0.object }
-    }
+    var uuid: UUID { get }
     
-    // Private helper for decoding
-    private struct PolymorphicContainer: Decodable {
-        let object: BoardObject
-        
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: BoardObject.CodingKeys.self)
-            let type = try container.decode(BoardObjectType.self, forKey: .type)
-            
-            switch type {
-            case .boardObject:
-                self.object = try BoardObject(from: decoder)
-            case .wall:
-                self.object = try Wall(from: decoder)
-            case .reinforcedWall:
-                self.object = try ReinforcedWall(from: decoder)
-            case .gift:
-                self.object = try Gift(from: decoder)
-            case .placeholder:
-                self.object = try Placeholder(from: decoder)
-            case .drone:
-                self.object = try Drone(from: decoder)
-            case .tank:
-                self.object = try Tank(from: decoder)
-            case .deadTank:
-                self.object = try DeadTank(from: decoder)
-            }
-        }
-    }
+    var metalDropped: Int { get }
+    
+    var appearance: Appearance { get }
+    var coordinates: Coordinates { get set }
+    
+    var health: Int { get set }
+    
+    
 }
 
 class Wall: BoardObject {
-    override var type: BoardObjectType { .wall }
+    static let collisionType: CollisionType = .solid
+    
+    let uuid: UUID
+    
+    var metalDropped: Int { 0 }
+    
+    let appearance: Appearance
+    
+    var coordinates: Coordinates
+    
+    var health: Int
     
     static var isSolid: Bool { true }
     static var isRigid: Bool { true }
     
     init(coordinates: Coordinates) {
-        super.init(
-            fuelDropped: 0,
-            metalDropped: 0,
-            appearance: Appearance(fillColor: .black, symbolColor: .black, symbol: "rectangle.fill"),
-            coordinates: coordinates,
-            health: 1,
-            defense: 0,
-            uuid: UUID()
-        )
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case uuid
-        case coordinates
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        super.init(
-            fuelDropped: 0,
-            metalDropped: 0,
-            appearance: Appearance(fillColor: .black, symbolColor: .black, symbol: "rectangle.fill"),
-            coordinates: try container.decode(Coordinates.self, forKey: .coordinates),
-            health: 1,
-            defense: 0,
-            uuid: try container.decode(UUID.self, forKey: .uuid)
-        )
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(uuid, forKey: .uuid)
-        try container.encode(coordinates, forKey: .coordinates)
+        self.coordinates = coordinates
+        self.health = 1 ;#warning("Should Walls have 1 health?")
+        self.appearance = Appearance(fillColor: .black, symbol: "")
+        self.uuid = UUID()
     }
 }
 
-class ReinforcedWall: BoardObject {
-    override var type: BoardObjectType { .reinforcedWall }
+class OreDeposit: BoardObject {
+    static let collisionType: CollisionType = .solid
+    
+    let uuid: UUID
+    
+    var metalDropped: Int { Int.random(in: 15...30) } ;#warning("Rebalance metal amount")
+    
+    let appearance: Appearance
+    
+    var coordinates: Coordinates
+    
+    var health: Int
     
     static var isSolid: Bool { true }
     static var isRigid: Bool { true }
     
     init(coordinates: Coordinates) {
-        super.init(
-            fuelDropped: 0,
-            metalDropped: 0,
-            appearance: Appearance(fillColor: .black, symbolColor: .red, symbol: "lock.fill"),
-            coordinates: coordinates,
-            health: 1,
-            defense: 0,
-            uuid: UUID()
-        )
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case uuid
-        case coordinates
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        super.init(
-            fuelDropped: 0,
-            metalDropped: 0,
-            appearance: Appearance(fillColor: .black, symbolColor: .red, symbol: "lock.fill"),
-            coordinates: try container.decode(Coordinates.self, forKey: .coordinates),
-            health: 1,
-            defense: 0,
-            uuid: try container.decode(UUID.self, forKey: .uuid)
-        )
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(uuid, forKey: .uuid)
-        try container.encode(coordinates, forKey: .coordinates)
+        self.coordinates = coordinates
+        self.health = 25 ;#warning("Should Ores have 25 health?")
+        self.appearance = Appearance(fillColor: .white, symbol: "mountain.2")
+        self.uuid = UUID()
     }
 }
 
-class Gift: BoardObject {
-    override var type: BoardObjectType { .gift }
-    let containedModule: Module?
-    
-    static var isSolid: Bool { false }
-    static var isRigid: Bool { false }
-    
-    init(coordinates: Coordinates, fuelReward: Int, metalReward: Int, containedModule: Module?, uuid: UUID?) {
-        self.containedModule = containedModule
-        super.init(
-            fuelDropped: fuelReward,
-            metalDropped: metalReward,
-            appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift"),
-            coordinates: coordinates,
-            health: 1,
-            defense: 0,
-            uuid: uuid ?? UUID()
-        )
-        updateAppearance(fuelReward: fuelReward, metalReward: metalReward)
-    }
-    
-    init(coordinates: Coordinates) {
-        let doModuleMode: Bool = Int.random(in: 1...5) == 5
-        self.containedModule = doModuleMode ? Module.random() : nil
-        let rewardMax = doModuleMode ? 0 : 6
-        let rewardMultiplier = 5
-        let fuelReward = Int.random(in: 0...rewardMax) * rewardMultiplier
-        let metalReward = (rewardMax * rewardMultiplier) - fuelReward
-        
-        super.init(
-            fuelDropped: fuelReward,
-            metalDropped: metalReward,
-            appearance: Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "gift"),
-            coordinates: coordinates,
-            health: 1,
-            defense: 0,
-            uuid: UUID()
-        )
-        updateAppearance(fuelReward: fuelReward, metalReward: metalReward)
-    }
-    
-    private func updateAppearance(fuelReward: Int, metalReward: Int) {
-        if fuelReward + metalReward == 0 {
-            appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "square.on.square.dashed")
-        } else if fuelReward == 0 {
-            appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "square.grid.2x2")
-        } else if metalReward == 0 {
-            appearance = Appearance(fillColor: .white, strokeColor: .white, symbolColor: .black, symbol: "fuelpump")
-        }
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case uuid
-        case coordinates
-        case fuelDropped
-        case metalDropped
-        case containedModule
-    }
-    
-    required convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        var module: Module?
-        if let moduleDecoder = try? container.superDecoder(forKey: .containedModule) {
-            module = try? Module.decode(from: moduleDecoder)
-        } else {
-            module = nil
-        }
-        
-        self.init(
-            coordinates: try container.decode(Coordinates.self, forKey: .coordinates),
-            fuelReward: try container.decode(Int.self, forKey: .fuelDropped),
-            metalReward: try container.decode(Int.self, forKey: .metalDropped),
-            containedModule: module,
-            uuid: try container.decode(UUID.self, forKey: .uuid)
-        )
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(uuid, forKey: .uuid)
-        try container.encode(coordinates, forKey: .coordinates)
-        try container.encode(fuelDropped, forKey: .fuelDropped)
-        try container.encode(metalDropped, forKey: .metalDropped)
-        try container.encode(containedModule, forKey: .containedModule)
-    }
-}
-
-class Placeholder: BoardObject {
-    override var type: BoardObjectType { .placeholder }
-    
-    static var isSolid: Bool { true }
-    static var isRigid: Bool { true }
-    
-    init(coordinates: Coordinates, uuid: UUID?) {
-        super.init(
-            fuelDropped: 0,
-            metalDropped: 0,
-            appearance: Appearance(
-                fillColor: .gray,
-                strokeColor: .black,
-                symbolColor: .black,
-                symbol: "questionmark.square.dashed"
-            ),
-            coordinates: coordinates,
-            health: 10000,
-            defense: 10000,
-            uuid: uuid ?? UUID()
-        )
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case uuid
-        case coordinates
-    }
-    
-    required convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(coordinates: try container.decode(Coordinates.self, forKey: .coordinates), uuid: try container.decode(UUID.self, forKey: .uuid))
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(uuid, forKey: .uuid)
-        try container.encode(coordinates, forKey: .coordinates)
-    }
-}
-
-class Drone: BoardObject {
-    override var type: BoardObjectType { .drone }
-    
-    static var isSolid: Bool { false }
-    static var isRigid: Bool { false }
-    
-    init(coordinates: Coordinates, uuid: UUID?) {
-        super.init(
-            fuelDropped: 0,
-            metalDropped: 0,
-            appearance: nil,
-            coordinates: Coordinates(x: coordinates.x, y: coordinates.y, level: coordinates.level, rotation: .north),
-            health: 10000,
-            defense: 10000,
-            uuid: uuid ?? UUID()
-        ) 
-    }
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case uuid
-        case coordinates
-    }
-    
-    required convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(coordinates: try container.decode(Coordinates.self, forKey: .coordinates), uuid: try container.decode(UUID.self, forKey: .uuid))
-        self.coordinates?.rotation(.north)
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(uuid, forKey: .uuid)
-        try container.encode(Coordinates(x: coordinates!.x, y: coordinates!.y, level: coordinates!.level, rotation: .north), forKey: .coordinates)
-    }
+#Preview {
+    BasicTileView(appearance: Appearance(fillColor: .white, symbol: "mountain.2"), accessibilitySettings: AccessibilitySettings())
 }

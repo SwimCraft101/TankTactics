@@ -28,8 +28,8 @@ extension Color {
 struct TooManyModules: View {
     let tank: Tank
     var body: some View {
-        let numberOfConduits = tank.modules.filter { $0 is ConduitModule }.count
-        let numberOfStorages = tank.modules.filter { $0 is StorageModule }.count
+        let numberOfConduits = tank.modules.filter { $0 == .conduit }.count
+        let numberOfStorages = tank.modules.filter { $0 == .storage }.count
         
         VStack {
             Text("You have too many Modules!")
@@ -55,9 +55,9 @@ struct TooManyModules: View {
                         .font(.system(size: inch(0.15)))
                         .italic()
                 }
-                ForEach(tank.modules.filter{!($0 is ConduitModule)}, id: \.self) { module in
+                ForEach(tank.modules.filter{ $0 != .conduit }, id: \.self) { module in
                     GridRow {
-                        Text(module.type.name())
+                        Text(module.name)
                             .font(.system(size: inch(0.25)))
                         Image(systemName: "square")
                             .resizable()
@@ -74,7 +74,8 @@ struct TooManyModules: View {
                 }
             }
             Spacer()
-            Text("You may equip up to \(min(2 + numberOfConduits, 4)) Modules\(numberOfConduits > 0 ? " because of your \(numberOfConduits) Conduit \(numberOfConduits == 1 ? "Module" : "Modules")" : "")\(numberOfStorages > 0 ? ", and store one module for every Storage module you equip" : "").")
+            #warning("revamp Too Many Modules because of more module types")
+            Text("You may equip up to \(min(2 + numberOfConduits, 4)) Modules\(numberOfConduits > 0 ? " because of your \(numberOfConduits) Conduit \(numberOfConduits == 1 ? "Module" : "Modules")" : "")\(numberOfStorages > 0 ? ", and store one module for each Storage module you equip" : "").")
                 .font(.system(size: inch(0.15)))
                 .italic()
         }
@@ -140,12 +141,7 @@ struct PanelToCutOff: View {
 
 struct StatusCardFront: View {
     let tank: Tank
-    var topModule: Module? {
-        return tank.displayedModules[safe: 0]
-    }
-    var bottomModule: Module? {
-        return tank.displayedModules[safe: 1]
-    }
+    #warning("Rework Status Cards with new Modules")
     var body: some View {
         ZStack {/*
             if tank.hasTooManyModules || topModule != nil {
@@ -241,19 +237,8 @@ struct StatusCardFront: View {
 
 struct StatusCardBack: View {
     let tank: Tank
-    var topModule: Module? {
-        return tank.displayedModules[safe: 0]
-    }
-    var bottomModule: Module? {
-        return tank.displayedModules[safe: 1]
-    }
+    #warning("Rework Status Cards with new Modules")
     var body: some View {
-        
-        Text("Tank Tactics:\nRapid Fire\nwill occur at 12:05 today in The Commons.")
-            .font(.system(size: inch(0.75)))
-            .multilineTextAlignment(.center)
-            .frame(width: inch(5), height: inch(8), alignment: .center)
-        
         /*
         ZStack {
             VStack(spacing: 0) {
@@ -310,239 +295,6 @@ struct StatusCardBack: View {
     }
 }
 
-struct ControlPanelView: View {
-    let tank: Tank
-    
-    @Environment(Game.self) private var game
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    switch game.gameDay {
-                    case .mondayNormal, .deadMonday:
-                        Text("Purchase \(game.moduleOffered!.type.name()) Module: \(game.moduleOfferPrice!)􀇷")
-                            .font(.system(size: inch(0.2)))
-                    case .tuesdayNormal, .deadTuesday:
-                        Text("Moving and Firing are 50% cheaper today.\nTwo Event Cards are availible.")
-                            .font(.system(size: inch(0.2)))
-                    case .wednesdayNormal, .deadWednesday:
-                        Grid(alignment: .center, horizontalSpacing: inch(0.05), verticalSpacing: 0) {
-                            GridRow {
-                                Image(systemName: "car.rear.road.lane.distance.\(max(1, min(tank.movementRange, 5)))")
-                                    .font(.system(size: inch(0.2)))
-                                Text("Movement Range")
-                                    .font(.system(size: inch(0.15)))
-                                    .lineLimit(1)
-                                Text("\(UpgradeMovementRange(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(tank.movementRange)􀂒\n\(tank.movementRange + 1)􀂒")
-                                    .font(.system(size: inch(0.15)))
-                            }
-                            
-                            GridRow {
-                                Image(systemName: {
-                                    switch tank.movementCost {
-                                    case 10, 9:
-                                        return "gauge.with.dots.needle.0percent"
-                                    case 8, 7:
-                                        return "gauge.with.dots.needle.33percent"
-                                    case 6, 5:
-                                        return "gauge.with.dots.needle.50percent"
-                                    case 4, 3:
-                                        return "gauge.with.dots.needle.67percent"
-                                    default: ///`case 2, 1:
-                                        return "gauge.with.dots.needle.100percent"
-                                    }
-                                }())
-                                    .font(.system(size: inch(0.2)))
-                                Text("Movement Efficiency")
-                                    .font(.system(size: inch(0.15)))
-                                    .lineLimit(1)
-                                Text("\(UpgradeMovementCost(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(tank.movementCost)􀵞\n\(tank.movementCost - 1)􀵞")
-                                    .font(.system(size: inch(0.15)))
-                            }
-                        }
-                    case .thursdayNormal, .deadThursday:
-                        Text("Sell any of the following to gain Metal:")
-                            .font(.system(size: inch(0.2)))
-                            .italic()
-                        if tank.modules.count >= 1 {
-                            let module = tank.modules.randomElement()!
-                            ThriftOption(name: module.type.name(), metalOffered: -SellModule(module: module.type, tankId: tank.uuid).metalCost)
-                        }
-                        ({
-                            var upgradeSellOptions: [ThriftOption] = []
-                            if tank.movementRange > 1 {
-                                upgradeSellOptions.append(ThriftOption(name: "Movement Range", metalOffered: SellUpgrade(upgrade: UpgradeMovementRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
-                            }
-                            if tank.movementCost < 10 {
-                                upgradeSellOptions.append(ThriftOption(name: "Movement Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeMovementCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
-                            }
-                            if tank.gunRange > 1 {
-                                upgradeSellOptions.append(ThriftOption(name: "Weapon Range", metalOffered: SellUpgrade(upgrade: UpgradeGunRange(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
-                            }
-                            if tank.gunCost < 10 {
-                                upgradeSellOptions.append(ThriftOption(name: "Weapon Efficiency", metalOffered: SellUpgrade(upgrade: UpgradeGunCost(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
-                            }
-                            if tank.gunDamage > 5 {
-                                upgradeSellOptions.append(ThriftOption(name: "Weapon Damage", metalOffered: SellUpgrade(upgrade: UpgradeGunDamage(tankId: tank.uuid), tankId: tank.uuid).metalCost / 2))
-                            }
-                            return AnyView(upgradeSellOptions.randomElement())
-                        } as! () -> AnyView)()
-                    case .fridayNormal, .deadFriday:
-                        Grid(horizontalSpacing: inch(0.05), verticalSpacing: 0) {
-                            GridRow {
-                                Image(systemName: "dot.scope")
-                                    .font(.system(size: inch(0.2)))
-                                Text("Weapon Range")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(UpgradeGunRange(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(tank.gunRange)􀂒\n\(tank.gunRange + 1)􀂒")
-                                    .font(.system(size: inch(0.15)))
-                                Spacer()
-                            }
-                            
-                            GridRow {
-                                Image(systemName: "bandage")
-                                    .font(.system(size: inch(0.2)))
-                                Text("Weapon Damage")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(UpgradeGunDamage(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(tank.gunDamage)􀲗\n\(tank.gunDamage + 5)􀲗")
-                                    .font(.system(size: inch(0.15)))
-                                Spacer()
-                            }
-                            
-                            GridRow {
-                                Image(systemName: "chart.bar.xaxis")
-                                    .font(.system(size: inch(0.2)))
-                                Text("Weapon Efficiency")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(UpgradeGunCost(tankId: tank.uuid).metalCost)􀇷")
-                                    .font(.system(size: inch(0.15)))
-                                Text("\(tank.gunCost)􀵞\n\(tank.gunCost - 1)􀵞")
-                                    .font(.system(size: inch(0.15)))
-                                Spacer()
-                            }
-                        }
-                    }
-                }
-                .frame(width: inch(2.5), height: inch(1.5), alignment: .topLeading)
-                Image(systemName: {
-                    switch game.gameDay {
-                    case .mondayNormal, .deadMonday:
-                        return "square.on.square.dashed"
-                    case .tuesdayNormal, .deadTuesday:
-                        return "exclamationmark.triangle"
-                    case .wednesdayNormal, .deadWednesday:
-                        return "tire"
-                    case .thursdayNormal, .deadThursday:
-                        return "storefront"
-                    case .fridayNormal, .deadFriday:
-                        return "headlight.high.beam"
-                    }
-                }()) // image representing the gameDay
-                .resizable()
-                .scaledToFit()
-                .frame(width: inch(0.25), height: inch(0.25))
-                .frame(width: inch(0.5), height: inch(0.5), alignment: .topLeading)
-                .frame(width: inch(1.5), height: inch(1.75), alignment: .topTrailing)
-            }
-            .frame(width: inch(4), height: inch(1.75), alignment: .topLeading)
-            
-            Grid {
-                GridRow {
-                    Text("􀅾: ")
-                        .font(.system(size: inch(0.2)))
-                    Text("\(Int(ceil(Double(tank.gunCost) / ((game.gameDay == .tuesdayNormal || game.gameDay == .deadTuesday) ? 2.0 : 1.0))))􀵞 ")
-                        .font(.system(size: inch(0.2)))
-                    Text("\(tank.gunRange)􀂒 ")
-                        .font(.system(size: inch(0.2)))
-                    Text("\(tank.gunDamage)􀲗 ")
-                        .font(.system(size: inch(0.2)))
-                }
-                GridRow {
-                    Text("􁹫: ")
-                        .font(.system(size: inch(0.2)))
-                    Text("\(Int(ceil(Double(tank.movementCost) / ((game.gameDay == .tuesdayNormal || game.gameDay == .deadTuesday) ? 2.0 : 1.0))))􀵞 ")
-                        .font(.system(size: inch(0.2)))
-                    Text("\(tank.movementRange)􀂒")
-                        .font(.system(size: inch(0.2)))
-                }
-            }
-            .frame(width: inch(4), height: inch(0.6), alignment: .topLeading)
-            
-            Grid {
-                GridRow {
-                    Text("")
-                        .font(.system(size: inch(0.2)))
-                    Text("􀈿")
-                        .font(.system(size: inch(0.2)))
-                    Text("􁘿")
-                        .font(.system(size: inch(0.2)))
-                    Text("")
-                        .font(.system(size: inch(0.2)))
-                }
-                GridRow {
-                    Text("􀵞")
-                        .font(.system(size: inch(0.2)))
-                    Text("__")
-                        .font(.system(size: inch(0.2)))
-                    Text("__")
-                        .font(.system(size: inch(0.2)))
-                    VStack {
-                        Text("􁹫")
-                        .font(.system(size: inch(0.1)))
-                        Text("􀅾")
-                        .font(.system(size: inch(0.1)))
-                    }
-                }
-                GridRow {
-                    Text("􀇷")
-                        .font(.system(size: inch(0.2))) 
-                    Text("__")
-                        .font(.system(size: inch(0.2)))
-                    Text("")
-                        .font(.system(size: inch(0.2)))
-                    Text("")
-                        .font(.system(size: inch(0.2)))
-                }
-                GridRow {
-                    Text("􀍕")
-                        .font(.system(size: inch(0.05)))
-                        .foregroundStyle(.clear)
-                }
-                GridRow {
-                    Text("􀍕")
-                        .font(.system(size: inch(0.2)))
-                }
-            } //precedence and Event Card spending
-            .frame(width: inch(4), height: inch(1.65), alignment: .topLeading)
-        }
-        .frame(width: inch(4), height: inch(4))
-        .foregroundColor(.black)
-    }
-}
-
-struct ThriftOption: View {
-    let name: String
-    let metalOffered: Int
-     
-    var body: some View {
-        HStack {
-            Text(name)
-                .font(.system(size: inch(0.2)))
-            Text("(\(metalOffered)􀇷)")
-                .font(.system(size: inch(0.2)))
-        }
-    }
-}
-
 struct MeterView: View {
     let value: Int
     let max: Int
@@ -585,20 +337,12 @@ struct MeterView: View {
     }
 }
 
-func fuelMeter(_ tank: Tank) -> MeterView {
-    return MeterView(value: tank.fuel, max: 50, color: .green.opacity(tank.playerInfo.accessibilitySettings.highContrast || tank.playerInfo.accessibilitySettings.colorblind ? 0.5 : 1), label: "Fuel", icon: "fuelpump")
-}
-
 func metalMeter(_ tank: Tank) -> MeterView {
     return MeterView(value: tank.metal, max: 50, color: .yellow.opacity(tank.playerInfo.accessibilitySettings.highContrast || tank.playerInfo.accessibilitySettings.colorblind ? 0.5 : 1), label: "Metal", icon: "square.grid.2x2")
 }
 
 func healthMeter(_ tank: Tank) -> MeterView {
     return MeterView(value: tank.health, max: 100, color: .red.opacity(tank.playerInfo.accessibilitySettings.highContrast || tank.playerInfo.accessibilitySettings.colorblind ? 0.5 : 1), label: "Health", icon: "bolt.heart")
-}
-
-func defenseMeter(_ tank: Tank) -> MeterView {
-    return MeterView(value: tank.defense, max: 10, color: .blue.opacity(tank.playerInfo.accessibilitySettings.highContrast || tank.playerInfo.accessibilitySettings.colorblind ? 0.5 : 1), label: "Defense", icon: "shield.lefthalf.filled")
 }
 
 struct DirectionOptions: View {
@@ -683,52 +427,6 @@ struct VirtualStatusCard: View {
     }
     
     var body: some View {
-        Grid(horizontalSpacing: 0, verticalSpacing: 0) {
-            GridRow {
-                HStack(spacing: 0) {
-                    fuelMeter(tank)
-                    metalMeter(tank)
-                    healthMeter(tank)
-                    defenseMeter(tank)
-                }
-                ZStack {
-                    ControlPanelView(tank: tank)
-                    TriangleViewport(coordinates: tank.coordinates!, viewRenderSize: 7, highDetailSightRange: 1000, lowDetailSightRange: 1000, radarRange: 1000, accessibilitySettings: tank.playerInfo.accessibilitySettings, selectedObject: selectedObjectBindingDefault)
-                }
-                .frame(width: inch(4), height: inch(4))
-                if tank.hasTooManyModules {
-                    TooManyModules(tank: tank)
-                } else {
-                    ModuleView(module: tank.displayedModules[safe: 2])
-                }
-                VStack(spacing: 0) {
-                    MessageView(message: messagesReceived[safe: 0])
-                    MessageView(message: messagesReceived[safe: 1])
-                }
-            }
-            if !tank.hasTooManyModules {
-                GridRow {
-                    ModuleView(module: tank.displayedModules[safe: 0])
-                    ModuleView(module: tank.displayedModules[safe: 1])
-                    ModuleView(module: tank.displayedModules[safe: 3])
-                }
-            }
-            HStack(spacing: 0) {
-                MessageView(message: messagesReceived[safe: 2])
-                MessageView(message: messagesReceived[safe: 3])
-                MessageView(message: messagesReceived[safe: 4])
-                MessageView(message: messagesReceived[safe: 5])
-            }
-            HStack(spacing: 0) {
-                MessageView(message: messagesReceived[safe: 6])
-                MessageView(message: messagesReceived[safe: 7])
-                MessageView(message: messagesReceived[safe: 8])
-                MessageView(message: messagesReceived[safe: 9]) //surely ten is enough...
-            }
-        }
+        fatalError("Please implement Virtual Status Cards")
     }
-}
-
-#Preview {
-    VirtualStatusCard(tank: tank)
 }

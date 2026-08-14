@@ -13,11 +13,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Definition of input features Full_Threats of NNUE evaluation function
+//Definition of input features Simplified_Threats of NNUE evaluation function
 
 #ifndef NNUE_FEATURES_FULL_THREATS_INCLUDED
 #define NNUE_FEATURES_FULL_THREATS_INCLUDED
 
+#include <cstdint>
 
 #include "../../misc.h"
 #include "../../types.h"
@@ -29,22 +30,23 @@ class Position;
 
 namespace Stockfish::Eval::NNUE::Features {
 
-// Pawn diagonal threats only target knights and rooks (pawn-pawn relationships
-// are handled by the PP_3Wide feature set), so pawns have 4 valid targets.
-static constexpr int numValidTargets[PIECE_NB] = {0, 4, 10, 8, 8, 10, 0, 0,
-                                                  0, 4, 10, 8, 8, 10, 0, 0};
+static constexpr int numValidTargets[PIECE_NB] = {0, 6, 12, 10, 10, 12, 8, 0,
+                                                  0, 6, 12, 10, 10, 12, 8, 0};
 
 class FullThreats {
    public:
+    // Feature name
+    static constexpr const char* Name = "Full_Threats(Friend)";
+
     // Hash value embedded in the evaluation file
-    static constexpr u32 HashValue = 0x2e6b9d04u;
+    static constexpr std::uint32_t HashValue = 0x8f234cb8u;
 
     // Number of feature dimensions
-    static constexpr IndexType Dimensions = 59808;
+    static constexpr IndexType Dimensions = 79856;
 
     // clang-format off
     // Orient a square according to perspective (rotates by 180 for black)
-    static constexpr i8 OrientTBL[SQUARE_NB] = {
+    static constexpr std::int8_t OrientTBL[SQUARE_NB] = {
         SQ_A1, SQ_A1, SQ_A1, SQ_A1, SQ_H1, SQ_H1, SQ_H1, SQ_H1,
         SQ_A1, SQ_A1, SQ_A1, SQ_A1, SQ_H1, SQ_H1, SQ_H1, SQ_H1,
         SQ_A1, SQ_A1, SQ_A1, SQ_A1, SQ_H1, SQ_H1, SQ_H1, SQ_H1,
@@ -56,18 +58,26 @@ class FullThreats {
     };
 
     static constexpr int map[PIECE_TYPE_NB-2][PIECE_TYPE_NB-2] = {
-      {-1,  0, -1,  1, -1, -1},
-      { 0,  1,  2,  3,  4, -1},
-      { 0,  1,  2,  3, -1, -1},
-      { 0,  1,  2,  3, -1, -1},
-      { 0,  1,  2,  3,  4, -1},
-      {-1, -1, -1, -1, -1, -1}
+      {0,  1, -1,  2, -1, -1},
+      {0,  1,  2,  3,  4,  5},
+      {0,  1,  2,  3, -1,  4},
+      {0,  1,  2,  3, -1,  4},
+      {0,  1,  2,  3,  4,  5},
+      {0,  1,  2,  3, -1, -1}
     };
     // clang-format on
 
+    struct FusedUpdateData {
+        Bitboard dp2removedOriginBoard = 0;
+        Bitboard dp2removedTargetBoard = 0;
+
+        Square dp2removed;
+    };
+
     // Maximum number of simultaneously active features.
-    using IndexList = ValueList<u16, 256>;
-    using DiffType  = DirtyThreats;
+    static constexpr IndexType MaxActiveDimensions = 128;
+    using IndexList                                = ValueList<IndexType, MaxActiveDimensions>;
+    using DiffType                                 = DirtyThreats;
 
     static IndexType
     make_index(Color perspective, Piece attkr, Square from, Square to, Piece attkd, Square ksq);
@@ -76,23 +86,17 @@ class FullThreats {
     static void append_active_indices(Color perspective, const Position& pos, IndexList& active);
 
     // Get a list of indices for recently changed features
-    static void append_changed_indices(Color                   perspective,
-                                       Square                  ksq,
-                                       const DiffType&         diff,
-                                       IndexList&              removed,
-                                       IndexList&              added,
-                                       const ThreatWeightType* prefetchBase   = nullptr,
-                                       IndexType               prefetchStride = 0);
+    static void append_changed_indices(Color            perspective,
+                                       Square           ksq,
+                                       const DiffType&  diff,
+                                       IndexList&       removed,
+                                       IndexList&       added,
+                                       FusedUpdateData* fd    = nullptr,
+                                       bool             first = false);
 
-    static void append_changed_indices_both(Square                  white_ksq,
-                                            Square                  black_ksq,
-                                            const DiffType&         diff,
-                                            IndexList&              white_removed,
-                                            IndexList&              white_added,
-                                            IndexList&              black_removed,
-                                            IndexList&              black_added,
-                                            const ThreatWeightType* prefetchBase   = nullptr,
-                                            IndexType               prefetchStride = 0);
+    // Returns whether the change stored in this DirtyPiece means
+    // that a full accumulator refresh is required.
+    static bool requires_refresh(const DiffType& diff, Color perspective);
 };
 
 }  // namespace Stockfish::Eval::NNUE::Features

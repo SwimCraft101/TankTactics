@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct Inspector: View {
-    @Binding var object: BoardObject
+    @Binding var object: any BoardObject
     
     @Bindable private var game = Game.shared
     
@@ -19,27 +19,30 @@ struct Inspector: View {
                 HStack {
                     BasicTileView(appearance: object.appearance, accessibilitySettings: AccessibilitySettings())
                         .frame(width: 50, height: 50)
-                    if object is Player {
-                        Text("\((object as! Player).playerInfo.fullName)")
+                    if let tank = object as? Tank {
+                        Text("\(tank.playerInfo.fullName)")
+                            .font(.title)
+                    } else if object is Wall {
+                        Text("Wall")
+                            .font(.title)
+                    } else if object is OreDeposit {
+                        Text("Wall")
                             .font(.title)
                     } else {
-                        Text(object.type.name)
-                            .font(.title)
+                        fatalError("An unrecognized boardObject was selected by the Inspector")
                     }
                 }
                 HStack {
                     Button("Delete", systemImage: "trash") {
-                        game.board.objects.removeAll { $0 === object }
+                        game.board.tanks.removeAll { $0 === object as? Tank }
+                        game.board.walls.removeAll { $0 === object as? Tank }
+                        game.board.oreDeposits.removeAll { $0 === object as? Tank }
                     }
                 }
                 HStack { // General Information
                     Text("Health")
                     TextField("Health", value: $object.health, format: .number)
                         .disabled(!(object is Player))
-                    Text("Defense")
-                    TextField("Defense", value: $object.defense, format: .number)
-                        .disabled(!(object is Player))
-                    Spacer()
                 }
                 HStack {
                     Text("Coordinates")
@@ -47,98 +50,49 @@ struct Inspector: View {
                         GridRow {
                             Text("")
                             Button("􀄨") {
-                                object.coordinates!.moveBy(.north)
+                                object.coordinates.moveBy(.north)
                             }
                             Text("")
                         }
                         GridRow {
                             Button("􀄪") {
-                                object.coordinates!.moveBy(.west)
+                                object.coordinates.moveBy(.west)
                             }
                             Text("")
                             Button("􀄫") {
-                                object.coordinates!.moveBy(.east)
+                                object.coordinates.moveBy(.east)
                             }
                         }
                         GridRow {
                             Text("")
                             Button("􀄩") {
-                                object.coordinates!.moveBy(.south)
+                                object.coordinates.moveBy(.south)
                             }
                             Text("")
                         }
                     }
                     TextField("X", value: Binding<Int>(
-                        get: { object.coordinates?.x ?? 0 },
+                        get: { object.coordinates.x },
                         set: { newValue in
-                            if object.coordinates == nil {
-                                object.coordinates = Coordinates(x: newValue, y: 0) // create if needed
-                            } else {
-                                object.coordinates!.x(newValue)
-                            }
+                            object.coordinates.x(newValue)
                         }
                     ), format: .number)
                     TextField("Y", value: Binding<Int>(
-                        get: { object.coordinates?.y ?? 0 },
+                        get: { object.coordinates.y },
                         set: { newValue in
-                            if object.coordinates == nil {
-                                object.coordinates = Coordinates(x: 0, y: newValue) // create if needed
-                            } else {
-                                object.coordinates!.y(newValue)
-                            }
+                            object.coordinates.y(newValue)
                         }
                     ), format: .number)
                     TextField("Layer", value: Binding<Int>(
-                        get: { object.coordinates?.level ?? 0 },
+                        get: { object.coordinates.level },
                         set: { newValue in
-                            if object.coordinates == nil {
-                                object.coordinates = Coordinates(x: 0, y: 0, level: newValue) // create if needed
-                            } else {
-                                object.coordinates!.level(newValue)
-                            }
+                            object.coordinates.level(newValue)
                         }
                     ), format: .number)
                     Spacer()
                 }
-                if let gift = object as? Gift {
-                    HStack {
-                        Text("Fuel")
-                        TextField(
-                            "Fuel",
-                            value: Binding(
-                                get: { gift.fuelDropped },
-                                set: { gift.fuelDropped = $0 }
-                            ),
-                            format: .number
-                        )
-                        Text("Metal")
-                        TextField(
-                            "Metal",
-                            value: Binding(
-                                get: { gift.metalDropped },
-                                set: { gift.metalDropped = $0 }
-                            ),
-                            format: .number
-                        )
-                        Spacer()
-                        if gift.containedModule != nil {
-                            Text("Gift contains a \(gift.containedModule!.type.name()) Module")
-                        } else {
-                            Text("Gift contains no Module")
-                        }
-                    }
-                }
                 if let tank = object as? Tank {
                     HStack {
-                        Text("Fuel")
-                        TextField(
-                            "Fuel",
-                            value: Binding(
-                                get: { tank.fuel },
-                                set: { tank.fuel = $0 }
-                            ),
-                            format: .number
-                        )
                         Text("Metal")
                         TextField(
                             "Metal",
@@ -151,147 +105,148 @@ struct Inspector: View {
                         Spacer()
                     }
                 }
-                if object.appearance != nil {
-                    HStack { // Information about Appearances
-                        ColorPicker("Fill", selection: Binding<Color>(
-                            get: { object.appearance!.fillColor },
-                            set: { object.appearance!.fillColor($0) }
-                        ))
-                        ColorPicker("Stroke", selection: Binding<Color>(
-                            get: { object.appearance!.strokeColor ?? object.appearance!.fillColor },
-                            set: { object.appearance!.strokeColor($0) }
-                        ))
-                        if object.appearance!.symbolColor != nil {
-                            ColorPicker("Symbol", selection: Binding<Color>(
-                                get: { object.appearance!.symbolColor ?? object.appearance!.strokeColor ?? object.appearance!.fillColor },
-                                set: { object.appearance!.symbolColor($0) }
-                            ))
+                HStack { // Information about Appearances
+                    ColorPicker("Fill", selection: Binding<Color>(
+                        get: { object.appearance.fillColor },
+                        set: {
+                            if let tank = object as? Tank {
+                                tank.appearance.fillColor($0)
+                            }
                         }
-                        TextField("Symbol", text: Binding<String>(
-                            get: { object.appearance!.symbol },
-                            set: { newValue in
-                                object.appearance!.symbol(newValue)
+                    ))
+                    ColorPicker("Stroke", selection: Binding<Color>(
+                        get: { object.appearance.strokeColor ?? object.appearance.fillColor },
+                        set: {
+                            if let tank = object as? Tank {
+                                tank.appearance.strokeColor($0)
+                            }
+                        }
+                    ))
+                    if object.appearance.symbolColor != nil {
+                        ColorPicker("Symbol", selection: Binding<Color>(
+                            get: { object.appearance.symbolColor ?? object.appearance.strokeColor ?? object.appearance.fillColor },
+                            set: {
+                                if let tank = object as? Tank {
+                                    tank.appearance.symbolColor($0)
+                                }
                             }
                         ))
-                        Toggle("Use Multicolor Symbol", isOn: Binding<Bool>(
-                            get: { object.appearance!.symbolColor == nil },
-                            set: { useMulticolorSymbol in
+                    }
+                    TextField("Symbol", text: Binding<String>(
+                        get: { object.appearance.symbol },
+                        set: {
+                            if let tank = object as? Tank {
+                                tank.appearance.symbol($0)
+                            }
+                        }
+                    ))
+                    Toggle("Use Multicolor Symbol", isOn: Binding<Bool>(
+                        get: { object.appearance.symbolColor == nil },
+                        set: { useMulticolorSymbol in
+                            if let tank = object as? Tank {
                                 if useMulticolorSymbol {
-                                    object.appearance!.symbolColor(nil)
+                                    tank.appearance.symbolColor(nil)
                                 } else {
-                                    object.appearance!.symbolColor(object.appearance!.strokeColor ?? object.appearance!.fillColor)
+                                    tank.appearance.symbolColor(tank.appearance.strokeColor ?? tank.appearance.fillColor)
                                 }
                             }
-                        ))
-                    }
-                    .disabled(!(object is Player))
+                        }
+                    ))
                 }
-                if let player = object as? Player {
-                    VStack { // Tank/Player information
-                        if let tank = player as? Tank {
-                            Text("Modules")
-                            VStack {
-                                ForEach(tank.modules) { module in
-                                    Text(module.type.name())
-                                        .onTapGesture {
-                                            tank.modules.removeAll { $0 === module }
-                                            tank.modules.append(module)
-                                        }
-                                        .contextMenu {
-                                            Button("Delete") {
-                                                tank.modules.removeAll { $0 === module }
-                                            }
-                                        }
-                                }
-                            }
+                .disabled(!(object is Player))
+                if let tank = object as? Tank {
+                    Text("Modules")
+                    VStack {
+                        ForEach(tank.modules) { module in
+                            Text(String(describing: module))
                         }
-                        HStack {
-                            Text("Name")
-                            TextField("First Name", text: Binding(get: {
-                                player.playerInfo.firstName
-                            }, set: {
-                                player.playerInfo.firstName($0)
-                            }))
-                            TextField("Last Name", text: Binding(get: {
-                                player.playerInfo.lastName
-                            }, set: {
-                                player.playerInfo.lastName($0)
-                            }))
-                        }
-                        HStack {
-                            Text("Delivery Location")
-                            TextField("Delivery Building", text: Binding(get: {
-                                player.playerInfo.deliveryBuilding
-                            }, set: {
-                                player.playerInfo.deliveryBuilding($0)
-                            }))
-                            TextField("Delivery Type", text: Binding(get: {
-                                player.playerInfo.deliveryType
-                            }, set: {
-                                player.playerInfo.deliveryType($0)
-                            }))
-                            TextField("Delivery Number", text: Binding(get: {
-                                player.playerInfo.deliveryNumber
-                            }, set: {
-                                player.playerInfo.deliveryNumber($0)
-                            }))
-                        }
-                        HStack {
-                            Text("Email")
-                            TextField("Email Address", text: Binding(
-                                get: { player.playerInfo.virtualDelivery ?? "" },
-                                set: { newValue in
-                                    if newValue == "" {
-                                        player.playerInfo.virtualDelivery(nil)
-                                        return
-                                    }
-                                    player.playerInfo.virtualDelivery(newValue)
-                                }
-                            ))
-                            Toggle("Deliver by email", isOn: Binding(get: {
-                                player.playerInfo.doVirtualDelivery
-                            }, set: {
-                                player.playerInfo.doVirtualDelivery($0)
-                            }))
-                        }
-                        EmptyView().padding(.top, 10)
-                        Toggle("High Contrast", isOn: Binding(
-                            get: {
-                                player.playerInfo.accessibilitySettings.highContrast
-                            },
-                            set: { newValue in
-                                player.playerInfo.accessibilitySettings({
-                                    var settings = player.playerInfo.accessibilitySettings
-                                    settings.highContrast(newValue)
-                                    return settings
-                                }())
-                            }
-                        ))
-                        Toggle("Colorblind", isOn: Binding(
-                            get: {
-                                player.playerInfo.accessibilitySettings.colorblind
-                            },
-                            set: { newValue in
-                                player.playerInfo.accessibilitySettings({
-                                    var settings = player.playerInfo.accessibilitySettings
-                                    settings.colorblind(newValue)
-                                    return settings
-                                }())
-                            }
-                        ))
-                        Toggle("Large Text", isOn: Binding(
-                            get: {
-                                player.playerInfo.accessibilitySettings.largeText
-                            },
-                            set: { newValue in
-                                player.playerInfo.accessibilitySettings({
-                                    var settings = player.playerInfo.accessibilitySettings
-                                    settings.largeText(newValue)
-                                    return settings
-                                }())
-                            }
-                        ))
                     }
+                    HStack {
+                        Text("Name")
+                        TextField("First Name", text: Binding(get: {
+                            tank.playerInfo.firstName
+                        }, set: {
+                            tank.playerInfo.firstName($0)
+                        }))
+                        TextField("Last Name", text: Binding(get: {
+                            tank.playerInfo.lastName
+                        }, set: {
+                            tank.playerInfo.lastName($0)
+                        }))
+                    }
+                    HStack {
+                        Text("Delivery Location")
+                        TextField("Delivery Building", text: Binding(get: {
+                            tank.playerInfo.deliveryBuilding
+                        }, set: {
+                            tank.playerInfo.deliveryBuilding($0)
+                        }))
+                        TextField("Delivery Type", text: Binding(get: {
+                            tank.playerInfo.deliveryType
+                        }, set: {
+                            tank.playerInfo.deliveryType($0)
+                        }))
+                        TextField("Delivery Number", text: Binding(get: {
+                            tank.playerInfo.deliveryNumber
+                        }, set: {
+                            tank.playerInfo.deliveryNumber($0)
+                        }))
+                    }
+                    HStack {
+                        Text("Email")
+                        TextField("Email Address", text: Binding(
+                            get: { tank.playerInfo.virtualDelivery ?? "" },
+                            set: { newValue in
+                                if newValue == "" {
+                                    tank.playerInfo.virtualDelivery(nil)
+                                    return
+                                }
+                                tank.playerInfo.virtualDelivery(newValue)
+                            }
+                        ))
+                        Toggle("Deliver by email", isOn: Binding(get: {
+                            tank.playerInfo.doVirtualDelivery
+                        }, set: {
+                            tank.playerInfo.doVirtualDelivery($0)
+                        }))
+                    }
+                    EmptyView().padding(.top, 10)
+                    Toggle("High Contrast", isOn: Binding(
+                        get: {
+                            tank.playerInfo.accessibilitySettings.highContrast
+                        },
+                        set: { newValue in
+                            tank.playerInfo.accessibilitySettings({
+                                var settings = tank.playerInfo.accessibilitySettings
+                                settings.highContrast(newValue)
+                                return settings
+                            }())
+                        }
+                    ))
+                    Toggle("Colorblind", isOn: Binding(
+                        get: {
+                            tank.playerInfo.accessibilitySettings.colorblind
+                        },
+                        set: { newValue in
+                            tank.playerInfo.accessibilitySettings({
+                                var settings = tank.playerInfo.accessibilitySettings
+                                settings.colorblind(newValue)
+                                return settings
+                            }())
+                        }
+                    ))
+                    Toggle("Large Text", isOn: Binding(
+                        get: {
+                            tank.playerInfo.accessibilitySettings.largeText
+                        },
+                        set: { newValue in
+                            tank.playerInfo.accessibilitySettings({
+                                var settings = tank.playerInfo.accessibilitySettings
+                                settings.largeText(newValue)
+                                return settings
+                            }())
+                        }
+                    ))
                 }
             }
         }

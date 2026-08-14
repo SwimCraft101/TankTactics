@@ -85,7 +85,8 @@ struct DeadStatusCardFront: View {
 struct DeadStatusCardBack: View {
     let tank: DeadTank
     var body: some View {
-        ZStack {
+        #warning("Revamp Dead Status Cards")
+        /*ZStack {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
                     ZStack {
@@ -115,7 +116,7 @@ struct DeadStatusCardBack: View {
                 .frame(width: inch(5), height: inch(4), alignment: .bottomTrailing)
             }
         }
-        .frame(width: inch(5), height: inch(8), alignment: .center)
+        .frame(width: inch(5), height: inch(8), alignment: .center)*/
     }
 }
 
@@ -126,7 +127,7 @@ func energyMeter(_ tank: DeadTank) -> MeterView {
 func essenceMeter(_ tank: DeadTank) -> MeterView {
     return MeterView(value: tank.essence, max: 50, color: .purple.opacity(tank.playerInfo.accessibilitySettings.highContrast || tank.playerInfo.accessibilitySettings.colorblind ? 0.5 : 1), label: "Essence", icon: "sparkles")
 }
-
+/*
 struct DeadControlPanelView: View {
     let tank: DeadTank
     var body: some View {
@@ -194,7 +195,7 @@ struct DeadVirtualStatusCard: View {
         }
     }
 }
-
+*/
 #Preview {
     DeadStatusCardBack(tank: DeadTank(appearance: Appearance(fillColor: .red, symbol: "rainbow"), killedById: Game.shared.board.objects.first!.uuid, playerInfo: PlayerInfo(firstName: "first", lastName: "last", deliveryBuilding: "build", deliveryType: "locker", deliveryNumber: "67", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 1, doVirtualDelivery: false), essence: 23, energy: 5, uuid: UUID()))
 }

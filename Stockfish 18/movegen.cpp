@@ -21,7 +21,6 @@
 #include <cassert>
 #include <initializer_list>
 
-#include "attacks.h"
 #include "bitboard.h"
 #include "position.h"
 
@@ -37,30 +36,53 @@ namespace {
 
 #if defined(USE_AVX512ICL)
 
+inline Move* write_moves(Move* moveList, uint32_t mask, __m512i vector) {
+    // Avoid _mm512_mask_compressstoreu_epi16() as it's 256 uOps on Zen4
+    _mm512_storeu_si512(reinterpret_cast<__m512i*>(moveList),
+                        _mm512_maskz_compress_epi16(mask, vector));
+    return moveList + popcount(mask);
+}
+
 template<Direction offset>
 inline Move* splat_pawn_moves(Move* moveList, Bitboard to_bb) {
-    assert(popcount(to_bb) <= 8);  // <= 8 pawns per side
+    alignas(64) static constexpr auto SPLAT_TABLE = [] {
+        std::array<Move, 64> table{};
+        for (int i = 0; i < 64; i++)
+        {
+            Square from{uint8_t(std::clamp(i - offset, 0, 63))};
+            table[i] = {Move(from, Square{uint8_t(i)})};
+        }
+        return table;
+    }();
 
-    const __m128i toSquares =
-      _mm_cvtepi8_epi16(_mm512_castsi512_si128(_mm512_maskz_compress_epi8(to_bb, AllSquares)));
-    const __m128i fromSquares = _mm_subs_epi16(toSquares, _mm_set1_epi16(offset));
-    const __m128i moves       = _mm_or_si128(_mm_slli_epi16(fromSquares, Move::FromSqShift),
-                                             _mm_slli_epi16(toSquares, Move::ToSqShift));
+    auto table = reinterpret_cast<const __m512i*>(SPLAT_TABLE.data());
 
-    _mm_storeu_si128(reinterpret_cast<__m128i*>(moveList), moves);
-    return moveList + popcount(to_bb);
+    moveList =
+      write_moves(moveList, static_cast<uint32_t>(to_bb >> 0), _mm512_load_si512(table + 0));
+    moveList =
+      write_moves(moveList, static_cast<uint32_t>(to_bb >> 32), _mm512_load_si512(table + 1));
+
+    return moveList;
 }
 
 inline Move* splat_moves(Move* moveList, Square from, Bitboard to_bb) {
-    assert(popcount(to_bb) <= 32);  // Q can attack up to 27 squares
+    alignas(64) static constexpr auto SPLAT_TABLE = [] {
+        std::array<Move, 64> table{};
+        for (uint8_t i = 0; i < 64; i++)
+            table[i] = {Move(SQUARE_ZERO, Square{i})};
+        return table;
+    }();
 
-    const __m512i fromVec = _mm512_set1_epi16(Move(from, SQUARE_ZERO).raw());
-    const __m512i toSquares =
-      _mm512_cvtepi8_epi16(_mm512_castsi512_si256(_mm512_maskz_compress_epi8(to_bb, AllSquares)));
-    const __m512i moves = _mm512_or_si512(fromVec, _mm512_slli_epi16(toSquares, Move::ToSqShift));
+    __m512i fromVec = _mm512_set1_epi16(Move(from, SQUARE_ZERO).raw());
 
-    _mm512_storeu_si512(moveList, moves);
-    return moveList + popcount(to_bb);
+    auto table = reinterpret_cast<const __m512i*>(SPLAT_TABLE.data());
+
+    moveList = write_moves(moveList, static_cast<uint32_t>(to_bb >> 0),
+                           _mm512_or_si512(_mm512_load_si512(table + 0), fromVec));
+    moveList = write_moves(moveList, static_cast<uint32_t>(to_bb >> 32),
+                           _mm512_or_si512(_mm512_load_si512(table + 1), fromVec));
+
+    return moveList;
 }
 
 #else
@@ -171,7 +193,7 @@ Move* generate_pawn_moves(const Position& pos, Move* moveList, Bitboard target) 
             if (Type == EVASIONS && (target & (pos.ep_square() + Up)))
                 return moveList;
 
-            b1 = pawnsNotOn7 & Attacks::attacks_bb<PAWN>(pos.ep_square(), Them);
+            b1 = pawnsNotOn7 & attacks_bb<PAWN>(pos.ep_square(), Them);
 
             assert(b1);
 
@@ -194,7 +216,7 @@ Move* generate_moves(const Position& pos, Move* moveList, Bitboard target) {
     while (bb)
     {
         Square   from = pop_lsb(bb);
-        Bitboard b    = Attacks::attacks_bb<Pt>(from, pos.pieces()) & target;
+        Bitboard b    = attacks_bb<Pt>(from, pos.pieces()) & target;
 
         moveList = splat_moves(moveList, from, b);
     }
@@ -214,7 +236,7 @@ Move* generate_all(const Position& pos, Move* moveList) {
     // Skip generating non-king moves when in double check
     if (Type != EVASIONS || !more_than_one(pos.checkers()))
     {
-        target = Type == EVASIONS     ? Attacks::between_bb(ksq, lsb(pos.checkers()))
+        target = Type == EVASIONS     ? between_bb(ksq, lsb(pos.checkers()))
                : Type == NON_EVASIONS ? ~pos.pieces(Us)
                : Type == CAPTURES     ? pos.pieces(~Us)
                                       : ~pos.pieces();  // QUIETS
@@ -226,7 +248,7 @@ Move* generate_all(const Position& pos, Move* moveList) {
         moveList = generate_moves<Us, QUEEN>(pos, moveList, target);
     }
 
-    Bitboard b = Attacks::attacks_bb<KING>(ksq) & (Type == EVASIONS ? ~pos.pieces(Us) : target);
+    Bitboard b = attacks_bb<KING>(ksq) & (Type == EVASIONS ? ~pos.pieces(Us) : target);
 
     moveList = splat_moves(moveList, ksq, b);
 

@@ -19,15 +19,13 @@
 #ifndef NNUE_MISC_H_INCLUDED
 #define NNUE_MISC_H_INCLUDED
 
+#include <cstddef>
+#include <memory>
 #include <string>
-#include <string_view>
-#include <optional>
-#include <filesystem>
 
 #include "../misc.h"
 #include "../types.h"
 #include "nnue_architecture.h"
-#include "../evaluate.h"
 
 namespace Stockfish {
 
@@ -35,32 +33,42 @@ class Position;
 
 namespace Eval::NNUE {
 
-// NNUE file metadata uses fixed string types so it stays trivially copyable and cheap to move
-// around between the engine and the network loader.
+// EvalFile uses fixed string types because it's part of the network structure which must be trivial.
 struct EvalFile {
     // Default net name, will use one of the EvalFileDefaultName* macros defined
     // in evaluate.h
-    constexpr static std::string_view defaultName = EvalFileDefaultName;
+    FixedString<256> defaultName;
     // Selected net name, either via uci option or default
-    std::optional<std::filesystem::path> current;
+    FixedString<256> current;
     // Net description extracted from the net file
-    std::string netDescription;
+    FixedString<256> netDescription;
 };
 
 struct NnueEvalTrace {
     static_assert(LayerStacks == PSQTBuckets);
 
-    Value psqt[LayerStacks];
-    Value positional[LayerStacks];
-    usize correctBucket;
+    Value       psqt[LayerStacks];
+    Value       positional[LayerStacks];
+    std::size_t correctBucket;
 };
 
-class Network;
+struct Networks;
 struct AccumulatorCaches;
 
-std::string trace(Position& pos, const Network& network, AccumulatorCaches& caches);
+std::string trace(Position& pos, const Networks& networks, AccumulatorCaches& caches);
 
 }  // namespace Stockfish::Eval::NNUE
 }  // namespace Stockfish
+
+template<>
+struct std::hash<Stockfish::Eval::NNUE::EvalFile> {
+    std::size_t operator()(const Stockfish::Eval::NNUE::EvalFile& evalFile) const noexcept {
+        std::size_t h = 0;
+        Stockfish::hash_combine(h, evalFile.defaultName);
+        Stockfish::hash_combine(h, evalFile.current);
+        Stockfish::hash_combine(h, evalFile.netDescription);
+        return h;
+    }
+};
 
 #endif  // #ifndef NNUE_MISC_H_INCLUDED

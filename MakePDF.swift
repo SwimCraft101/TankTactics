@@ -47,9 +47,6 @@ extension View {
 }
 
 func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize = CGSize(width: inch(11), height: inch(8.5))) {
-    // Define page size for portrait orientation
-    let pageSize = CGSize(width: inch(11), height: inch(8.5))
-    
     // Create a PDF document
     let pdfDocument = PDFDocument()
     
@@ -79,13 +76,13 @@ func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize 
     }
 }
 
-func saveTurnToPDF(players: [Player], messages messagesIn: [Message], eventCards eventCardsIn: [EventCard], notes notesIn: [String], printerCalibration: PrinterCalibration) {
+func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventCards eventCardsIn: [EventCard], notes notesIn: [String], printerCalibration: PrinterCalibration) {
     var pages: [AnyView] = []
-    var playersToPrintInConduitMode: [Player] = players.filter({ $0.statusCardConduitFront() != nil })
+    var playersToPrintInConduitMode: [any Player] = players.filter({ $0.statusCardConduitFront() != nil })
     playersToPrintInConduitMode.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
-    var playersToPrintNormally: [Player] = players.filter({ $0.statusCardConduitFront() == nil })
+    var playersToPrintNormally: [any Player] = players.filter({ $0.statusCardConduitFront() == nil })
     playersToPrintNormally.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
-    var playersToPrintWithLargeText: [Player] = players.filter({ $0.playerInfo.accessibilitySettings.largeText })
+    var playersToPrintWithLargeText: [any Player] = players.filter({ $0.playerInfo.accessibilitySettings.largeText })
     var messages = messagesIn
     var eventCards = eventCardsIn
     var notes = notesIn

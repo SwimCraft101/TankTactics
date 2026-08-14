@@ -3,4 +3,651 @@
    uuid = "9A721F18-AA73-459C-BC83-B0152489DB30"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.ExceptionBreakpoint">
+         <BreakpointContent
+            uuid = "A269C8B2-FEF5-40A4-BE5C-4F148F22A314"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            breakpointStackSelectionBehavior = "1"
+            scope = "0"
+            stopOnStyle = "0">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "exit"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 7d83288a14aba3e7"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "+[NSThread exit]"
+                  moduleName = "Foundation"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 6a315ef70d97f9ce"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "dyld4::LibSystemHelpers::exit(int) const"
+                  moduleName = "libdyld.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 9c8ec5631e77ad25"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "dyld::ThreadLocalVariables::exit()"
+                  moduleName = "libdyld.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 25a1daa434695d6f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "exit"
+                  moduleName = "libsystem_c.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - ba9b1c5a10e60ca4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Security::CountingMutex::exit()"
+                  moduleName = "Security"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 8e2784a10fabed5c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[CWFBackgroundScanNetwork exit]"
+                  moduleName = "CoreWiFi"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - c76d71328623f80e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[CBAurora exit]"
+                  moduleName = "CoreBrightness"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - e6fe484a56a28bf0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "re::NetworkSystem::LocalPeer::exit(re::ecs2::NetworkComponent*)"
+                  moduleName = "CoreRE"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 4427f02e61d8b0a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TeaFoundation.Gate.exit() -&gt; ()"
+                  moduleName = "TeaFoundation"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - d747eb30b265a1f9"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[RTVisit exit]"
+                  moduleName = "CoreRoutine"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2C9205C5-ACDB-4F72-83CB-635A92C8D1D6 - 6473e0bbe428b909"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[RTLocationOfInterestVisit exit]"
+                  moduleName = "CoreRoutine"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "abort"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 25a1d5f94881d04c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "abort"
+                  moduleName = "libsystem_c.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - cc42baac7bbdeefe"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "abort.344"
+                  moduleName = "libsystem_kernel.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - d0a01e629d19933c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "TAOQueue::abort()"
+                  moduleName = "DiskImages"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 12277f87ea90129b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[NEIKEv2Session abort]"
+                  moduleName = "NetworkExtension"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - d3e9ac45c60b92d5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[CIContext abort]"
+                  moduleName = "CoreImage"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - e378cbd49b6f323e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[IOBluetoothDeviceInquiry abort]"
+                  moduleName = "IOBluetooth"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - ec9311bf851e0006"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[OBEXFileTransferServices abort]"
+                  moduleName = "IOBluetooth"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - ba7d2349462eb874"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[DRBurn abort]"
+                  moduleName = "DiscRecording"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 9f11ade6bc10094"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[BWDeferredCaptureContainer abort]"
+                  moduleName = "CMCapture"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 51a5c7931945626e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ModelManagerServices.ResponseIterator.abort(error: Swift.Error) async throws -&gt; ()"
+                  moduleName = "ModelManagerServices"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - c431c332a3e9fec9"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Gestures.AnyGestureNode.abort() throws -&gt; ()"
+                  moduleName = "Gestures"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 581d22aabc29f88a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::NetworkResourceLoader::abort()"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - e128d83d00c59554"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::RemoteSourceBufferProxy::abort()"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 99ff04c85e9dcc39"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::BackgroundFetchLoad::abort()"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 290c02e489600b79"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::SOAuthorizationSession::abort()"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - e6d6948cedc93222"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::SpeechRecognitionServer::abort(WTF::ObjectIdentifierGeneric&lt;WebCore::SpeechRecognitionConnectionClientIdentifierType, WTF::ObjectIdentifierMainThreadAccessTraits&lt;unsigned long long&gt;, unsigned long long&gt;)"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - fae9e936dff4109f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::SourceBufferPrivateRemote::abort()"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 5ab2c12480f4f9c5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebKit::WebSpeechRecognitionConnection::abort(WTF::ObjectIdentifierGeneric&lt;WebCore::SpeechRecognitionConnectionClientIdentifierType, WTF::ObjectIdentifierMainThreadAccessTraits&lt;unsigned long long&gt;, unsigned long long&gt;)"
+                  moduleName = "WebKit"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - e4980d4076c958ad"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[QLWindowEffect abort]"
+                  moduleName = "QuickLookUI"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - e5a2fc9d8bc92145"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[QLAnimationWindowEffect abort]"
+                  moduleName = "QuickLookUI"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 17a2132d0f6a5ea2"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::DummySpeechRecognitionProvider::DummySpeechRecognitionConnection::abort(WTF::ObjectIdentifierGeneric&lt;WebCore::SpeechRecognitionConnectionClientIdentifierType, WTF::ObjectIdentifierMainThreadAccessTraits&lt;unsigned long long&gt;, unsigned long long&gt;)"
+                  moduleName = "WebKitLegacy"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 60961bcc4566018a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::XMLHttpRequest::abort()"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 3cfb59f2b870524a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::FileSystemWritableFileStreamSink::abort(JSC::JSValue)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 1a5114caa01c5a4f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::SourceBuffer::abort()"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - c6da39f2a6025b6f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::SimpleWritableStreamSink::abort(JSC::JSValue)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - eaff345b0b49eb17"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::VideoTrackGenerator::Sink::abort(JSC::JSValue)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 5b24b37daf2d3ab3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::PaymentRequest::abort(WebCore::DOMPromiseDeferred&lt;void&gt;&amp;&amp;)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 34a9b1f28d908868"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::DatagramSink::abort(JSC::JSValue)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - c1afcedf028e263a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::WebTransportSendStreamSink::abort(JSC::JSValue)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 245b283ddc401db0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::InternalWritableStream::abort(JSC::JSGlobalObject&amp;, JSC::JSValue)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - b0eb06a6919e5949"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::FileReader::abort()"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 8ac5a21c12a18eab"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::DummySpeechRecognitionProvider::DummySpeechRecognitionConnection::abort(WTF::ObjectIdentifierGeneric&lt;WebCore::SpeechRecognitionConnectionClientIdentifierType, WTF::ObjectIdentifierMainThreadAccessTraits&lt;unsigned long long&gt;, unsigned long long&gt;)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 635390b6d915b68d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::SourceBufferPrivate::abort()"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 812347f0f24d6e70"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::BackgroundFetch::Record::abort()"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 6198cfebe5611d2d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::BackgroundFetchRegistration::abort(WebCore::ScriptExecutionContext&amp;, WebCore::DOMPromiseDeferred&lt;WebCore::IDLBoolean&gt;&amp;&amp;)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - ed79f16fa8aadfa5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::SpeechRecognizer::abort(std::__1::optional&lt;WebCore::SpeechRecognitionError&gt;&amp;&amp;)"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 273918f4a9b0da62"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WebCore::IDBServer::UniqueIDBDatabaseTransaction::abort()"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - b1535f28da9e279a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[WebSpeechRecognizerTaskImpl abort]"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - edcd896c5bc78c12"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[WebSpeechRecognizerTask abort]"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 2ff42fed6ea6ad02"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[WebSpeechRecognizerTaskMock abort]"
+                  moduleName = "WebCore"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - f19a2497b1cf249b"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSPublisher abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 61d8ac7cb096f802"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSSubscriber abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 384676d0b5331b56"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSPublishStreamsProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - c3fe313b70423aaf"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSSubscribeStreamsProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - a697112635063eb2"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSMMCSProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - bde873e9dce65c40"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSServerSideConfigProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - f4ef268f353a2378"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSServerSideConfigManager abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - c2a8cec46637c043"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSResetServerProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 1a7e9a0f21a96fb9"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSReauthorizationProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - a4b5c28c772b5070"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSDeleter abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 4d2ec97c3bb31626"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSDeleteStreamsProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - fcefdda57b8dd8ec"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[MSStreamsProtocol abort]"
+                  moduleName = "CoreMediaStream"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - 5d01d7daa091fc52"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[FTCinematicHighPriorityTrackerState abort]"
+                  moduleName = "FusionTracker"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+               <Location
+                  uuid = "2D3FF5C3-86BF-40C4-98A5-E847B3A8268A - b5562ec17f3dee71"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "ExecutionSchedulerSortedConsecutiveIt&lt;ChecksumScheduler&lt;checksum::Any&lt;locks::None, checksum::None, checksum::CRC32&gt;::bind_algos, details::udif_verify::scheduler_type, locks::Std&gt;::wrapper, locks::Std, boost::iterators::transform_iterator&lt;interval_map2set_it::$_0, std::__1::__map_const_iterator&lt;std::__1::__tree_const_iterator&lt;std::__1::__value_type&lt;boost::icl::discrete_interval&lt;unsigned long long, std::__1::less&gt;, udif::details::run_info&gt;, std::__1::__tree_node&lt;std::__1::__value_type&lt;boost::icl::discrete_interval&lt;unsigned long long, std::__1::less&gt;, udif::details::run_info&gt;, void*&gt;*, long&gt;&gt;, boost::use_default, boost::use_default&gt;&gt;::abort()"
+                  moduleName = "DiskImages2"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.SymbolicBreakpoint">
+         <BreakpointContent
+            uuid = "C757DF62-EFD5-4934-95FB-10FC07E1E1EB"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            symbolName = "std::terminate"
+            moduleName = "">
+            <Locations>
+               <Location
+                  uuid = "C757DF62-EFD5-4934-95FB-10FC07E1E1EB - 44676062330c8984"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "std::terminate()"
+                  moduleName = "libc++abi.dylib"
+                  usesParentBreakpointCondition = "Yes">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

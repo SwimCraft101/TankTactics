@@ -19,13 +19,14 @@
 #ifndef TIMEMAN_H_INCLUDED
 #define TIMEMAN_H_INCLUDED
 
+#include <cstdint>
 
 #include "misc.h"
 
 namespace Stockfish {
 
 class OptionsMap;
-enum Color : u8;
+enum Color : uint8_t;
 
 namespace Search {
 struct LimitsType;
@@ -50,15 +51,15 @@ class TimeManagement {
     TimePoint elapsed_time() const { return now() - startTime; };
 
     void clear();
-    void advance_nodes_time(i64 nodes);
+    void advance_nodes_time(std::int64_t nodes);
 
    private:
     TimePoint startTime;
     TimePoint optimumTime;
     TimePoint maximumTime;
 
-    i64  availableNodes = -1;     // When in 'nodes as time' mode
-    bool useNodesTime   = false;  // True if we are in 'nodes as time' mode
+    std::int64_t availableNodes = -1;     // When in 'nodes as time' mode
+    bool         useNodesTime   = false;  // True if we are in 'nodes as time' mode
 };
 
 }  // namespace Stockfish

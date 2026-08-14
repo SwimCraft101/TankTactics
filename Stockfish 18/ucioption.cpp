@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <cerrno>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -35,7 +34,7 @@ bool CaseInsensitiveLess::operator()(const std::string& s1, const std::string& s
 
     return std::lexicographical_compare(
       s1.begin(), s1.end(), s2.begin(), s2.end(),
-      [](unsigned char c1, unsigned char c2) { return std::tolower(c1) < std::tolower(c2); });
+      [](char c1, char c2) { return std::tolower(c1) < std::tolower(c2); });
 }
 
 void OptionsMap::add_info_listener(InfoListener&& message_func) { info = std::move(message_func); }
@@ -69,7 +68,7 @@ const Option& OptionsMap::operator[](const std::string& name) const {
 void OptionsMap::add(const std::string& name, const Option& option) {
     if (!options_map.count(name))
     {
-        static usize insert_order = 0;
+        static size_t insert_order = 0;
 
         options_map[name] = option;
 
@@ -84,7 +83,10 @@ void OptionsMap::add(const std::string& name, const Option& option) {
 }
 
 
-usize OptionsMap::count(const std::string& name) const { return options_map.count(name); }
+std::size_t OptionsMap::count(const std::string& name) const { return options_map.count(name); }
+
+Option::Option(const OptionsMap* map) :
+    parent(map) {}
 
 Option::Option(const char* v, OnChange f) :
     type("string"),
@@ -142,16 +144,6 @@ bool Option::operator==(const char* s) const {
 
 bool Option::operator!=(const char* s) const { return !(*this == s); }
 
-static bool value_in_range(const std::string& v, int min, int max) {
-    if (v.empty())
-        return false;
-    errno                  = 0;
-    char*           end    = nullptr;
-    const long long result = std::strtoll(v.c_str(), &end, 10);
-    if (errno == ERANGE || *end != '\0')
-        return false;
-    return result >= min && result <= max;
-}
 
 // Updates currentValue and triggers on_change() action. It's up to
 // the GUI to check for option's limits, but we could receive the new value
@@ -162,7 +154,7 @@ Option& Option::operator=(const std::string& v) {
 
     if ((type != "button" && type != "string" && v.empty())
         || (type == "check" && v != "true" && v != "false")
-        || (type == "spin" && !value_in_range(v, min, max)))
+        || (type == "spin" && (std::stoi(v) < min || std::stoi(v) > max)))
         return *this;
 
     if (type == "combo")
@@ -193,7 +185,7 @@ Option& Option::operator=(const std::string& v) {
 }
 
 std::ostream& operator<<(std::ostream& os, const OptionsMap& om) {
-    for (usize idx = 0; idx < om.options_map.size(); ++idx)
+    for (size_t idx = 0; idx < om.options_map.size(); ++idx)
         for (const auto& it : om.options_map)
             if (it.second.idx == idx)
             {
