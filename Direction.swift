@@ -16,6 +16,10 @@ enum Direction: Codable {
         [.north, .south, .east, .west]
     }
     
+    static var random: Self {
+        all.randomElement()!
+    }
+    
     var changeInYValue: Int {
         switch self {
         case .north:

@@ -16,6 +16,7 @@ struct Message: Codable, Hashable {
 
 struct MessageView: View {
     var message: Message?
+    @ObservedObject var game: Game
     
     var body: some View {
         if message != nil {
@@ -23,9 +24,9 @@ struct MessageView: View {
                 TankTacticsHexagon()
                     .stroke(Color.black, lineWidth: inch(0.005))
                 HStack {
-                    BasicTileView(appearance: Game.shared.board.objects.first(where: { $0.uuid == message!.sender })!.appearance, accessibilitySettings: (Game.shared.board.objects.first(where: { $0.uuid == message!.recipient })! as! Tank).playerInfo.accessibilitySettings)
+                    BasicTileView(appearance: game.board.objects.first(where: { $0.uuid == message!.sender })!.appearance, accessibilitySettings: (game.board.objects.first(where: { $0.uuid == message!.recipient })! as! Tank).playerInfo.accessibilitySettings)
                         .frame(width: inch(0.5), height: inch(0.5), alignment: .center)
-                    Text(" To \((Game.shared.board.objects.first(where: { $0.uuid == message!.recipient })! as! Player).playerInfo.fullName)")
+                    Text(" To \((game.board.objects.first(where: { $0.uuid == message!.recipient })! as! Player).playerInfo.fullName)")
                         .font(.system(size: inch(0.25)))
                         .italic()
                 }
@@ -48,6 +49,8 @@ struct MessageView: View {
 struct MessageBackView: View {
     var message: Message?
     
+    @ObservedObject var game: Game
+    
     var body: some View {
         ZStack {
             TankTacticsHexagon()
@@ -59,7 +62,7 @@ struct MessageBackView: View {
                         Spacer()
                         Text("Respond to ")
                             .font(.system(size: inch(0.25)))
-                        BasicTileView(appearance: Game.shared.board.objects.first(where: { $0.uuid == message!.sender })!.appearance, accessibilitySettings: (Game.shared.board.objects.first(where: { $0.uuid == message!.recipient })! as! Tank).playerInfo.accessibilitySettings)
+                        BasicTileView(appearance: game.board.objects.first(where: { $0.uuid == message!.sender })!.appearance, accessibilitySettings: (game.board.objects.first(where: { $0.uuid == message!.recipient })! as! Tank).playerInfo.accessibilitySettings)
                             .frame(width: inch(0.25), height: inch(0.25), alignment: .center)
                         Text(":")
                             .font(.system(size: inch(0.25)))
@@ -78,9 +81,8 @@ struct MessageBackView: View {
 }
 
 struct MessageList: View {
-    @Environment(Game.self) private var game
-    
     @State private var message: Message = Message(text: "", sender: UUID(), recipient: UUID())
+    @ObservedObject var game: Game
     
     var body: some View {
         VStack {
@@ -141,8 +143,8 @@ struct MessageList: View {
 #Preview {
     @Previewable 
     
-    let sender = Game.shared.board.tanks.first!.uuid
-    let recipient = Game.shared.board.tanks.last!.uuid
+    let sender = previewCanvasGame.board.tanks.first!.uuid
+    let recipient = previewCanvasGame.board.tanks.last!.uuid
     let text = """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eleifend in nisl in varius. Proin vestibulum viverra mauris et faucibus. Vivamus egestas dapibus cursus. Mauris efficitur sollicitudin enim ornare euismod. Nulla viverra sit amet ipsum in euismod. Curabitur at euismod tortor. Nunc tincidunt condimentum enim quis porta. Nam blandit lorem ultrices tellus faucibus placerat. Proin sed pulvinar libero.
         """
@@ -150,8 +152,8 @@ struct MessageList: View {
     
     let message = Message(text: text, sender: sender, recipient: recipient)
     VSplitView {
-        MessageView(message: message)
-        MessageBackView(message: message)
+        MessageView(message: message, game: previewCanvasGame)
+        MessageBackView(message: message, game: previewCanvasGame)
     }
     .background(.white)
 }

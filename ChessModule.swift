@@ -121,32 +121,28 @@ fileprivate struct ChessSquare: View {
 }
 
 struct ChessGameView: View {
-    @Environment(Game.self) private var game
-    @State private var fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    
+    @ObservedObject var game: Game
+
     var body: some View {
-        VStack {
-            Grid(horizontalSpacing: 0, verticalSpacing: 0) {
-                let board = ChessBoard(fen)
-                ForEach(0..<8) { rowIndex in
-                    GridRow {
-                        ForEach(0..<8) { columnIndex in
-                            let piece = board[rowIndex][columnIndex]
-                            ChessSquare(piece: piece, color: ((rowIndex + columnIndex) % 2 == 1) ? .dark : .light)
+        let fen: String? = game.chessPuzzle?.fen
+        let board: ChessBoard? = if fen != nil { ChessBoard(fen!) } else { nil }
+        
+        if fen == nil {
+            Text("Chess Puzzle has not generated yet.")
+        } else {
+            VStack {
+                Grid(horizontalSpacing: 0, verticalSpacing: 0) {
+                    ForEach(0..<8) { rowIndex in
+                        GridRow {
+                            ForEach(0..<8) { columnIndex in
+                                let piece = board![rowIndex][columnIndex]
+                                ChessSquare(piece: piece, color: ((rowIndex + columnIndex) % 2 == 1) ? .dark : .light)
+                            }
                         }
                     }
                 }
+                Text(((fen!.split(separator: " ")[1] == "w") ? "White" : "Black") + " to move.")
             }
-            .frame(width: inch(3.5), height: inch(3.5), alignment: .center)
-
-            Text(((fen.split(separator: " ")[1] == "w") ? "White" : "Black") + " to move.")
-        }
-        .task {
-            fen = await game.chessPuzzle.fen
         }
     }
-}
-
-#Preview {
-    ChessGameView()
 }

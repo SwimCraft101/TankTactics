@@ -141,11 +141,14 @@ class Tank: BoardObject, Player {
     var playerInfo: PlayerInfo
     
     var energyProduction: Int { 100 } // The amount of energy availible for this tank to use each turn.
+    #warning("Tank Energy Production tiles and modules yet to be added, chess, etc.")
     var metal: Int
     
     var modules: [Module]
     
-    init(uuid: UUID, appearance: Appearance, coordinates: Coordinates, health: Int, playerInfo: PlayerInfo, metal: Int, modules: [Module]) {
+    var logs: [LogEntry]
+    
+    init(uuid: UUID, appearance: Appearance, coordinates: Coordinates, health: Int, playerInfo: PlayerInfo, metal: Int, modules: [Module] = [], logs: [LogEntry] = []) {
         self.uuid = uuid
         self.appearance = appearance
         self.coordinates = coordinates
@@ -153,6 +156,19 @@ class Tank: BoardObject, Player {
         self.playerInfo = playerInfo
         self.metal = metal
         self.modules = modules
+        self.logs = logs
+    }
+    
+    init(in game: Game) {
+        self.uuid = UUID()
+        self.appearance = Appearance(fillColor: .gray, strokeColor: .black, symbolColor: .black, symbol: "questionmark.square.dashed")
+        self.coordinates = game.board.randomOpenPosition
+        self.health = 100
+        self.playerInfo = PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false)
+        self.metal = 50
+        self.modules = []
+        #warning("Tank Starter Modules")
+        self.logs = []
     }
 }
 
@@ -165,10 +181,6 @@ class DeadTank: Player {
     var playerInfo: PlayerInfo
     var essence: Int
     var energy: Int
-    
-    var killer: (any Player)? {
-        Game.shared.board.objects.first(where: { $0.uuid == killedById }) as? any Player
-    }
     
     init(
         appearance: Appearance,

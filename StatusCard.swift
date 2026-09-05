@@ -83,53 +83,6 @@ struct TooManyModules: View {
     }
 }
 
-struct RightTriangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        // Start at the bottom-left corner
-        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-
-        // Draw a line to the bottom-right corner
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-
-        // Draw a line to the top-left corner (forming the right angle)
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-
-        // Close the path back to the starting point
-        path.closeSubpath()
-
-        return path
-    }
-}
-
-struct TankTacticsHexagon: Shape {
-    func path(in rect: CGRect) -> Path {
-        let rectangle: CGRect = CGRect(x: rect.minX, y: rect.minY, width: inch(3.535534), height: inch(2.715679))
-        
-        var path = Path()
-
-        // Start at the top-left corner
-        path.move(to: CGPoint(x: rectangle.minX, y: rectangle.minY))
-
-        // Draw a line to the bottom-left corner, offset a little to make the corner cut.
-        path.addLine(to: CGPoint(x: rectangle.minX, y: rectangle.maxY - inch(0.5)))
-        path.addLine(to: CGPoint(x: rectangle.minX + inch(0.5), y: rectangle.maxY))
-        
-        // Draw a line to the bottom-right corner
-        path.addLine(to: CGPoint(x: rectangle.maxX, y: rectangle.maxY))
-        
-        // Draw a line to the top-right corner, offset a little to make the corner cut.
-        path.addLine(to: CGPoint(x: rectangle.maxX, y: rectangle.minY + inch(0.5)))
-        path.addLine(to: CGPoint(x: rectangle.maxX - inch(0.5), y: rectangle.minY))
-
-        // Close the path back to the starting point
-        path.closeSubpath()
-
-        return path
-    }
-}
-
 struct PanelToCutOff: View {
     var body: some View {
         RightTriangle()
@@ -421,9 +374,10 @@ struct RotatedDirectionOptions: View {
 
 struct VirtualStatusCard: View {
     let tank: Tank
+    @ObservedObject var game: Game
     
     private var messagesReceived: [Message] {
-        return Game.shared.messages.filter { $0.recipient == tank.uuid }
+        return game.messages.filter { $0.recipient == tank.uuid }
     }
     
     var body: some View {

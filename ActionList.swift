@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct ActionList: View {
-    @Bindable private var game = Game.shared
+    @ObservedObject var game: Game
     
     var body: some View {
         ScrollView(.vertical) {

@@ -12,13 +12,11 @@ enum ModuleCategory {
     case minigame, info, action, ethereal
 }
 
-enum Module: View, Codable, Identifiable, Equatable, Hashable {
-    case tutorial, website, radar, drone, spy, conduit, storage, construction, chessPuzzle(fen: String), numberPuzzle
+enum Module: Codable, Identifiable, Equatable, Hashable {
+    case tutorial, website, radar, drone, spy, conduit, storage, construction, chessPuzzle, numberPuzzle
     
     var id: String {
         switch self {
-            case .chessPuzzle(let fen):
-                return "Chess Puzzle Module (\(fen))"
             default:
                 return name
         }
@@ -64,8 +62,35 @@ enum Module: View, Codable, Identifiable, Equatable, Hashable {
             }
         }() + " Module"
     }
+}
+
+struct ModuleView: View {
+    @ObservedObject var game: Game
+    let module: Module
     
     var body: some View {
-        Text("Hello I am a module")
+        switch module {
+            case .chessPuzzle: ChessGameView(game: game)
+            default: fatalError("The requested Module View type has not been implemented.")
+        }
+    }
+}
+
+extension Tank {
+    private var numberOfModulesByCategory: [ModuleCategory: Int] {
+        var result: [ModuleCategory: Int] = [:]
+        for moduleCategory in [ModuleCategory.ethereal, ModuleCategory.minigame, ModuleCategory.action, ModuleCategory.info] {
+            result[moduleCategory] = modules.count(where: { $0.moduleCategory == moduleCategory })
+        }
+        return result
+    }
+    
+    var hasTooManyModules: Bool {
+        let numberOfConduits = modules.count(where: { $0 == .conduit })
+        let numberOfModulesAllowed = 2 + numberOfConduits
+        let numberOfMinigameModules = numberOfModulesByCategory[.minigame] ?? 0
+        let numberOfNonMinigameModulePairs = max(numberOfModulesByCategory[.action] ?? 0, numberOfModulesByCategory[.info] ?? 0)
+        let numberOfModuleSlotsUsed = numberOfNonMinigameModulePairs + numberOfMinigameModules
+        return numberOfModuleSlotsUsed > numberOfModulesAllowed
     }
 }

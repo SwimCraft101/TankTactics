@@ -9,7 +9,8 @@ import Foundation
 import SwiftUI
 
 struct TurnNotesList: View {
-    @Environment(Game.self) private var game
+    @ObservedObject var game: Game
+    
     var body: some View {
         ScrollView(.vertical) {
             VStack {

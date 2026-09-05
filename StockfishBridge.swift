@@ -42,13 +42,15 @@ actor EmbeddedStockfishEngine {
             NSLog("Small NNUE file NOT FOUND in bundle")
         }
         
-        bridge?.sendCommand("setoption name Threads value 4")
+        bridge?.sendCommand("setoption name Threads value 1")
         
         bridge?.sendCommand("isready")
     }
 
     func setPosition(fen: String) {
+        NSLog("SETTING POSITION: %@", fen)
         bridge?.sendCommand("position fen \(fen)")
+        bridge?.sendCommand("d")   // ← temporary diagnostic
     }
 
     func setPosition(moves: [String]) {
@@ -163,51 +165,48 @@ actor EmbeddedStockfishEngine {
         bridge = nil
     }
 }
-@MainActor
+
 class ChessGameViewModel: ObservableObject {
     @Published var currentMove: String = ""
     @Published var isSearching: Bool = false
 
-    static let shared = ChessGameViewModel()   // one engine for the whole app
-
     private let engine = EmbeddedStockfishEngine()
-    private var started = false
 
-    private init() {
-        Task { await engine.start(); started = true }
+    init() {
+        Task { await engine.start() }
+    }
+
+    func puzzle() async -> ChessPuzzle {
+        await engine.generatePuzzle()
     }
 
     func bestMove(for fen: String, depth: Int = 18) async -> String {
         await engine.setPosition(fen: fen)
         return await engine.calculateBestMove(depth: depth)
     }
-    
-    func puzzle() async -> ChessPuzzle {
-        return await engine.generatePuzzle()
-    }
 }
 
 fileprivate func makeMove(_ currentMove: String, on fen: inout String) {
     let components = fen.split(separator: " ").map(String.init)
     guard components.count == 6, currentMove.count >= 4 else { return }
-
+    
     let boardStr = components[0]
     var activeColor = components[1]
     var castling = components[2]
     let epSquare = components[3]
     var halfmove = Int(components[4]) ?? 0
     var fullmove = Int(components[5]) ?? 1
-
+    
     let chars = Array(currentMove)
     let fromCol = Int(chars[0].asciiValue! - Character("a").asciiValue!)
     let fromRank = Int(String(chars[1]))!
     let toCol = Int(chars[2].asciiValue! - Character("a").asciiValue!)
     let toRank = Int(String(chars[3]))!
-
+    
     let fromRow = 8 - fromRank
     let toRow = 8 - toRank
     let promotion: Character? = chars.count > 4 ? chars[4] : nil
-
+    
     // Parse FEN board into an 8x8 grid (row 0 = rank 8, row 7 = rank 1)
     var grid: [[Character?]] = Array(repeating: Array(repeating: nil, count: 8), count: 8)
     let ranks = boardStr.split(separator: "/")
@@ -222,27 +221,27 @@ fileprivate func makeMove(_ currentMove: String, on fen: inout String) {
             }
         }
     }
-
+    
     guard let piece = grid[fromRow][fromCol] else { return }
     let isWhite = activeColor == "w"
     let isPawn = piece == "P" || piece == "p"
     let isKing = piece == "K" || piece == "k"
     let targetPiece = grid[toRow][toCol]
     var isCapture = targetPiece != nil
-
+    
     // Handle En Passant capture
     if isPawn && epSquare != "-" {
         let epCol = Int(Array(epSquare)[0].asciiValue! - Character("a").asciiValue!)
         let epRank = Int(String(Array(epSquare)[1]))!
         let epRow = 8 - epRank
-
+        
         if toRow == epRow && toCol == epCol {
             isCapture = true
             let capturedPawnRow = isWhite ? toRow + 1 : toRow - 1
             grid[capturedPawnRow][toCol] = nil
         }
     }
-
+    
     // Handle Castling rook movement
     if isKing && abs(toCol - fromCol) == 2 {
         if toCol == 6 { // Kingside
@@ -255,7 +254,7 @@ fileprivate func makeMove(_ currentMove: String, on fen: inout String) {
             grid[fromRow][3] = rook
         }
     }
-
+    
     // Move piece and apply promotion if specified
     grid[fromRow][fromCol] = nil
     if let promo = promotion {
@@ -264,7 +263,7 @@ fileprivate func makeMove(_ currentMove: String, on fen: inout String) {
     } else {
         grid[toRow][toCol] = piece
     }
-
+    
     // Determine new En Passant square for two-square pawn advances
     var nextEpSquare = "-"
     if isPawn && abs(toRow - fromRow) == 2 {
@@ -273,31 +272,31 @@ fileprivate func makeMove(_ currentMove: String, on fen: inout String) {
         let epFileChar = Character(UnicodeScalar(Character("a").asciiValue! + UInt8(fromCol)))
         nextEpSquare = "\(epFileChar)\(epRankVal)"
     }
-
+    
     // Update castling availability
     if piece == "K" {
         castling = castling.replacingOccurrences(of: "K", with: "").replacingOccurrences(of: "Q", with: "")
     } else if piece == "k" {
         castling = castling.replacingOccurrences(of: "k", with: "").replacingOccurrences(of: "q", with: "")
     }
-
+    
     func updateRookRights(row: Int, col: Int) {
         if row == 7 && col == 7 { castling = castling.replacingOccurrences(of: "K", with: "") }
         if row == 7 && col == 0 { castling = castling.replacingOccurrences(of: "Q", with: "") }
         if row == 0 && col == 7 { castling = castling.replacingOccurrences(of: "k", with: "") }
         if row == 0 && col == 0 { castling = castling.replacingOccurrences(of: "q", with: "") }
     }
-
+    
     updateRookRights(row: fromRow, col: fromCol)
     updateRookRights(row: toRow, col: toCol)
-
+    
     if castling.isEmpty { castling = "-" }
-
+    
     // Update clocks and turn counter
     halfmove = (isPawn || isCapture) ? 0 : halfmove + 1
     if !isWhite { fullmove += 1 }
     activeColor = isWhite ? "b" : "w"
-
+    
     // Rebuild board position string
     var boardRanks: [String] = []
     for r in 0..<8 {
@@ -317,6 +316,6 @@ fileprivate func makeMove(_ currentMove: String, on fen: inout String) {
         if emptyCount > 0 { rankStr += "\(emptyCount)" }
         boardRanks.append(rankStr)
     }
-
+    
     fen = "\(boardRanks.joined(separator: "/")) \(activeColor) \(castling) \(nextEpSquare) \(halfmove) \(fullmove)"
 }

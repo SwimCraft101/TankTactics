@@ -10,39 +10,34 @@ import SwiftUI
 struct Coordinates: Equatable, Codable {
     let x: Int
     let y: Int
-    let level: Int
     let rotation: Direction
     
     mutating func x(_ newX: Int) {
-        self = .init(x: newX, y: y, level: level, rotation: rotation)
+        self = .init(x: newX, y: y, rotation: rotation)
     }
     
     mutating func y(_ newY: Int) {
-        self = .init(x: x, y: newY, level: level, rotation: rotation)
-    }
-    
-    mutating func level(_ newLevel: Int) {
-        self = .init(x: x, y: y, level: newLevel, rotation: rotation)
+        self = .init(x: x, y: newY, rotation: rotation)
     }
     
     mutating func rotation(_ newRotation: Direction) {
-        self = .init(x: x, y: y, level: level, rotation: newRotation)
+        self = .init(x: x, y: y, rotation: newRotation)
     }
     
     mutating func moveBy(_ direction: Direction) {
-        self = .init(x: x + direction.changeInXValue, y: y + direction.changeInYValue, level: level, rotation: rotation)
+        self = .init(x: x + direction.changeInXValue, y: y + direction.changeInYValue, rotation: rotation)
     }
     
     func viewOffset(right: Int, up: Int) -> Coordinates {
         switch rotation {
         case .north:
-            return Coordinates(x: x + right, y: y + up, level: level)
+            return Coordinates(x: x + right, y: y + up)
         case .east:
-            return Coordinates(x: x + up, y: y - right, level: level)
+            return Coordinates(x: x + up, y: y - right)
         case .south:
-            return Coordinates(x: x - right, y: y - up, level: level)
+            return Coordinates(x: x - right, y: y - up)
         case .west:
-            return Coordinates(x: x - up, y: y + right, level: level)
+            return Coordinates(x: x - up, y: y + right)
         }
     }
     
@@ -55,23 +50,12 @@ struct Coordinates: Equatable, Codable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         if lhs.x != rhs.x { return false }
         if lhs.y != rhs.y { return false }
-        if lhs.level != rhs.level { return false }
         return true
     }
     
-    func inBounds() -> Bool {
-        if(abs(x) <= Game.shared.board.border) {
-            if(abs(y) <= Game.shared.board.border) {
-                return true
-            }
-        }
-        return false
-    }
-    
-    init(x: Int, y: Int, level: Int = 0, rotation: Direction = .all.randomElement()!) {
+    init(x: Int, y: Int, rotation: Direction = .all.randomElement()!) {
         self.x = x
         self.y = y
-        self.level = level
         self.rotation = rotation
     }
     
@@ -136,20 +120,18 @@ enum CollisionType: Codable {
 }
 
 enum DamageType: Codable {
-    case tankWeapon(tank: UUID); #warning("Once modules are finalized split this into different types")
-    case tankCollision(tank: UUID)
+    case tankWeapon(killerName: String); #warning("Once modules are finalized split this into different types")
+    case tankCollision(colliderName: String)
     case wallCollision
     case smite //intentionally anonymous
     case outerWall
     
     func damageMessage(for damageAmount: Int) -> String {
         switch self {
-            case .tankWeapon (let tank):
-                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
-                return "\(tankName) shot you, dealing \(damageAmount)􀲗."
-            case .tankCollision (let tank):
-                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
-                return "\(tank) crashed into you, dealing \(damageAmount)􀲗."
+            case .tankWeapon (let playerName):
+                return "\(playerName) shot you, dealing \(damageAmount)􀲗."
+            case .tankCollision (let playerName):
+                return "\(playerName) crashed into you, dealing \(damageAmount)􀲗."
             case .wallCollision:
                 return "You crashed into a wall, taking \(damageAmount)􀲗."
             case .smite:
@@ -161,12 +143,10 @@ enum DamageType: Codable {
     
     func deathMessage(for nameOfDeceased: String) -> String {
         switch self {
-            case .tankWeapon (let tank):
-                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
-                return "\(nameOfDeceased) was killed by \(tankName)."
-            case .tankCollision (let tank):
-                let tankName = Game.shared.board.tanks.first(where: { $0.uuid == tank })!.playerInfo.fullName
-                return "\(nameOfDeceased) was killed in a crash with \(tankName)."
+            case .tankWeapon (let playerName):
+                return "\(nameOfDeceased) was killed by \(playerName)."
+            case .tankCollision (let playerName):
+                return "\(nameOfDeceased) was killed in a crash with \(playerName)."
             case .wallCollision:
                 return "\(nameOfDeceased) got into a fight against a Wall and lost."
             case .smite:

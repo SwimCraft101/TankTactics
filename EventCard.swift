@@ -35,7 +35,7 @@ enum EventCardRarity {
 //receive random player's coordinates
 //"" anonymously?
 
-enum EventCard: View {
+enum EventCard: View, Codable {
     // COMMON CARDS
     case meteorite, boost
     case radarModule, storageModule, constructionModule
@@ -170,7 +170,7 @@ enum EventCard: View {
         }
     }
     
-    func preExecute(by tank: UnsafeMutablePointer<Tank>, target: UnsafeMutablePointer<any BoardObject>? = nil) { // Runs before turn.
+    func preExecute(by tank: UnsafeMutablePointer<Tank>, on target: UnsafeMutablePointer<any BoardObject>? = nil, in game: Game) { // Runs before turn.
         switch self {
             case .meteorite:
                 tank.pointee.metal += 10
@@ -179,7 +179,7 @@ enum EventCard: View {
                 tank.pointee.health += 10
                 return
             case .meteorShower:
-                for object in Game.shared.board.objects {
+                for object in game.board.objects {
                     if let targetTank = object as? Tank {
                         if targetTank.coordinates.distanceTo(tank.pointee.coordinates) > 10 { continue }
                         targetTank.metal += 10
@@ -187,7 +187,7 @@ enum EventCard: View {
                 }
                 return
             case .storm:
-                for object in Game.shared.board.objects {
+                for object in game.board.objects {
                     if let targetTank = object as? Tank {
                         if targetTank.coordinates.distanceTo(tank.pointee.coordinates) > 10 { continue }
                         targetTank.health -= 10
@@ -197,7 +197,7 @@ enum EventCard: View {
             case .smite:
                 target?.pointee.health -= 10
             case .disruptor:
-                Game.shared.notes.append("Do not deliver a Status Card to \((target!.pointee as! Player).playerInfo.fullName)! They were Disrupted by \(tank.pointee.playerInfo.fullName).")
+                game.notes.append("Do not deliver a Status Card to \((target!.pointee as! Player).playerInfo.fullName)! They were Disrupted by \(tank.pointee.playerInfo.fullName).")
             case .radarModule:
                 tank.pointee.modules.append(.radar)
                 return
@@ -223,16 +223,17 @@ enum EventCard: View {
                 if Int.random(in: 0...3) == 0 {
                     for _ in 1...3 {
                         let card = Self.init()
-                        Game.shared.eventCardsToPrint.append(card)
-                        Game.shared.notes.append("Give \(tank.pointee.playerInfo.fullName) the \(card.name) Event Card.")
+                        game.eventCardsToPrint.append(card)
+                        game.notes.append("Give \(tank.pointee.playerInfo.fullName) the \(card.name) Event Card.")
                     }
                 } else {
-                    Game.shared.notes.append("Do not deliver a Status Card to \(tank.pointee.playerInfo.fullName)! They ate Moon Deer Stew!")
+                    game.notes.append("Do not deliver a Status Card to \(tank.pointee.playerInfo.fullName)! They ate Moon Deer Stew!")
+                    #warning("Add a status card exclude list.")
                 }
         }
     }
     
-    func postExecute(by tank: Tank) { // Runs after turn. Allows for temporary boosts in stats like MovementRange.
+    func postExecute(by tank: UnsafeMutablePointer<Tank>, on target: UnsafeMutablePointer<any BoardObject>? = nil, in game: Game) {
         switch self {
         case .meteorite: return
         case .boost: return

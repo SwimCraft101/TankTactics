@@ -23,7 +23,6 @@
 		5966EA2A302BEBC200D7735C /* memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966E9ED302BEBC200D7735C /* memory.cpp */; };
 		5966EA2B302BEBC200D7735C /* movepick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966E9F3302BEBC200D7735C /* movepick.cpp */; };
 		5966EA2C302BEBC200D7735C /* uci.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA21302BEBC200D7735C /* uci.cpp */; };
-		5966EA2D302BEBC200D7735C /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 5966E9EB302BEBC200D7735C /* Makefile */; };
 		5966EA2F302BEBC200D7735C /* search.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA10302BEBC200D7735C /* search.cpp */; };
 		5966EA31302BEBC200D7735C /* movegen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966E9F1302BEBC200D7735C /* movegen.cpp */; };
 		5966EA32302BEBC200D7735C /* thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA17302BEBC200D7735C /* thread.cpp */; };
@@ -35,7 +34,12 @@
 		5966EA3B302BEBC200D7735C /* score.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA0E302BEBC200D7735C /* score.cpp */; };
 		5966EA42302BEDA700D7735C /* engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA41302BEDA700D7735C /* engine.cpp */; };
 		5966EA45302BEF0400D7735C /* nn-c288c895ea92.nnue in Resources */ = {isa = PBXBuildFile; fileRef = 5966EA44302BEF0400D7735C /* nn-c288c895ea92.nnue */; };
-		5966EA46302BEF0400D7735C /* nn-37f18f62d772.nnue in Resources */ = {isa = PBXBuildFile; fileRef = 5966EA43302BEF0400D7735C /* nn-37f18f62d772.nnue */; };
+		5966EA48302FDA1B00D7735C /* Swift Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA47302FDA1B00D7735C /* Swift Utilities.swift */; };
+		5966EA4A3030E60000D7735C /* BlockRowColModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5966EA493030E60000D7735C /* BlockRowColModule.swift */; };
+		596B8A263034A9A900E016B1 /* DEBUG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596B8A253034A9A700E016B1 /* DEBUG.swift */; };
+		596B8A2A3037633A00E016B1 /* TankLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596B8A293037633700E016B1 /* TankLog.swift */; };
+		596B8A2C3037656600E016B1 /* StatusCardShapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 596B8A2B3037656600E016B1 /* StatusCardShapes.swift */; };
+		596B8A2E3037826C00E016B1 /* nn-37f18f62d772.nnue in Resources */ = {isa = PBXBuildFile; fileRef = 596B8A2D3037826C00E016B1 /* nn-37f18f62d772.nnue */; };
 		59ABD62C301FF87800E40D16 /* StockfishBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59ABD62B301FF87800E40D16 /* StockfishBridge.swift */; };
 		59ABD62D301FFA1000E40D16 /* StockfishBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 59ABD629301FF76B00E40D16 /* StockfishBridge.mm */; };
 		59ABD64A3020D28E00E40D16 /* ChessModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59ABD6493020D28E00E40D16 /* ChessModule.swift */; };
@@ -67,7 +71,6 @@
 		5966E9E5302BEBC200D7735C /* evaluate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = evaluate.h; sourceTree = "<group>"; };
 		5966E9E6302BEBC200D7735C /* evaluate.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = evaluate.cpp; sourceTree = "<group>"; };
 		5966E9E7302BEBC200D7735C /* history.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = history.h; sourceTree = "<group>"; };
-		5966E9EB302BEBC200D7735C /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		5966E9EC302BEBC200D7735C /* memory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = memory.h; sourceTree = "<group>"; };
 		5966E9ED302BEBC200D7735C /* memory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = memory.cpp; sourceTree = "<group>"; };
 		5966E9EE302BEBC200D7735C /* misc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = misc.h; sourceTree = "<group>"; };
@@ -102,8 +105,13 @@
 		5966EA23302BEBC200D7735C /* ucioption.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ucioption.cpp; sourceTree = "<group>"; };
 		5966EA40302BEDA700D7735C /* engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = engine.h; sourceTree = "<group>"; };
 		5966EA41302BEDA700D7735C /* engine.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = engine.cpp; sourceTree = "<group>"; };
-		5966EA43302BEF0400D7735C /* nn-37f18f62d772.nnue */ = {isa = PBXFileReference; lastKnownFileType = file; path = "nn-37f18f62d772.nnue"; sourceTree = "<group>"; };
-		5966EA44302BEF0400D7735C /* nn-c288c895ea92.nnue */ = {isa = PBXFileReference; lastKnownFileType = file; path = "nn-c288c895ea92.nnue"; sourceTree = "<group>"; };
+		5966EA44302BEF0400D7735C /* nn-c288c895ea92.nnue */ = {isa = PBXFileReference; lastKnownFileType = text; path = "nn-c288c895ea92.nnue"; sourceTree = "<group>"; };
+		5966EA47302FDA1B00D7735C /* Swift Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Swift Utilities.swift"; sourceTree = "<group>"; };
+		5966EA493030E60000D7735C /* BlockRowColModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockRowColModule.swift; sourceTree = "<group>"; };
+		596B8A253034A9A700E016B1 /* DEBUG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DEBUG.swift; sourceTree = "<group>"; };
+		596B8A293037633700E016B1 /* TankLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TankLog.swift; sourceTree = "<group>"; };
+		596B8A2B3037656600E016B1 /* StatusCardShapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusCardShapes.swift; sourceTree = "<group>"; };
+		596B8A2D3037826C00E016B1 /* nn-37f18f62d772.nnue */ = {isa = PBXFileReference; lastKnownFileType = file; path = "nn-37f18f62d772.nnue"; sourceTree = "<group>"; };
 		59ABD628301FF71500E40D16 /* StockfishBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StockfishBridge.h; sourceTree = "<group>"; };
 		59ABD629301FF76B00E40D16 /* StockfishBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = StockfishBridge.mm; sourceTree = "<group>"; };
 		59ABD62A301FF79D00E40D16 /* TankTactics-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TankTactics-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -153,7 +161,6 @@
 				5966E9E6302BEBC200D7735C /* evaluate.cpp */,
 				5966E9E7302BEBC200D7735C /* history.h */,
 				5966E9EA302BEBC200D7735C /* incbin */,
-				5966E9EB302BEBC200D7735C /* Makefile */,
 				5966E9EC302BEBC200D7735C /* memory.h */,
 				5966E9ED302BEBC200D7735C /* memory.cpp */,
 				5966E9EE302BEBC200D7735C /* misc.h */,
@@ -204,9 +211,12 @@
 				59DF6B0C2C57C9D500CB3F9A /* GameBoard.swift */,
 				592B7F7F2C3863E2001EA317 /* BoardObject.swift */,
 				592B80492C3A0A22008F41BF /* Tank.swift */,
+				596B8A293037633700E016B1 /* TankLog.swift */,
+				596B8A2B3037656600E016B1 /* StatusCardShapes.swift */,
 				5937400D2E5F959500E6C733 /* TankAction.swift */,
 				59C8CD542E6F857400151076 /* Inspector.swift */,
 				5910A74C2E05F4A000B217BB /* Game.swift */,
+				5966EA493030E60000D7735C /* BlockRowColModule.swift */,
 				59E01EB62E7E0C2E002544A2 /* EventCard.swift */,
 				5910A74E2E05F4DD00B217BB /* Message.swift */,
 				59AECC6C2E8DDEC800082FC0 /* TurnNotesList.swift */,
@@ -216,8 +226,8 @@
 				59E01EB22E7CBECD002544A2 /* ActionList.swift */,
 				592B804F2C42AB9B008F41BF /* Direction.swift */,
 				59B7E55B2E451C5600105725 /* Viewport.swift */,
-				5966EA43302BEF0400D7735C /* nn-37f18f62d772.nnue */,
 				5966EA44302BEF0400D7735C /* nn-c288c895ea92.nnue */,
+				596B8A2D3037826C00E016B1 /* nn-37f18f62d772.nnue */,
 				59DF70B62BF553F7001E64B3 /* TankTactics */,
 				59DF70B52BF553F7001E64B3 /* Products */,
 			);
@@ -234,6 +244,8 @@
 		59DF70B62BF553F7001E64B3 /* TankTactics */ = {
 			isa = PBXGroup;
 			children = (
+				5966EA47302FDA1B00D7735C /* Swift Utilities.swift */,
+				596B8A253034A9A700E016B1 /* DEBUG.swift */,
 				59D77B232C93836600BD384A /* Info.plist */,
 				59ABD62A301FF79D00E40D16 /* TankTactics-Bridging-Header.h */,
 				59DF70B72BF553F7001E64B3 /* TankTacticsApp.swift */,
@@ -306,8 +318,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				596B8A2E3037826C00E016B1 /* nn-37f18f62d772.nnue in Resources */,
 				5966EA45302BEF0400D7735C /* nn-c288c895ea92.nnue in Resources */,
-				5966EA46302BEF0400D7735C /* nn-37f18f62d772.nnue in Resources */,
 				59DF70BE2BF553F8001E64B3 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -326,7 +338,6 @@
 				5966EA2A302BEBC200D7735C /* memory.cpp in Sources */,
 				5966EA2B302BEBC200D7735C /* movepick.cpp in Sources */,
 				5966EA2C302BEBC200D7735C /* uci.cpp in Sources */,
-				5966EA2D302BEBC200D7735C /* Makefile in Sources */,
 				5966EA2F302BEBC200D7735C /* search.cpp in Sources */,
 				5966EA31302BEBC200D7735C /* movegen.cpp in Sources */,
 				5966EA32302BEBC200D7735C /* thread.cpp in Sources */,
@@ -334,6 +345,7 @@
 				5966EA35302BEBC200D7735C /* misc.cpp in Sources */,
 				5966EA36302BEBC200D7735C /* bitboard.cpp in Sources */,
 				5966EA37302BEBC200D7735C /* benchmark.cpp in Sources */,
+				5966EA48302FDA1B00D7735C /* Swift Utilities.swift in Sources */,
 				5966EA3A302BEBC200D7735C /* tune.cpp in Sources */,
 				5966EA42302BEDA700D7735C /* engine.cpp in Sources */,
 				5966EA3B302BEBC200D7735C /* score.cpp in Sources */,
@@ -344,17 +356,21 @@
 				594D86F92CAF2F2B00916C89 /* MakePDF.swift in Sources */,
 				59ABD62D301FFA1000E40D16 /* StockfishBridge.mm in Sources */,
 				596376A52CFB5BB000059FCA /* DeadStatusCard.swift in Sources */,
+				5966EA4A3030E60000D7735C /* BlockRowColModule.swift in Sources */,
 				59B7E55A2E428E3800105725 /* Module.swift in Sources */,
 				59DF6B0D2C57C9DE00CB3F9A /* GameBoard.swift in Sources */,
 				59ABD64A3020D28E00E40D16 /* ChessModule.swift in Sources */,
+				596B8A2C3037656600E016B1 /* StatusCardShapes.swift in Sources */,
 				59ABD62C301FF87800E40D16 /* StockfishBridge.swift in Sources */,
 				595A2D092C6655A10086A452 /* StatusCard.swift in Sources */,
 				59E01EB72E7E0C2E002544A2 /* EventCard.swift in Sources */,
 				59C8CD552E6F857400151076 /* Inspector.swift in Sources */,
+				596B8A2A3037633A00E016B1 /* TankLog.swift in Sources */,
 				5910A74F2E05F4DD00B217BB /* Message.swift in Sources */,
 				592B80502C42ABAB008F41BF /* Direction.swift in Sources */,
 				59AECC6D2E8DDECE00082FC0 /* TurnNotesList.swift in Sources */,
 				59B7E55C2E451C5600105725 /* Viewport.swift in Sources */,
+				596B8A263034A9A900E016B1 /* DEBUG.swift in Sources */,
 				59E01EB32E7CBEDC002544A2 /* ActionList.swift in Sources */,
 				59DF70B82BF553F7001E64B3 /* TankTacticsApp.swift in Sources */,
 			);
@@ -492,6 +508,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_ENTITLEMENTS = TankTactics/TankTactics.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -530,6 +547,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_ENTITLEMENTS = TankTactics/TankTactics.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

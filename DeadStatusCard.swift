@@ -197,5 +197,5 @@ struct DeadVirtualStatusCard: View {
 }
 */
 #Preview {
-    DeadStatusCardBack(tank: DeadTank(appearance: Appearance(fillColor: .red, symbol: "rainbow"), killedById: Game.shared.board.objects.first!.uuid, playerInfo: PlayerInfo(firstName: "first", lastName: "last", deliveryBuilding: "build", deliveryType: "locker", deliveryNumber: "67", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 1, doVirtualDelivery: false), essence: 23, energy: 5, uuid: UUID()))
+    DeadStatusCardBack(tank: DeadTank(appearance: Appearance(fillColor: .red, symbol: "rainbow"), killedById: previewCanvasGame.board.tanks.first!.uuid, playerInfo: PlayerInfo(firstName: "first", lastName: "last", deliveryBuilding: "build", deliveryType: "locker", deliveryNumber: "67", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 1, doVirtualDelivery: false), essence: 23, energy: 5, uuid: UUID()))
 }

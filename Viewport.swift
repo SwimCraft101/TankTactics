@@ -16,7 +16,9 @@ struct SquareViewport: View {
     let radarRange: Int
     let accessibilitySettings: AccessibilitySettings
     
-    @Binding var selectedObject: any BoardObject
+    @Binding var selectedObject: (any BoardObject)?
+    
+    @ObservedObject var game: Game
     
     var body: some View {
         GeometryReader { geometry in
@@ -24,7 +26,7 @@ struct SquareViewport: View {
                 ForEach(((-viewRenderSize)...viewRenderSize).reversed(), id: \.self) { upOffset in
                     GridRow {
                         ForEach(((-viewRenderSize)...viewRenderSize), id: \.self) { rightOffset in
-                            TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings, selectedObject: $selectedObject)
+                            TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings, selectedObject: $selectedObject, game: game)
                         }
                     }
                 }
@@ -42,7 +44,9 @@ struct TriangleViewport: View {
     let radarRange: Int
     let accessibilitySettings: AccessibilitySettings
     
-    @Binding var selectedObject: any BoardObject
+    @Binding var selectedObject: (any BoardObject)?
+    
+    @ObservedObject var game: Game
     
     var body: some View {
         GeometryReader { geometry in
@@ -71,7 +75,7 @@ struct TriangleViewport: View {
                                         .rotationEffect(coordinates.rotation.angle)
                                         .foregroundStyle(.black)
                                 } else {
-                                    TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings, selectedObject: $selectedObject)
+                                    TileView(centerCoordinates: coordinates, highDetailSightRange: highDetailSightRange, lowDetailSightRange: lowDetailSightRange, radarRange: radarRange, coordinates: coordinates.viewOffset(right: rightOffset, up: upOffset), accessibilitySettings: accessibilitySettings, selectedObject: $selectedObject, game: game)
                                 }
                             } else {
                                 BasicTileView(appearance: nil, accessibilitySettings: accessibilitySettings)
@@ -136,12 +140,12 @@ struct TileView: View {
     
     var thisTile: (any BoardObject)? { game.board.objects.first(where: { $0.coordinates == coordinates }) }
     
-    @Binding var selectedObject: any BoardObject
+    @Binding var selectedObject: (any BoardObject)?
     
-    @Bindable private var game = Game.shared
+    @ObservedObject var game: Game
     
-    func getAppearenceAtLocation() -> Appearance { //MARK: make this less horrible
-        if coordinates.inBounds() {
+    func getAppearenceAtLocation() -> Appearance { #warning("Please make this less horrible.")
+        if game.board.inBounds(at: coordinates) {
             for tile in game.board.objects { //if there is an object, it will be rendered here
                 if tile.coordinates != coordinates { //first and most important check: that this tile is in the correct location to be rendered.
                     continue //skips to next object in the loop
@@ -184,7 +188,7 @@ struct TileView: View {
             //renderer for out of bounds tiles
             if coordinates.distanceTo(centerCoordinates) <= radarRange {
                 if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
-                    return game.board.showBorderWarning ? Appearance(fillColor: .black, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Wall(coordinates: Coordinates(x: 0, y: 0, level: 0)).appearance
+                    return game.board.showBorderWarning ? Appearance(fillColor: .gray, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Appearance(fillColor: .gray, symbolColor: .gray, symbol: "rectangle")
                 }
                 let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
                 return Appearance(fillColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
@@ -207,7 +211,7 @@ struct TileView: View {
                         game.board.oreDeposits.append(OreDeposit(coordinates: coordinates))
                     }
                     Button("􀭉 Add New Tank") {
-                        game.board.tanks.append(Tank(uuid: UUID(), appearance: Appearance(fillColor: .gray, strokeColor: .black, symbolColor: .black, symbol: "questionmark.square.dashed"), coordinates: coordinates, health: 100, playerInfo: PlayerInfo(firstName: "", lastName: "", deliveryBuilding: "", deliveryType: "", deliveryNumber: "", virtualDelivery: nil, accessibilitySettings: AccessibilitySettings(), kills: 0, doVirtualDelivery: false), metal: 50, modules: []))
+                        game.board.tanks.append(Tank(in: game))
                     }
                 }
             }
@@ -223,13 +227,13 @@ struct TileView: View {
     }
 }
 
-let selectedObjectBindingDefault = Binding<any BoardObject>(get: { Wall(coordinates: Coordinates(x: 0, y: 0)) }, set: { _ in fatalError() })
+let selectedObjectBindingDefault = Binding<(any BoardObject)?>(get: { nil }, set: { _ in print("An attempt to edit the nil binding was made.") })
 
 #Preview {
     VStack {
-        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 100, lowDetailSightRange: 200, radarRange: 300, accessibilitySettings: AccessibilitySettings(), selectedObject: selectedObjectBindingDefault)
+        TriangleViewport(coordinates: Coordinates(x: 0, y: 0, rotation: .south), viewRenderSize: 7, highDetailSightRange: 100, lowDetailSightRange: 200, radarRange: 300, accessibilitySettings: AccessibilitySettings(), selectedObject: selectedObjectBindingDefault, game: previewCanvasGame)
             .frame(width: inch(4), height: inch(4))
-        SquareViewport(coordinates: Coordinates(x: 0, y: 0, level: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, accessibilitySettings: AccessibilitySettings(), selectedObject: selectedObjectBindingDefault)
+        SquareViewport(coordinates: Coordinates(x: 0, y: 0, rotation: .south), viewRenderSize: 4, highDetailSightRange: 1, lowDetailSightRange: 2, radarRange: 3, accessibilitySettings: AccessibilitySettings(), selectedObject: selectedObjectBindingDefault, game: previewCanvasGame)
             .frame(width: inch(4), height: inch(4))
     }
     .background(.white)

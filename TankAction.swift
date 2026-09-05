@@ -20,14 +20,19 @@ protocol ArbitraryFuelAndMetalAmountAction {
     var metalAmount: Int { get }
 }
 
-protocol TankAction: Identifiable {
-    var tankId: UUID { get }
-    var energyCost: Int { get }
-    var metalCost: Int { get }
+enum TankAction: Identifiable, Codable {
+    var tankId: UUID { fatalError() }
+    var energyCost: Int { fatalError() }
+    var metalCost: Int { fatalError() }
     
-    static var icon: String { get }
+    static var icon: String { fatalError() }
     
-    var isAllowed: Bool { get }
+    var isAllowed: Bool { fatalError() }
     
-    func execute()
+    func execute() { fatalError() }
+    
+    var id: UUID { UUID() }
+    #warning("Is this safe?")
+    
+    case notImplementedYet, alsoNotImplemented
 }

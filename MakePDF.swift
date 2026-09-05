@@ -52,7 +52,7 @@ func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize 
     
     // Add each view as a separate page in the PDF document
     for view in views {
-        let image = imageFromView(AnyView(view.environment(Game.shared)), size: pageSize)
+        let image = imageFromView(AnyView(view), size: pageSize)
         let pdfPage = PDFPage(image: image)
         
         if let page = pdfPage {
@@ -76,24 +76,24 @@ func createAndSavePDF(from views: [AnyView], fileName: String, pageSize: CGSize 
     }
 }
 
-func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventCards eventCardsIn: [EventCard], notes notesIn: [String], printerCalibration: PrinterCalibration) {
+func saveTurnToPDF(players: [any Player], forGame game: Game, printerCalibration: PrinterCalibration) {
     var pages: [AnyView] = []
     var playersToPrintInConduitMode: [any Player] = players.filter({ $0.statusCardConduitFront() != nil })
     playersToPrintInConduitMode.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
     var playersToPrintNormally: [any Player] = players.filter({ $0.statusCardConduitFront() == nil })
     playersToPrintNormally.removeAll(where: { $0.playerInfo.accessibilitySettings.largeText })
     var playersToPrintWithLargeText: [any Player] = players.filter({ $0.playerInfo.accessibilitySettings.largeText })
-    var messages = messagesIn
-    var eventCards = eventCardsIn
-    var notes = notesIn
+    var messages = game.messages
+    var eventCards = game.eventCardsToPrint
+    var notes = game.notes
     
     var extraCards: [(AnyView, AnyView)] = []
     
     while !messages.isEmpty {
         extraCards.append(
             (
-                AnyView(MessageView(message: messages.first)),
-                AnyView(MessageBackView(message: messages.removeFirst()))
+                AnyView(MessageView(message: messages.first, game: game)),
+                AnyView(MessageBackView(message: messages.removeFirst(), game: game))
             )
         )
     }
@@ -126,7 +126,8 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .frame(width: inch(10.5), height: inch(105/16))
             .border(.black, width: inch(0.005))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)))
+                            )
+                    )
         pages.append(AnyView(HStack(spacing:0) {
             player.statusCardBack()
                 .scaleEffect(21/16)
@@ -136,7 +137,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .border(.black, width: inch(0.005))
             .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)
         ))
         
         if player.statusCardConduitFront() != nil {
@@ -147,7 +147,8 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
                 .frame(width: inch(21/4), height: inch(21/4))
                 .border(.black, width: inch(0.005))
                 .frame(width: inch(11), height: inch(8.5))
-                .environment(Game.shared)))
+                                 )
+                         )
             pages.append(AnyView(HStack(spacing:0) {
                 player.statusCardConduitBack()
                     .scaleEffect(21/16)
@@ -156,7 +157,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
                 .border(.black, width: inch(0.005))
                 .compensateForPrinterAlignment(printerCalibration)
                 .frame(width: inch(11), height: inch(8.5))
-                .environment(Game.shared)
             ))
         }
     }
@@ -191,7 +191,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .border(.black, width: inch(0.005))
             .frame(width: inch(10), height: inch(8))
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)
             )
         )
         pages.append(AnyView(HStack(spacing:0) {
@@ -221,7 +220,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .frame(width: inch(10), height: inch(8))
             .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)
         ))
     }
     
@@ -237,8 +235,7 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
         }
             .frame(width: inch(10), height: inch(8))
             .border(.black, width: inch(0.005))
-            .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
         pages.append(AnyView(HStack(spacing: 0) {
             player2.statusCardBack()
                 .frame(width: inch(5), height: inch(8))
@@ -249,7 +246,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .border(.black, width: inch(0.005))
             .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)
         ))
     }
     
@@ -266,8 +262,7 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
         }
             .frame(width: inch(10), height: inch(8))
             .border(.black, width: inch(0.005))
-            .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
         pages.append(AnyView(HStack(spacing: 0) {
             VStack(spacing: 0) {
                 extraCards[safe: 0]?.1 ?? AnyView(Rectangle().foregroundColor(.white).frame(width: inch(3.535534), height: inch(2.715679)))
@@ -281,7 +276,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .border(.black, width: inch(0.005))
             .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)
         ))
         
         if extraCards.count <= 2 {
@@ -318,8 +312,7 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
         }
             .frame(width: inch(10), height: inch(8))
             .border(.black, width: inch(0.005))
-            .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)))
+            .frame(width: inch(11), height: inch(8.5), alignment: .center)))
         pages.append(AnyView(HStack(spacing: 0) {
             Grid(alignment: .topTrailing, horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
@@ -348,7 +341,6 @@ func saveTurnToPDF(players: [any Player], messages messagesIn: [Message], eventC
             .border(.black, width: inch(0.005))
             .compensateForPrinterAlignment(printerCalibration)
             .frame(width: inch(11), height: inch(8.5), alignment: .center)
-            .environment(Game.shared)
         ))
         if extraCards.count <= 4 {
             extraCards.removeAll()
