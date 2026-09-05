@@ -17,7 +17,7 @@ struct LogView: View {
     let logs: [LogEntry]
     
     var body: some View {
-        let logList: String = logs.map { "\(Image(systemName: $0.icon)) " + $0.text }.joined(separator: "\n")
+        let logList: String = logs.map { $0.text }.joined(separator: "\n")
         
         ShapeText(text: logList, shape: TankTacticsHexagon())
     }

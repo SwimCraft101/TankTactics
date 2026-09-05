@@ -146,57 +146,49 @@ struct TileView: View {
     
     func getAppearenceAtLocation() -> Appearance { #warning("Please make this less horrible.")
         if game.board.inBounds(at: coordinates) {
-            for tile in game.board.objects { //if there is an object, it will be rendered here
-                if tile.coordinates != coordinates { //first and most important check: that this tile is in the correct location to be rendered.
-                    continue //skips to next object in the loop
-                }
-                if tile.coordinates.distanceTo(centerCoordinates) <= radarRange {
-                    if tile.coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
-                        if tile.coordinates.distanceTo(centerCoordinates) <= highDetailSightRange {
-                            //fully rendered
-                            return tile.appearance
-                        } else {
-                            //only in lidar and radar range
-                            if !(tile.appearance.strokeColor == .white) { //skips 'small' objects
-                                return Appearance(fillColor: tile.appearance.fillColor, symbolColor: tile.appearance.fillColor, symbol: "rectangle")
+            if coordinates.distanceTo(centerCoordinates) <= radarRange {
+                if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
+                    if coordinates.distanceTo(centerCoordinates) <= highDetailSightRange {
+                        //fully rendered
+                        return game.board.appearanceMap[coordinates] ?? Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle")
+                    } else {
+                        //only in lidar and radar range
+                        if !(game.board.appearanceMap[coordinates]?.strokeColor == .white) { //skips 'small' objects
+                            if game.board.appearanceMap[coordinates] != nil {
+                                return Appearance(fillColor: game.board.appearanceMap[coordinates]!.fillColor, symbolColor: game.board.appearanceMap[coordinates]!.fillColor, symbol: "rectangle")
+                            } else {
+                                let fog = Color(red: 0.9, green: 0.9, blue: 0.9)
+                                return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if not in full range
                             }
                         }
-                    } else {
-                        //only in radar range
-                        if !(tile.appearance.strokeColor == .white) { //skips 'small' objects
+                    }
+                } else {
+                    //only in radar range
+                    if game.board.appearanceMap[coordinates] != nil {
+                        if !(game.board.appearanceMap[coordinates]?.strokeColor == .white) { //skips 'small' objects
                             let mysteryObjectColor = Color(red: 0.4, green: 0.4, blue: 0.4) //color for an object only in Radar Range
                             return Appearance(fillColor: mysteryObjectColor, symbolColor: mysteryObjectColor, symbol: "rectangle")
                         }
                     }
+                    let fog = Color(red: 0.8, green: 0.8, blue: 0.8)
+                    return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if only in radar range
                 }
-            }
-            //renders if there is nothing there, but still requires inbounds
-            if centerCoordinates.distanceTo(coordinates) <= radarRange {
-                if centerCoordinates.distanceTo(coordinates) <= lowDetailSightRange {
-                    if centerCoordinates.distanceTo(coordinates) <= highDetailSightRange {
-                        return Appearance(fillColor: .white, strokeColor: .white, symbolColor: .white, symbol: "rectangle") //pure white if in full range
-                    }
-                    let fog = Color(red: 0.9, green: 0.9, blue: 0.9)
-                    return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if not in full range
-                }
-                let fog = Color(red: 0.8, green: 0.8, blue: 0.8)
-                return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") //greyer if only in radar range
             }
             let fog = Color.white
-            return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle") // greyest if out of range
-        } else {
-            //renderer for out of bounds tiles
-            if coordinates.distanceTo(centerCoordinates) <= radarRange {
-                if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
-                    return game.board.showBorderWarning ? Appearance(fillColor: .gray, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Appearance(fillColor: .gray, symbolColor: .gray, symbol: "rectangle")
-                }
-                let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
-                return Appearance(fillColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
-            }
-            let fog = Color(red: 0.7, green: 0.7, blue: 0.7)
             return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle")
+        } else {
+        //renderer for out of bounds tiles
+        if coordinates.distanceTo(centerCoordinates) <= radarRange {
+            if coordinates.distanceTo(centerCoordinates) <= lowDetailSightRange {
+                return game.board.showBorderWarning ? Appearance(fillColor: .gray, symbolColor: .red, symbol: "exclamationmark.triangle.fill") : Appearance(fillColor: .gray, symbolColor: .gray, symbol: "rectangle")
+            }
+            let mysteryObject = Color(red: 0.4, green: 0.4, blue: 0.4)
+            return Appearance(fillColor: mysteryObject, symbolColor: mysteryObject, symbol: "rectangle")
         }
+        let fog = Color(red: 0.7, green: 0.7, blue: 0.7)
+        return Appearance(fillColor: fog, symbolColor: fog, symbol: "rectangle")
     }
+}
     
     var body: some View {
         BasicTileView(appearance: getAppearenceAtLocation(), accessibilitySettings: accessibilitySettings)
@@ -216,9 +208,7 @@ struct TileView: View {
                 }
             }
             .onTapGesture(count: 1) {
-                if thisTile != nil {
-                    selectedObject = thisTile!
-                }
+                selectedObject = thisTile
             }
             .onTapGesture(count: 2) {
                 game.board.oreDeposits.removeAll(where: { $0 === thisTile as? OreDeposit })

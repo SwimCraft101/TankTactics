@@ -7,7 +7,7 @@
 import Foundation
 import SwiftUI
 
-struct Coordinates: Equatable, Codable {
+struct Coordinates: Equatable, Codable, Hashable {
     let x: Int
     let y: Int
     let rotation: Direction

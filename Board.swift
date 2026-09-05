@@ -4,10 +4,24 @@ import Observation
     var objects: [any BoardObject] {
         tanks + walls + oreDeposits
     }
-    var tanks: [Tank]
-    var walls: [Wall]
-    var oreDeposits: [OreDeposit]
-    var border: Int
+    var tanks: [Tank] {
+        didSet {
+            await updateAppearanceMap()
+        }
+    }
+    var walls: [Wall] {
+        didSet {
+            await updateAppearanceMap()
+        }
+    }
+    var oreDeposits: [OreDeposit] {
+        didSet {
+            await updateAppearanceMap()
+        }
+    }
+    var border: Int 
+    
+    var appearanceMap: [Coordinates: Appearance]
     
     var showBorderWarning: Bool = false
     
@@ -16,6 +30,17 @@ import Observation
         self.walls = walls
         self.oreDeposits = oreDeposits
         self.border = border
+        appearanceMap = [:]
+        Task {
+            await updateAppearanceMap()
+        }
+    }
+    
+    private func updateAppearanceMap() async {
+        appearanceMap = [:]
+        for object in objects {
+            appearanceMap[object.coordinates] = object.appearance
+        }
     }
     
     var randomOpenPosition: Coordinates {

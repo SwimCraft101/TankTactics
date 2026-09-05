@@ -40,7 +40,7 @@ struct Inspector: View {
                             Text("Wall")
                                 .font(.title)
                         } else if object is OreDeposit {
-                            Text("Wall")
+                            Text("Ore Deposit")
                                 .font(.title)
                         } else {
                             fatalError("An unrecognized boardObject was selected by the Inspector")
@@ -49,8 +49,8 @@ struct Inspector: View {
                     HStack {
                         Button("Delete", systemImage: "trash") {
                             game.board.tanks.removeAll { $0 === object as? Tank }
-                            game.board.walls.removeAll { $0 === object as? Tank }
-                            game.board.oreDeposits.removeAll { $0 === object as? Tank }
+                            game.board.walls.removeAll { $0 === object as? Wall }
+                            game.board.oreDeposits.removeAll { $0 === object as? OreDeposit }
                         }
                     }
                     HStack { // General Information
